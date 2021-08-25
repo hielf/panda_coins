@@ -73,7 +73,7 @@ module BinanceHelper
   end
 
   def binance_data_insert(file, table_name)
-    # file = "/Users/hielf/workspace/projects/panda_ib/tmp/csv/binance/20210629/ETHBTC-1m-2021-06-27.zip"
+    # file = "/Users/hielf/workspace/projects/panda_coins/tmp/csv/binance/20210629/ETHBTC-1m-2021-06-27.zip"
     require 'zip'
     fpath = ""
     begin

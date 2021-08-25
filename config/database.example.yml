@@ -16,7 +16,7 @@ default: &default
 
 development:
   <<: *default
-  database: panda_ib_dev
+  database: panda_coins_dev
 
 
 
@@ -25,7 +25,7 @@ development:
 # Do not set this db to the same as development or production.
 test:
   <<: *default
-  database: panda_ib_test_local
+  database: panda_coins_test_local
 
 production:
   <<: *default

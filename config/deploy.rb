@@ -1,13 +1,13 @@
 # config valid for current version and patch releases of Capistrano
 lock "~> 3.11.0"
 
-set :repo_url, "git@github.com:hielf/panda_ib.git"
-set :application, "panda_ib"
+set :repo_url, "git@github.com:hielf/panda_coins.git"
+set :application, "panda_coins"
 # set :user, "deploy"
 set :puma_threads, [4, 16]
 set :puma_workers, 0
 set :rails_env, 'production'
-# set :rvm_ruby_version, '2.4.0@panda_ib'
+# set :rvm_ruby_version, '2.4.0@panda_coins'
 
 # Default branch is :master
 # ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
@@ -27,7 +27,7 @@ set :deploy_to, "/var/www/#{fetch(:application)}"
 # set :pty, true
 
 # Default value for :linked_files is []
-append :linked_files, "config/database.yml", "config/secrets.yml", "config/application.yml", "tmp/hsi_trades.json"
+append :linked_files, "config/database.yml", "config/secrets.yml", "config/application.yml"
 
 # Default value for linked_dirs is []
 append :linked_dirs, "log", "tmp/pids", "tmp/cache", "tmp/sockets", 'tmp/image', "tmp/csv"

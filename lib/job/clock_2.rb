@@ -50,7 +50,7 @@ module Clockwork
       #     current_time = Time.zone.now
       #     if current_time - table[-1]["date"].in_time_zone > 60
       #       if (current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30")
-      #         system( "god restart panda_ib-clock_2" )
+      #         system( "god restart panda_coins-clock_2" )
       #         break
       #       end
       #     end
@@ -68,7 +68,7 @@ module Clockwork
         req_times = req_times + 1
         if req_times >= 20
           ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
-          system( "god restart panda_ib-clock_2" )
+          system( "god restart panda_coins-clock_2" )
           break
         end
         sleep await
@@ -95,7 +95,7 @@ module Clockwork
   # every(1.day, 'midnight.job', :at => '00:00')
 end
 
-# cd /var/www/panda_ib/current/lib/job && clockworkd -c clock.rb start --log -d /var/www/panda_ib/current/lib/job
-# clockworkd -c clock.rb start --log -d /Users/hielf/workspace/projects/panda_ib/lib/job
-# clockworkd -c clock.rb start --log -d /var/www/panda_ib/current/lib/job
+# cd /var/www/panda_coins/current/lib/job && clockworkd -c clock.rb start --log -d /var/www/panda_coins/current/lib/job
+# clockworkd -c clock.rb start --log -d /Users/hielf/workspace/projects/panda_coins/lib/job
+# clockworkd -c clock.rb start --log -d /var/www/panda_coins/current/lib/job
 # clockworkd -c clock.rb stop

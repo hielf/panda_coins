@@ -1,6 +1,6 @@
 # 熊猫IB交易接口
 
-### [API](https://github.com/hielf/panda_ib/blob/master/api.md)
+### [API](https://github.com/hielf/panda_coins/blob/master/api.md)
 
 ## 产品简介
 * 熊猫IB交易接口

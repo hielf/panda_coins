@@ -50,7 +50,7 @@ module Clockwork
   # every(1.day, 'midnight.job', :at => '00:00')
 end
 
-# cd /var/www/panda_ib/current/lib/job && clockworkd -c clock.rb start --log -d /var/www/panda_ib/current/lib/job
-# clockworkd -c clock.rb start --log -d /Users/hielf/workspace/projects/panda_ib/lib/job
-# clockworkd -c clock.rb start --log -d /var/www/panda_ib/current/lib/job
+# cd /var/www/panda_coins/current/lib/job && clockworkd -c clock.rb start --log -d /var/www/panda_coins/current/lib/job
+# clockworkd -c clock.rb start --log -d /Users/hielf/workspace/projects/panda_coins/lib/job
+# clockworkd -c clock.rb start --log -d /var/www/panda_coins/current/lib/job
 # clockworkd -c clock.rb stop
