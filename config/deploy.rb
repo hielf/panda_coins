@@ -1,5 +1,5 @@
 # config valid for current version and patch releases of Capistrano
-lock "~> 3.11.0"
+lock "~> 3.16.0"
 
 set :repo_url, "git@github.com:hielf/panda_coins.git"
 set :application, "panda_coins"
@@ -75,13 +75,13 @@ namespace :puma do
 end
 
 namespace :deploy do
-  desc "stops god"
-  task :stop_god do
-    on roles(:app) do
-      execute "sudo -H -u deploy /bin/bash -l -c 'god stop'"
-    end
-  end
-  before 'deploy', 'deploy:stop_god'
+  # desc "stops god"
+  # task :stop_god do
+  #   on roles(:app) do
+  #     execute "sudo -H -u deploy /bin/bash -l -c 'god stop'"
+  #   end
+  # end
+  # before 'deploy', 'deploy:stop_god'
 
   desc "Make sure local git is in sync with remote."
   task :check_revision do

@@ -37,6 +37,7 @@ require "capistrano/bundler"
 # require 'capistrano/sidekiq'
 require 'capistrano/puma'
 install_plugin Capistrano::Puma
+install_plugin Capistrano::Puma::Daemon
 install_plugin Capistrano::Puma::Workers  # if you want to control the workers (in cluster mode)
 # install_plugin Capistrano::Puma::Jungle # if you need the jungle tasks
 # install_plugin Capistrano::Puma::Monit  # if you need the monit tasks
