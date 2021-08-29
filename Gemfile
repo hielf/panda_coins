@@ -1,6 +1,12 @@
 # source 'https://rubygems.org'
 # source 'https://ruby.taobao.org'
-source 'https://gems.ruby-china.com'
+
+group :development do
+  source 'https://gems.ruby-china.com'
+end
+group :production do
+  source 'https://rubygems.org'
+end
 
 git_source(:github) do |repo_name|
   repo_name = "#{repo_name}/#{repo_name}" unless repo_name.include?("/")
