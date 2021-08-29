@@ -23,7 +23,7 @@ module Clockwork
     end
   end
 
-  every(10.seconds, 'IB.risk', :thread => true)
+  # every(10.seconds, 'IB.risk', :thread => true)
 
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')

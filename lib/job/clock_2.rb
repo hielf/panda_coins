@@ -86,7 +86,7 @@ module Clockwork
     end
   end
 
-  every(60.minute, 'IB.market_data', :thread => true)
+  # every(60.minute, 'IB.market_data', :thread => true)
   # every(5.minute, 'IB.trades_data', :thread => true)
 
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)

@@ -59,9 +59,9 @@ module Clockwork
     end
   end
 
-  every(2.second, 'IB.realtime_bar_csv', :thread => true)
-  every(1.minute, 'IB.realtime_bar_get', :thread => true)
-  every(1.day, 'IB.history', :at => '18:00', :thread => true)
+  # every(2.second, 'IB.realtime_bar_csv', :thread => true)
+  # every(1.minute, 'IB.realtime_bar_get', :thread => true)
+  # every(1.day, 'IB.history', :at => '18:00', :thread => true)
 
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')
