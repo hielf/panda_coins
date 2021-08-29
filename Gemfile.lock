@@ -203,6 +203,7 @@ GEM
     rb-inotify (0.10.1)
       ffi (~> 1.0)
     rbtree (0.4.4)
+    redis (4.4.0)
     rmmseg-cpp-new (0.3.1)
     rspec-core (3.10.1)
       rspec-support (~> 3.10.0)
@@ -319,6 +320,7 @@ DEPENDENCIES
   rails (~> 5.2.3)
   rainbow
   ransack
+  redis
   rspec-rails
   ruby-pinyin
   rubyzip
