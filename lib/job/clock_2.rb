@@ -16,19 +16,29 @@ module Clockwork
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
     if job == 'huobi.tickers_check'
-      start_time = Time.now - 120
-      end_time = Time.now
+      check_time = Time.now - 60
+      changes = []
+      changes = Rails.cache.redis.hgetall("tickers")
+      if changes && !changes.empty?
+        change = changes.find {|x| (eval x[1])[:time] >= check_time}
+        break if change && change.count > 0
 
-      symbols = ApplicationController.helpers.huobi_tickers_check(start_time, end_time)
+        loop do
+          start_time = Time.now - 120
+          end_time = Time.now
 
-      open_count = ApplicationController.helpers.huobi_open_symbols(symbols)
+          symbols = ApplicationController.helpers.huobi_tickers_check(start_time, end_time)
+          open_count = ApplicationController.helpers.huobi_open_symbols(symbols)
+          Rails.logger.warn "openning #{symbols_count} of new symbols at #{end_time.to_s}" if open_count > 0
 
-      Rails.logger.warn "openning #{symbols_count} of new symbols at #{end_time.to_s}" if open_count > 0
+          sleep 6
+        end
+      end
     end
   end
 
   # every(60.minute, 'IB.market_data', :thread => true)
-  every(10.seconds, 'huobi.tickers_check')
+  every(1.minute, 'huobi.tickers_check', :thread => true)
 
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')
