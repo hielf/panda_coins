@@ -37,6 +37,100 @@ module HuobisHelper
     return list
   end
 
+  def huobi_tickers_cache
+    url = "https://api.huobi.pro/market/tickers"
+    Parallel.map([1, 2, 3], in_processes: 3) do |i|
+      sleep i
+      # raise Parallel::Break # -> stops after all current items are finished
+      loop do
+        sleep rand(0..0.5)
+        # current_time = Time.zone.now.strftime('%H:%M')
+        # p current_time
+        res = HTTParty.get url
+        json = JSON.parse res.body
+        ticker_time = Time.at(json["ts"]/1000)
+        data = []
+        json["data"].each do |d|
+          if d["symbol"].end_with?("usdt")
+            data << d
+          end
+        end
+
+        redis = Rails.cache.redis
+        begin
+          Rails.cache.write(ticker_time, data, expires_in: 2.minute)
+          # redis.hset("tickers",ticker_time,data, expires_in: 2.minute)
+        rescue ExceptionName => e
+          Rails.logger.warn e.message
+        end
+      end
+      # Parallel::Stop
+    end
+    return true
+  end
+
+  # ApplicationController.helpers.huobi_tickers_check(Time.now - 120, Time.now)
+  def huobi_tickers_check(start_time, end_time)
+    start_time = Time.now.beginning_of_day - 2 if start_time.nil?
+    end_time = Time.now if end_time.nil?
+    keys = Rails.cache.redis.keys.sort
+    times = []
+    symbols = []
+    keys.each do |key|
+      times << key if (!key.to_time.nil? && key.to_time >= start_time && key.to_time <= end_time)
+    end
+    p times[0]
+    data_s = Rails.cache.read(times[0])
+    data_l = Rails.cache.read(times[-1])
+    if data_s && !data_s.empty? && data_l && !data_l.empty?
+      data_s.each do |ticker|
+        symbol = ticker["symbol"]
+        last = data_l.find {|x| x["symbol"] == symbol}
+        change = (ticker["open"] == 0 ? 0 : (last["close"]-ticker["close"])/ticker["close"])
+        Rails.cache.redis.hset("tickers", ticker["symbol"], {"time": times[-1], "open": ticker["close"], "close": last["close"], "change": change})
+      end
+
+      changes = Rails.cache.redis.hgetall("tickers")
+      symbols = changes.find_all {|x| (eval x[1])[:change] >= ENV["up_floor_limit"].to_f}
+    end
+
+    return symbols
+  end
+
+  def huobi_open_symbols(symbols)
+    # symbols = ApplicationController.helpers.huobi_tickers_check(Time.now - 120, Time.now)
+    start_time = Time.now - 10
+    symbols.delete_if {|x| (eval x[1])[:time].to_time <= start_time}
+    opened_symbols = Rails.cache.redis.hgetall("orders")
+    if !opened_symbols.empty?
+      opened_symbols.each do |sym|
+        symbols.delete_if {|x| x[0] == sym[0]}
+      end
+    end
+
+    Parallel.each(symbols, in_processes: symbols.count) do |symbol|
+      tick = ApplicationController.helpers.huobi_symbol_ticker(symbol[0])
+      Rails.cache.redis.hset("orders", symbol[0], {"open_price": (eval symbol[1])[:close], "current_price": tick["close"], "open_time": (eval symbol[1])[:time], "current_time": tick["ticker_time"]})
+    end
+
+    return true
+  end
+
+  def huobi_symbol_ticker(symbol)
+    url = "https://api.huobi.pro/market/detail/merged?symbol=#{symbol}"
+    tick = false
+    begin
+      res = HTTParty.get url
+      json = JSON.parse res.body
+      ticker_time = Time.at(json["ts"]/1000)
+      tick = json["tick"]
+      tick["ticker_time"] = ticker_time
+    rescue ExceptionName => e
+      Rails.logger.warn e.message
+    end
+    return tick
+  end
+
   def huobi_data_insert
     table_name = "huobi_start_1min"
     dir = Rails.root.to_s + "/lib/python/cryptocurrency/"

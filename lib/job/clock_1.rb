@@ -15,19 +15,24 @@ module Clockwork
 
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
-    contract = ENV['contract']
-    version = ENV['backtrader_version']
-    # puts "ib.trader started at #{Time.zone.now}"
-    begin
-      j = TradersJob.perform_later contract, version
-      100.times do
-        status = ActiveJob::Status.get(j)
-        break if status.completed?
-        sleep 0.2
+
+    if job == 'huobi.tickers_cache'
+      current_time = Time.now
+      keys = Rails.cache.redis.keys.sort
+      times = []
+      keys.each do |key|
+        times << key if (!key.to_time.nil?)
       end
-    rescue Exception => e
-      error_message = e.message
-    end if job == 'ib.trader'
+
+      if times.empty? || current_time - times[-1].to_time > 30
+        begin
+          ApplicationController.helpers.huobi_tickers_cache
+        rescue Exception => e
+          error_message = e.message
+        end
+      end
+    end
+    
   end
 
   # -----------------------------------temp -----------------------------------
@@ -43,7 +48,7 @@ module Clockwork
   # every(1.second, 'ib.trader', :if => lambda { |t| t.sec == 54 }, :thread => true) if ENV["backtrader_version"] == "5min"
 
   # # trades
-  # every(5.minutes, 'ib.trades', :thread => true)
+  every(5.minutes, 'huobi.tickers_cache', :thread => true)
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')
   #
