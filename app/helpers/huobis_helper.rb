@@ -108,12 +108,13 @@ module HuobisHelper
       end
     end
 
-    Parallel.each(symbols, in_processes: symbols.count) do |symbol|
+    # Parallel.each(symbols, in_processes: symbols.count) do |symbol|
+    symbols.each do |symbol|
       tick = ApplicationController.helpers.huobi_symbol_ticker(symbol[0])
       Rails.cache.redis.hset("orders", symbol[0], {"open_price": (eval symbol[1])[:close], "current_price": tick["close"], "open_time": (eval symbol[1])[:time], "current_time": tick["ticker_time"]})
     end
 
-    return true
+    return symbols.count
   end
 
   def huobi_symbol_ticker(symbol)

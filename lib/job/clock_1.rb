@@ -25,14 +25,15 @@ module Clockwork
       end
 
       if times.empty? || current_time - times[-1].to_time > 30
+        Rails.logger.warn "last tickers expired collecting tickers_cache"
         begin
           ApplicationController.helpers.huobi_tickers_cache
         rescue Exception => e
-          error_message = e.message
+          Rails.logger.warn "huobi.tickers_cache error: #{e.message}"
         end
       end
     end
-    
+
   end
 
   # -----------------------------------temp -----------------------------------
