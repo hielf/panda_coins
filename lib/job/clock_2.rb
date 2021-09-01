@@ -15,79 +15,18 @@ module Clockwork
 
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
-    if job == 'IB.market_data'
-      contract = ENV['contract']
-      version = ENV['backtrader_version']
+    if job == 'huobi.tickers_check'
+      start_time = Time.now - 120
+      end_time = Time.now
 
-      case version
-      when '15secs'
-        await = 60
-      when "1min"
-        await = 6
-      when "2min"
-        await = 8
-      when "3min"
-        await = 12
-      when "4min"
-        await = 16
-      when "5min"
-        await = 20
-      end
-      stop_time = Time.zone.now + 60.minutes - await.seconds
-      req_times = 0
+      symbols = ApplicationController.helpers.huobi_tickers_check(start_time, end_time)
 
-      # file = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.csv"
-      #
-      # 3.times do
-      #   begin
-      #     table = CSV.parse(File.read(file), headers: true)
-      #   rescue Exception => e
-      #     Rails.logger.warn "IB.realtime_bar_get failed: #{e}"
-      #     sleep 0.3
-      #   end
-      #
-      #   if table && table.count > 0
-      #     current_time = Time.zone.now
-      #     if current_time - table[-1]["date"].in_time_zone > 60
-      #       if (current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30")
-      #         system( "god restart panda_coins-clock_2" )
-      #         break
-      #       end
-      #     end
-      #   end
-      # end
-
-      loop do
-        if Time.zone.now > stop_time
-          ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
-          break
-        end
-        @ib = ApplicationController.helpers.ib_connect if @ib.nil?
-        @ib = ApplicationController.helpers.ib_connect if !@ib.nil? && !@ib.isConnected()
-        MarketDataJob.perform_later('@ib', contract, version)
-        req_times = req_times + 1
-        if req_times >= 20
-          ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
-          system( "god restart panda_coins-clock_2" )
-          break
-        end
-        sleep await
-      end
-    end
-
-    if job == 'IB.trades_data'
-      @contract = ENV['contract']
-      @version = ENV['backtrader_version']
-      run_time = Time.zone.now
-      current_time = run_time.strftime('%H:%M')
-      if ((current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "15:55"))
-        job = PositionsJob.set(wait: 2.seconds).perform_later(@contract, @version)
-      end
+      ApplicationController.helpers.huobi_open_symbols(symbols)
     end
   end
 
   # every(60.minute, 'IB.market_data', :thread => true)
-  # every(5.minute, 'IB.trades_data', :thread => true)
+  every(10.seconds, 'huobi.tickers_check')
 
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')

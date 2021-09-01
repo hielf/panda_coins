@@ -16,10 +16,7 @@ module Clockwork
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
     if job == 'IB.risk'
-      contract = ENV['contract']
-      version = ENV['backtrader_version']
-
-      RisksJob.perform_later contract, version
+  
     end
   end
 
