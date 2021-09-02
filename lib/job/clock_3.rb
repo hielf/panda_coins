@@ -30,9 +30,7 @@ module Clockwork
     end
   end
 
-  # every(10.seconds, 'IB.risk', :thread => true)
-
-  every(1.minute, 'huobi.orders_check', :thread => true)
+  every(1.minute, 'huobi.orders_check')
   # every(1.hour, 'hourly.job')
   #
   # every(1.day, 'midnight.job', :at => '00:00')
