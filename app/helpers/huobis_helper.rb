@@ -4,7 +4,7 @@
 # include PyCall::Import
 # require 'faye/websocket'
 # require 'eventmachine'
-# ApplicationController.helpers.huobi_data_insert
+# ApplicationController.helpers.huobi_tickers_cache
 module HuobisHelper
 # ["ethusdt", "btcusdt", "dogeusdt", "xrpusdt", "lunausdt", "adausdt", "bttusdt", "nftusdt", "dotusdt", "trxusdt", "icpusdt", "abtusdt", "skmusdt", "bhdusdt", "aacusdt", "canusdt", "fisusdt", "nhbtcusdt", "letusdt", "massusdt", "achusdt", "ringusdt", "stnusdt", "mtausdt", "itcusdt", "atpusdt", "gofusdt", "pvtusdt", "auctionus", "ocnusdt"]
 
@@ -80,20 +80,23 @@ module HuobisHelper
       times << key if (!key.to_time.nil? && key.to_time >= start_time && key.to_time <= end_time)
     end
     p times[0]
-    data_s = Rails.cache.read(times[0])
-    data_l = Rails.cache.read(times[-1])
-    if data_s && !data_s.empty? && data_l && !data_l.empty?
-      data_s.each do |ticker|
-        symbol = ticker["symbol"]
-        last = data_l.find {|x| x["symbol"] == symbol}
-        change = (ticker["open"] == 0 ? 0 : (last["close"]-ticker["close"])/ticker["close"])
-        Rails.cache.redis.hset("tickers", ticker["symbol"], {"time": times[-1], "open": ticker["close"], "close": last["close"], "change": change})
+    begin
+      data_s = Rails.cache.read(times[0])
+      data_l = Rails.cache.read(times[-1])
+      if data_s && !data_s.empty? && data_l && !data_l.empty?
+        data_s.each do |ticker|
+          symbol = ticker["symbol"]
+          last = data_l.find {|x| x["symbol"] == symbol}
+          change = (ticker["open"] == 0 ? 0 : (last["close"]-ticker["close"])/ticker["close"])
+          Rails.cache.redis.hset("tickers", ticker["symbol"], {"time": times[-1], "open": ticker["close"], "close": last["close"], "change": change})
+        end
+
+        changes = Rails.cache.redis.hgetall("tickers")
+        symbols = changes.find_all {|x| (eval x[1])[:change] >= ENV["up_floor_limit"].to_f}
       end
-
-      changes = Rails.cache.redis.hgetall("tickers")
-      symbols = changes.find_all {|x| (eval x[1])[:change] >= ENV["up_floor_limit"].to_f}
+    rescue ExceptionName => e
+      Rails.logger.warn e.message
     end
-
     return symbols
   end
 
@@ -108,13 +111,31 @@ module HuobisHelper
       end
     end
 
-    # Parallel.each(symbols, in_processes: symbols.count) do |symbol|
+    # Parallel.each(symbols, in_thread: symbols.count) do |symbol|
     symbols.each do |symbol|
-      tick = ApplicationController.helpers.huobi_symbol_ticker(symbol[0])
-      Rails.cache.redis.hset("orders", symbol[0], {"open_price": (eval symbol[1])[:close], "current_price": tick["close"], "open_time": (eval symbol[1])[:time], "current_time": tick["ticker_time"]})
+      huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
+      tick = huobi_pro.merged(symbol[0])
+      # tick = ApplicationController.helpers.huobi_symbol_ticker(symbol[0])
+      ticker_time = Time.at(tick["ts"]/1000).to_s
+      Rails.cache.redis.hset("orders", symbol[0], {"open_price": (eval symbol[1])[:close], "current_price": tick["tick"]["close"], "open_time": (eval symbol[1])[:time], "current_time": ticker_time})
     end
 
     return symbols.count
+  end
+
+  def huobi_orders_check
+    opened_symbols = Rails.cache.redis.hgetall("orders")
+    # opened_symbols.each do |symbol|
+    Parallel.each(opened_symbols, in_thread: opened_symbols.count) do |symbol|
+      redis = Redis.new
+      huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
+      tick = huobi_pro.merged(symbol[0])
+      ticker_time = Time.at(tick["ts"]/1000).to_s
+      p [symbol[0], ticker_time, tick["tick"]["close"]]
+      redis.hset("orders", symbol[0], {"open_price": (eval symbol[1])[:open_price], "current_price": tick["tick"]["close"], "open_time": (eval symbol[1])[:open_time], "current_time": ticker_time})
+    end
+
+    return opened_symbols.count
   end
 
   def huobi_symbol_ticker(symbol)
@@ -186,7 +207,7 @@ module HuobisHelper
       if (current_time >= "00:00" && current_time < "00:01")
         res = HTTParty.get url
         json = JSON.parse res.body
-        ticker_time = Time.at(json["ts"]/1000)
+        ticker_time = Time.at(json["ts"]/1000).to_s
         if !contracts.any?{|d| d["time"] == ticker_time}
           hash = {}
           data = []
