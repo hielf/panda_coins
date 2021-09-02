@@ -15,7 +15,6 @@ module Clockwork
 
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
-
     if job == 'huobi.tickers_cache'
       current_time = Time.now
       keys = Rails.cache.redis.keys.sort
@@ -35,7 +34,7 @@ module Clockwork
     end
 
   end
-]
+
   # # trades
   every(5.minutes, 'huobi.tickers_cache')
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)

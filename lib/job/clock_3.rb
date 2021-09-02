@@ -16,6 +16,7 @@ module Clockwork
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
     if job == 'huobi.orders_check'
+      # Rails.cache.redis.del("orders")
       check_time = Time.now - 60
       changes = []
       changes = Rails.cache.redis.hgetall("orders")
