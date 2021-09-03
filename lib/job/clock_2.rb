@@ -17,11 +17,11 @@ module Clockwork
   handler do |job, time|
     if job == 'huobi.tickers_check'
       check_time = Time.now - 60
-      changes = []
-      changes = Rails.cache.redis.hgetall("tickers")
-      if changes && !changes.empty?
-        change = changes.find {|x| (eval x[1])[:time] >= check_time}
-        break if change && change.count > 0
+      tickers = []
+      tickers = Rails.cache.redis.hgetall("tickers")
+      if tickers && !tickers.empty?
+        c = tickers.find {|x| (eval x[1])[:time] >= check_time}
+        break if c && c.count > 0
 
         loop do
           start_time = Time.now - 120

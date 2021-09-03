@@ -117,8 +117,9 @@ module HuobisHelper
       tick = huobi_pro.merged(symbol[0])
       # tick = ApplicationController.helpers.huobi_symbol_ticker(symbol[0])
       ticker_time = Time.at(tick["ts"]/1000).to_s
-      change = ((eval symbol[1])[:close] == 0 ? 0 : (tick["tick"]["close"]-(eval symbol[1])[:close])/(eval symbol[1])[:close])
-      Rails.cache.redis.hset("orders", symbol[0], {"open_price": (eval symbol[1])[:close], "current_price": tick["tick"]["close"], "change": change, "open_time": (eval symbol[1])[:time], "current_time": ticker_time})
+      sym_data = eval symbol[1]
+      change = (sym_data[:close] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:close])/sym_data[:close])
+      Rails.cache.redis.hset("orders", symbol[0], {"open_price": sym_data[:close], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:time], "current_time": ticker_time})
     end
 
     return symbols.count
@@ -140,7 +141,7 @@ module HuobisHelper
         redis.quit
       end
     end
-    
+
     return opened_symbols.count
   end
 

@@ -18,10 +18,10 @@ module Clockwork
     if job == 'huobi.orders_check'
       # Rails.cache.redis.del("orders")
       check_time = Time.now - 60
-      changes = []
-      changes = Rails.cache.redis.hgetall("orders")
-      change = changes.find {|x| (eval x[1])[:current_time].to_time >= check_time}
-      break if change && change.count > 0
+      orders = []
+      orders = Rails.cache.redis.hgetall("orders")
+      c = orders.find {|x| (eval x[1])[:current_time].to_time >= check_time}
+      break if c && c.count > 0
 
       loop do
         count_1 = ApplicationController.helpers.huobi_orders_check
