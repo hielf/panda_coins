@@ -87,7 +87,7 @@ module HuobisHelper
         data_s.each do |ticker|
           symbol = ticker["symbol"]
           last = data_l.find {|x| x["symbol"] == symbol}
-          change = (ticker["open"] == 0 ? 0 : (last["close"]-ticker["close"])/ticker["close"])
+          change = (ticker["close"] == 0 ? 0 : (last["close"]-ticker["close"])/ticker["close"])
           Rails.cache.redis.hset("tickers", ticker["symbol"], {"time": times[-1], "open": ticker["close"], "close": last["close"], "change": change})
         end
 
@@ -132,7 +132,9 @@ module HuobisHelper
       tick = huobi_pro.merged(symbol[0])
       ticker_time = Time.at(tick["ts"]/1000).to_s
       # p [symbol[0], ticker_time, tick["tick"]["close"]]
-      redis.hset("orders", symbol[0], {"open_price": (eval symbol[1])[:open_price], "current_price": tick["tick"]["close"], "open_time": (eval symbol[1])[:open_time], "current_time": ticker_time})
+      sym_data = eval symbol[1]
+      change = (sym_data[:open_price] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:open_price])/sym_data[:open_price])
+      redis.hset("orders", symbol[0], {"open_price": sym_data[:open_price], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:open_time], "current_time": ticker_time})
       redis.quit
     end
 
