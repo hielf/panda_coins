@@ -21,8 +21,8 @@
           <td colspan="3"><%= data[:open_price] %></td>
           <td colspan="3"><%= data[:current_price] %></td>
           <td colspan="3"><%= data[:change] %></td>
-          <td colspan="3"><%= data[:open_time].nil? ? "" || strftime_time(data[:open_time].to_time) %></td>
-          <td colspan="3"><%= data[:current_time].nil? ? "" || strftime_time(data[:current_time].to_time) %></td>
+          <td colspan="3"><%= data[:open_time].nil? ? "" : strftime_time(data[:open_time].to_time) %></td>
+          <td colspan="3"><%= data[:current_time].nil? ? "" : strftime_time(data[:current_time].to_time) %></td>
         </tr>
       <% end %>
     <% end %>
