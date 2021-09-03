@@ -29,7 +29,7 @@ module Clockwork
 
           symbols = ApplicationController.helpers.huobi_tickers_check(start_time, end_time)
           open_count = ApplicationController.helpers.huobi_open_symbols(symbols)
-          Rails.logger.warn "openning #{symbols_count} of new symbols at #{end_time.to_s}" if open_count > 0
+          Rails.logger.warn "openning #{open_count} of new symbols at #{end_time.to_s}" if open_count > 0
 
           sleep 6
         end

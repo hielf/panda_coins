@@ -13,6 +13,8 @@ class TradeOrdersController < ApplicationController
       @pre_orders = @pre_orders.sort_by { |key| (eval key[1])[:open_price] }.to_h
     when "current_price"
       @pre_orders = @pre_orders.sort_by { |key| (eval key[1])[:current_price] }.to_h
+    when "change"
+      @pre_orders = @pre_orders.sort_by { |key| (eval key[1])[:change] }.to_h
     when "open_time"
       @pre_orders = @pre_orders.sort_by { |key| (eval key[1])[:open_time] }.to_h
     when "current_time"
