@@ -127,12 +127,13 @@ module HuobisHelper
     opened_symbols = Rails.cache.redis.hgetall("orders")
     # opened_symbols.each do |symbol|
     Parallel.each(opened_symbols, in_thread: opened_symbols.count) do |symbol|
-      redis = Redis.new
+      redis = Redis.new(Rails.application.config_for(:redis))
       huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
       tick = huobi_pro.merged(symbol[0])
       ticker_time = Time.at(tick["ts"]/1000).to_s
-      p [symbol[0], ticker_time, tick["tick"]["close"]]
+      # p [symbol[0], ticker_time, tick["tick"]["close"]]
       redis.hset("orders", symbol[0], {"open_price": (eval symbol[1])[:open_price], "current_price": tick["tick"]["close"], "open_time": (eval symbol[1])[:open_time], "current_time": ticker_time})
+      redis.quit
     end
 
     return opened_symbols.count
