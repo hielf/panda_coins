@@ -20,8 +20,8 @@ module Clockwork
       check_time = Time.now - 60
       changes = []
       changes = Rails.cache.redis.hgetall("orders")
-      c = changes.find {|x| (eval x[1])[:current_time].to_time >= check_time}
-      break if c && c.count > 0
+      change = changes.find {|x| (eval x[1])[:current_time].to_time >= check_time}
+      break if change && change.count > 0
 
       loop do
         count = ApplicationController.helpers.huobi_orders_check

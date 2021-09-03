@@ -24,7 +24,7 @@ module ContractsHelper
       end_time = Time.zone.now
       # url = "http://#{ENV["market_db"]}:3000/#{contract}?and=(date.gte.#{begin_time.strftime('%Y-%m-%dT%H:%M:%S')},date.lte.#{end_time.strftime('%Y-%m-%dT%H:%M:%S')})"
       url = "http://#{ENV["market_db"]}:3000/#{contract}_last_1200"
-      res = HTTParty.get url
+      res = Faraday.get url
       json = JSON.parse res.body
       begin
         csv = CSV.generate(headers: false) { |csv| json.map(&:to_a).each { |row| csv << row } }

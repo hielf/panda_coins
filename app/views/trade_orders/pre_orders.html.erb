@@ -1,0 +1,27 @@
+<h1>当前指令合约</h1>
+
+<table border="1" cellpadding="0" cellspacing="" width="100%">
+  <thead>
+    <tr>
+      <th colspan="3"><%= link_to "合约", :sort => "symbol"%> </th>
+      <th colspan="3"><%= link_to "指令买入价", :sort => "open_price"%> </th>
+      <th colspan="3"><%= link_to "当前价", :sort => "current_price"%> </th>
+      <th colspan="3"><%= link_to "指令时间", :sort => "open_time"%> </th>
+      <th colspan="3"><%= link_to "当前时间", :sort => "current_time"%> </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @pre_orders.each do |pre_order| %>
+      <% if pre_order && !pre_order.empty? %>
+        <% data = eval pre_order[1] %>
+        <tr>
+          <td colspan="3"><%= pre_order[0] %></td>
+          <td colspan="3"><%= data[:open_price] %></td>
+          <td colspan="3"><%= data[:current_price] %></td>
+          <td colspan="3"><%= strftime_time(data[:open_time].to_time) %></td>
+          <td colspan="3"><%= strftime_time(data[:current_time].to_time) %></td>
+        </tr>
+      <% end %>
+    <% end %>
+  </tbody>

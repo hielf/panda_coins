@@ -16,7 +16,7 @@ module BinanceHelper
     # year = "2021"
     # month = "06"
     # day = "27"
-    res = HTTParty.get('https://api.binance.com/api/v1/exchangeInfo')
+    res = Faraday.get('https://api.binance.com/api/v1/exchangeInfo')
     json = JSON.parse res.body
     key_symbols = ["ETH", "BTCUSD", "BTCBUSD", "LTC", "EOS", "XMR", "DODO", "ONT", "VET", "AAVE", "SUSHI", "YFI", "FTM", "CRV"]
     # json["symbols"].each do |sym|

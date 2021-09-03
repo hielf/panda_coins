@@ -1,39 +1,20 @@
 class Api::TradeOrdersController < Api::ApplicationController
   skip_before_action :authenticate_user!
-  include TradeOrdersHelper
-  include ContractsHelper
 
-  def test
-    contract = "hsi"
-    result = [0, '成功']
-    TradersJob.perform_now contract
-    render_json(result)
-  end
-
-  def order
-    m_requires! [:order_type, :amount, :price, :rand_code]
-    result = [0, '下单成功']
-
-    @order = params[:order_type].upcase
-    @amount = params[:amount].to_i
-    price = params[:price].to_f
-    rand_code = params[:rand_code]
-
+  def pre_orders
     begin
-      ApplicationController.helpers.ib_order(@order, @amount, price)
-
-      EventLog.create(log_type: "ORDER", order_type: @order, content: "#{@order} #{@amount.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if @order != "" && @amount != 0
-      # OrdersJob.perform_later @order, @amount
+      data = Rails.cache.redis.hgetall("orders")
+      result = [0, "success", data.as_json]
     rescue Exception => e
-      result = [1, '下单失败']
+      result = [1, e.value.to_s]
     end
     render_json(result)
   end
 
-  def positions
+  def tickers
     begin
-      data = helpers.ib_positions
-      result = [0, "success", data]
+      data = Rails.cache.redis.hgetall("tickers")
+      result = [0, "success", data.as_json]
     rescue Exception => e
       result = [1, e.value.to_s]
     end
@@ -83,26 +64,6 @@ class Api::TradeOrdersController < Api::ApplicationController
       end
       render_json(result)
     end
-  end
-
-  def position_check
-    type = params[:type]
-    contract = params[:contract]
-    result = [0, 'success']
-
-    Rails.logger.warn "contract & type: #{contract}, #{type}"
-    if contract
-      file = index_to_csv(contract)
-      data = online_data(file)
-    end
-
-    if !type.nil? && type == "check" && data
-      check_position(data)
-    else
-      close_position
-    end
-
-    render_json(result)
   end
 
   private

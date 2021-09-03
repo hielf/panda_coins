@@ -1,4 +1,4 @@
-require 'httparty'
+# require 'httparty'
 require 'json'
 require 'open-uri'
 require 'rack'

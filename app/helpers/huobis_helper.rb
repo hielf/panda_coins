@@ -11,7 +11,7 @@ module HuobisHelper
   def currencys_list
     url = "https://api.huobi.pro"
     api = "/v1/common/symbols"
-    res = HTTParty.get url + api
+    res = Faraday.get url + api
     json = JSON.parse res.body
     list = []
     json["data"].each do |d|
@@ -46,7 +46,7 @@ module HuobisHelper
         sleep rand(0..0.5)
         # current_time = Time.zone.now.strftime('%H:%M')
         # p current_time
-        res = HTTParty.get url
+        res = Faraday.get url
         json = JSON.parse res.body
         ticker_time = Time.at(json["ts"]/1000)
         data = []
@@ -143,7 +143,7 @@ module HuobisHelper
     url = "https://api.huobi.pro/market/detail/merged?symbol=#{symbol}"
     tick = false
     begin
-      res = HTTParty.get url
+      res = Faraday.get url
       json = JSON.parse res.body
       ticker_time = Time.at(json["ts"]/1000)
       tick = json["tick"]
@@ -206,7 +206,7 @@ module HuobisHelper
       current_time = Time.zone.now.strftime('%H:%M')
       p current_time
       if (current_time >= "00:00" && current_time < "00:01")
-        res = HTTParty.get url
+        res = Faraday.get url
         json = JSON.parse res.body
         ticker_time = Time.at(json["ts"]/1000).to_s
         if !contracts.any?{|d| d["time"] == ticker_time}
