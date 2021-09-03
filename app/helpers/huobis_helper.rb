@@ -117,7 +117,8 @@ module HuobisHelper
       tick = huobi_pro.merged(symbol[0])
       # tick = ApplicationController.helpers.huobi_symbol_ticker(symbol[0])
       ticker_time = Time.at(tick["ts"]/1000).to_s
-      Rails.cache.redis.hset("orders", symbol[0], {"open_price": (eval symbol[1])[:close], "current_price": tick["tick"]["close"], "open_time": (eval symbol[1])[:time], "current_time": ticker_time})
+      change = ((eval symbol[1])[:close] == 0 ? 0 : (tick["tick"]["close"]-(eval symbol[1])[:close])/(eval symbol[1])[:close])
+      Rails.cache.redis.hset("orders", symbol[0], {"open_price": (eval symbol[1])[:close], "current_price": tick["tick"]["close"], "change": change, "open_time": (eval symbol[1])[:time], "current_time": ticker_time})
     end
 
     return symbols.count
@@ -126,19 +127,37 @@ module HuobisHelper
   def huobi_orders_check
     opened_symbols = Rails.cache.redis.hgetall("orders")
     # opened_symbols.each do |symbol|
-    Parallel.each(opened_symbols, in_thread: opened_symbols.count) do |symbol|
-      redis = Redis.new(Rails.application.config_for(:redis))
-      huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
-      tick = huobi_pro.merged(symbol[0])
-      ticker_time = Time.at(tick["ts"]/1000).to_s
-      # p [symbol[0], ticker_time, tick["tick"]["close"]]
-      sym_data = eval symbol[1]
-      change = (sym_data[:open_price] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:open_price])/sym_data[:open_price])
-      redis.hset("orders", symbol[0], {"open_price": sym_data[:open_price], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:open_time], "current_time": ticker_time})
-      redis.quit
+    if opened_symbols && opened_symbols.any?
+      Parallel.each(opened_symbols, in_thread: opened_symbols.count) do |symbol|
+        redis = Redis.new(Rails.application.config_for(:redis))
+        huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
+        tick = huobi_pro.merged(symbol[0])
+        ticker_time = Time.at(tick["ts"]/1000).to_s
+        # p [symbol[0], ticker_time, tick["tick"]["close"]]
+        sym_data = eval symbol[1]
+        change = (sym_data[:open_price] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:open_price])/sym_data[:open_price])
+        redis.hset("orders", symbol[0], {"open_price": sym_data[:open_price], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:open_time], "current_time": ticker_time})
+        redis.quit
+      end
+    end
+    
+    return opened_symbols.count
+  end
+
+  def huobi_orders_dispose
+    count = 0
+    data = Rails.cache.redis.hgetall("orders")
+    orders = data.find_all {|x| (eval x[1])[:change] <= ENV["down_limit"].to_f}
+
+    if orders && orders.any?
+      orders.each do |order|
+        symbol = order[0]
+        Rails.cache.redis.hdel("orders", symbol)
+        count = count + 1
+      end
     end
 
-    return opened_symbols.count
+    return count
   end
 
   def huobi_symbol_ticker(symbol)

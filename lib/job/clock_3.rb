@@ -24,8 +24,8 @@ module Clockwork
       break if change && change.count > 0
 
       loop do
-        count = ApplicationController.helpers.huobi_orders_check
-        break if count == 0
+        count_1 = ApplicationController.helpers.huobi_orders_check
+        count_2 = ApplicationController.helpers.huobi_orders_dispose
         sleep 0.2
       end
     end
