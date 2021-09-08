@@ -48,7 +48,7 @@ module HuobisHelper
         begin
           Rails.cache.write(ticker_time, data, expires_in: 2.minute)
           # redis.hset("tickers",ticker_time,data, expires_in: 2.minute)
-        rescue ExceptionName => e
+        rescue Exception => e
           Rails.logger.warn e.message
         end
       end
@@ -82,7 +82,7 @@ module HuobisHelper
         changes = Rails.cache.redis.hgetall("tickers")
         symbols = changes.find_all {|x| (eval x[1])[:change] >= ENV["up_floor_limit"].to_f}
       end
-    rescue ExceptionName => e
+    rescue Exception => e
       Rails.logger.warn e.message
     end
     return symbols
@@ -138,7 +138,7 @@ module HuobisHelper
 
   def huobi_pnls(symbol)
     pnls = Rails.cache.redis.lrange("pnl:#{symbol}", 0, -1)
-    return pnls
+    return pnls.map(&:to_f)
   end
 
   def huobi_orders_close
@@ -153,7 +153,7 @@ module HuobisHelper
         begin
           ApplicationController.helpers.huobi_orders_log(symbol)
           Rails.cache.redis.hdel("orders", symbol)
-        rescue ExceptionName => e
+        rescue Exception => e
           Rails.logger.warn e.message
         ensure
           Rails.cache.redis.del("pnl:#{symbol}")
@@ -173,7 +173,7 @@ module HuobisHelper
         begin
           ApplicationController.helpers.huobi_orders_log(symbol)
           Rails.cache.redis.hdel("orders", symbol)
-        rescue ExceptionName => e
+        rescue Exception => e
           Rails.logger.warn e.message
         ensure
           Rails.cache.redis.del("pnl:#{symbol}")
@@ -184,29 +184,40 @@ module HuobisHelper
     end
 
     # 3 pnl_limit
-    # data = Rails.cache.redis.hgetall("orders")
-    # orders = data.find_all {|x| (eval x[1])[:change] > ENV["up_limit"].to_f}
-    #
-    # if orders && orders.any?
-    #   orders.each do |order|
-    #     symbol = order[0]
-    #     begin
-    #       ApplicationController.helpers.huobi_orders_log(symbol)
-    #       Rails.cache.redis.hdel("orders", symbol)
-    #     rescue ExceptionName => e
-    #       Rails.logger.warn e.message
-    #     end
-    #
-    #     count = count + 1
-    #   end
-    # end
+    data = Rails.cache.redis.hgetall("orders")
+    orders = data
+
+    if orders && orders.any?
+      orders.each do |order|
+        symbol = order[0]
+        pnls = ApplicationController.helpers.huobi_pnls(symbol)
+        pnls = (pnls.select.with_index{|_,i| (i+1) % ENV["pnl_interval"].to_i == 0}).last(3)
+
+        if pnls.any? && pnls.sort.reverse == pnls
+          begin
+            ApplicationController.helpers.huobi_orders_log(symbol)
+            Rails.cache.redis.hdel("orders", symbol)
+          rescue Exception => e
+            Rails.logger.warn e.message
+          ensure
+            Rails.cache.redis.del("pnl:#{symbol}")
+          end
+        end
+
+        count = count + 1
+      end
+    end
 
     return count
   end
 
   def huobi_orders_log(symbol)
-    order = Rails.cache.redis.hget("orders", symbol)
-    EventLog.create(eval order)
+    begin
+      order = Rails.cache.redis.hget("orders", symbol)
+      EventLog.create(eval order)
+    rescue Exception => e
+      Rails.logger.warn e.message
+    end
   end
 
   def huobi_symbol_ticker(symbol)
@@ -218,7 +229,7 @@ module HuobisHelper
       ticker_time = Time.at(json["ts"]/1000)
       tick = json["tick"]
       tick["ticker_time"] = ticker_time
-    rescue ExceptionName => e
+    rescue Exception => e
       Rails.logger.warn e.message
     end
     return tick
