@@ -8,33 +8,21 @@
 module HuobisHelper
 # ["ethusdt", "btcusdt", "dogeusdt", "xrpusdt", "lunausdt", "adausdt", "bttusdt", "nftusdt", "dotusdt", "trxusdt", "icpusdt", "abtusdt", "skmusdt", "bhdusdt", "aacusdt", "canusdt", "fisusdt", "nhbtcusdt", "letusdt", "massusdt", "achusdt", "ringusdt", "stnusdt", "mtausdt", "itcusdt", "atpusdt", "gofusdt", "pvtusdt", "auctionus", "ocnusdt"]
 
-  def currencys_list
-    url = "https://api.huobi.pro"
-    api = "/v1/common/symbols"
-    res = Faraday.get url + api
-    json = JSON.parse res.body
-    list = []
-    json["data"].each do |d|
-      list << d["symbol"]
+  def usdts_symbols
+    huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
+    list = huobi_pro.symbols["data"]
+    usdts = []
+    if list && list.any?
+      list.each do |l|
+        usdts << l if l["quote-currency"] == "usdt"
+      end
     end
 
-    usdt = []
-    list.each do |l|
-      usdt << l if l.end_with?("usdt")
+    usdts.each do |usdt|
+      Rails.cache.redis.hset("symbols", usdt["symbol"], {"price-precision": usdt["price-precision"], "amount-precision": usdt["amount-precision"], "value-precision": usdt["value-precision"], "state": usdt["state"], "api-trading": usdt["api-trading"]})
     end
 
-    # begin
-    #   csv = CSV.generate(headers: false) { |csv| json.map(&:to_a).each { |row| csv << row } }
-    #   CSV.open( file, 'w' ) do |writer|
-    #     writer << ["date", "open", "high", "low", "close", "volume", "barCount", "average"] if with_index
-    #     json.each do |c|
-    #       writer << [c["date"], c["open"], c["high"], c["low"], c["close"], c["volume"], c["barCount"], c["average"]]
-    #     end
-    #   end
-    # rescue Exception => e
-    #   Rails.logger.warn "index_to_csv failed: #{e}"
-    # end
-    return list
+    return usdts.count
   end
 
   def huobi_tickers_cache
@@ -56,7 +44,7 @@ module HuobisHelper
           end
         end
 
-        redis = Rails.cache.redis
+        # redis = Rails.cache.redis
         begin
           Rails.cache.write(ticker_time, data, expires_in: 2.minute)
           # redis.hset("tickers",ticker_time,data, expires_in: 2.minute)
@@ -138,6 +126,9 @@ module HuobisHelper
         sym_data = eval symbol[1]
         change = (sym_data[:open_price] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:open_price])/sym_data[:open_price])
         redis.hset("orders", symbol[0], {"open_price": sym_data[:open_price], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:open_time], "current_time": ticker_time})
+
+        pnl = change.truncate(4)
+        redis.rpush("pnl:#{symbol}", pnl)
         redis.quit
       end
     end
@@ -145,7 +136,13 @@ module HuobisHelper
     return opened_symbols.count
   end
 
-  def huobi_orders_dispose
+  def huobi_pnls(symbol)
+    pnls = Rails.cache.redis.lrange("pnl:#{symbol}", 0, -1)
+    return pnls
+  end
+
+  def huobi_orders_close
+    # 1 down limit
     count = 0
     data = Rails.cache.redis.hgetall("orders")
     orders = data.find_all {|x| (eval x[1])[:change] <= ENV["down_limit"].to_f}
@@ -153,12 +150,63 @@ module HuobisHelper
     if orders && orders.any?
       orders.each do |order|
         symbol = order[0]
-        Rails.cache.redis.hdel("orders", symbol)
+        begin
+          ApplicationController.helpers.huobi_orders_log(symbol)
+          Rails.cache.redis.hdel("orders", symbol)
+        rescue ExceptionName => e
+          Rails.logger.warn e.message
+        ensure
+          Rails.cache.redis.del("pnl:#{symbol}")
+        end
+
         count = count + 1
       end
     end
 
+    # 2 up_limit
+    data = Rails.cache.redis.hgetall("orders")
+    orders = data.find_all {|x| (eval x[1])[:change] > ENV["up_limit"].to_f}
+
+    if orders && orders.any?
+      orders.each do |order|
+        symbol = order[0]
+        begin
+          ApplicationController.helpers.huobi_orders_log(symbol)
+          Rails.cache.redis.hdel("orders", symbol)
+        rescue ExceptionName => e
+          Rails.logger.warn e.message
+        ensure
+          Rails.cache.redis.del("pnl:#{symbol}")
+        end
+
+        count = count + 1
+      end
+    end
+
+    # 3 pnl_limit
+    # data = Rails.cache.redis.hgetall("orders")
+    # orders = data.find_all {|x| (eval x[1])[:change] > ENV["up_limit"].to_f}
+    #
+    # if orders && orders.any?
+    #   orders.each do |order|
+    #     symbol = order[0]
+    #     begin
+    #       ApplicationController.helpers.huobi_orders_log(symbol)
+    #       Rails.cache.redis.hdel("orders", symbol)
+    #     rescue ExceptionName => e
+    #       Rails.logger.warn e.message
+    #     end
+    #
+    #     count = count + 1
+    #   end
+    # end
+
     return count
+  end
+
+  def huobi_orders_log(symbol)
+    order = Rails.cache.redis.hget("orders", symbol)
+    EventLog.create(eval order)
   end
 
   def huobi_symbol_ticker(symbol)

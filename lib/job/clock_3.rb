@@ -25,7 +25,7 @@ module Clockwork
 
       loop do
         count_1 = ApplicationController.helpers.huobi_orders_check
-        count_2 = ApplicationController.helpers.huobi_orders_dispose
+        count_2 = ApplicationController.helpers.huobi_orders_close
         sleep 0.2
       end
     end

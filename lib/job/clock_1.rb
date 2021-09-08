@@ -33,14 +33,22 @@ module Clockwork
       end
     end
 
+    if job == 'huobi.usdts_symbols'
+      begin
+        ApplicationController.helpers.usdts_symbols
+      rescue Exception => e
+        Rails.logger.warn "huobi.usdts_symbols error: #{e.message}"
+      end
+    end
+    
   end
 
   # # trades
   every(5.minutes, 'huobi.tickers_cache')
+  every(1.day, 'huobi.usdts_symbols', :at => '06:00', :thread => true)
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')
   #
-  # every(1.day, 'midnight.job', :at => '00:00')
 end
 
 # cd /var/www/panda_coins/current/lib/job && clockworkd -c clock.rb start --log -d /var/www/panda_coins/current/lib/job

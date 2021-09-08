@@ -23,4 +23,9 @@ class TradeOrdersController < ApplicationController
 
   end
 
+  def balances
+    huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
+    @balances = huobi_pro.balances["data"]["list"].find_all {|x| x["balance"].to_f != 0 }
+  end
+
 end

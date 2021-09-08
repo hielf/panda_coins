@@ -112,14 +112,14 @@ class HuobiPro
   ## 如果使用借贷资产交易
   ## 请在下单接口/v1/order/orders/place
   ## 请求参数source中填写'margin-api'
-  def new_order(symbol,side,price,count)
+  def new_order(symbol,type,price,count)
     params ={
       "account-id" => @account_id,
       "amount" => count,
       "price" => price,
       "source" => "api",
       "symbol" => symbol,
-      "type" => "#{side}-limit"
+      "type" => type
     }
     path = "/v1/order/orders/place"
     request_method = "POST"
@@ -178,10 +178,10 @@ class HuobiPro
   end
 
   ## 查询当前委托、历史委托
-  def open_orders(symbol,side)
+  def open_orders(symbol,types)
     params ={
       "symbol" => symbol,
-      "types" => "#{side}-limit",
+      "types" => types,
       "states" => "pre-submitted,submitted,partial-filled,partial-canceled"
     }
     path = "/v1/order/orders"
@@ -287,3 +287,10 @@ end
 # p huobi_pro.merged('ethbtc')
 # p huobi_pro.trade_detail('ethbtc')
 # p huobi_pro.history_trade('ethbtc')
+
+
+# huobi_pro.new_order(symbol,"buy-market",0,1)
+# huobi_pro.history_matchresults(symbol)
+# huobi_pro.new_order(symbol,"sell-market",0,5)
+# huobi_pro.matchresults(359277988888707)
+# huobi_pro.submitcancel(359277988888707)
