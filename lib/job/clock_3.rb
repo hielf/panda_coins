@@ -26,6 +26,7 @@ module Clockwork
       loop do
         count_1 = ApplicationController.helpers.huobi_orders_check
         count_2 = ApplicationController.helpers.huobi_orders_close
+        Rails.logger.warn "closing #{count_2} of symbols at #{Time.now.to_s}" if count_2 > 0
         sleep 0.2
       end
     end
