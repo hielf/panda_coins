@@ -232,7 +232,7 @@ module HuobisHelper
   def huobi_pnls_log(symbol, pnls)
     begin
       pnls.each do |change|
-        EventLog.create(symbol: symbol, change: change)
+        ProfitLoss.create(symbol: symbol, change: change)
       end
     rescue Exception => e
       Rails.logger.warn e.message
