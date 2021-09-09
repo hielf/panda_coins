@@ -128,7 +128,7 @@ module HuobisHelper
         redis.hset("orders", symbol[0], {"open_price": sym_data[:open_price], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:open_time], "current_time": ticker_time})
 
         pnl = change.truncate(4)
-        Rails.logger.warn "#{symbol[0]} pnl: #{pnl}"
+        # Rails.logger.warn "#{symbol[0]} pnl: #{pnl}"
         redis.rpush("pnl:#{symbol[0]}", pnl)
         redis.quit
       end
