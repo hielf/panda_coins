@@ -198,7 +198,7 @@ module HuobisHelper
         pnls = ApplicationController.helpers.huobi_pnls(symbol)
         pnl_samples = (pnls.select.with_index{|_,i| (i+1) % ENV["pnl_interval"].to_i == 0}).last(3)
 
-        if pnl_samples.any? && pnl_samples.sort.reverse == pnl_samples
+        if pnl_samples.any? && pnl_samples.count == 3 && pnl_samples.sort.reverse == pnl_samples
           begin
             ApplicationController.helpers.huobi_orders_log(symbol)
             Rails.cache.redis.hdel("orders", symbol)

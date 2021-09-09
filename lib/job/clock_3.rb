@@ -17,27 +17,29 @@ module Clockwork
   handler do |job, time|
     if job == 'huobi.orders_check'
       # Rails.cache.redis.del("orders")
-      # s = `ps aux | grep 'clockworkd.clock_3' | grep -v grep| awk '{print $2}'`
-      # pid = s.gsub("\n", "")
-      # system("kill -9 #{pid}") if pid && pid.to_i > 0
+      begin
+        loop do
+          count_1 = ApplicationController.helpers.huobi_orders_check
+          count_2 = ApplicationController.helpers.huobi_orders_close
+          Rails.logger.warn "closing #{count_2} of symbols at #{Time.now.to_s}" if count_2 > 0
+          sleep 0.2
+          break if Time.now.strftime('%S') == "59"
+        end
+      rescue Exception => e
+        Rails.logger.warn "orders error: #{e.message}"
+      end
+    end
 
+    if job == 'huobi.live_check'
       current_time = Time.now
       check_time = current_time - 60
       orders = []
       orders = Rails.cache.redis.hgetall("orders")
       c = orders.find {|x| (eval x[1])[:current_time].to_time >= check_time}
-      if c && c.count > 0
-        s = `ps aux | grep 'clockworkd.clock_3' | grep -v grep| awk '{print $2}'`
-        pid = s.gsub("\n", "")
-        system("kill -9 #{pid}") if pid && pid.to_i > 0
-      end
-
-      loop do
-        count_1 = ApplicationController.helpers.huobi_orders_check
-        count_2 = ApplicationController.helpers.huobi_orders_close
-        Rails.logger.warn "closing #{count_2} of symbols at #{Time.now.to_s}" if count_2 > 0
-
-        sleep 0.2
+      if c.nil? || (c && c.count == 0)
+        # s = `ps aux | grep 'clockworkd.clock_3' | grep -v grep| awk '{print $2}'`
+        # pid = s.gsub("\n", "")
+        # system("kill -9 #{pid}") if pid && pid.to_i > 0
       end
     end
   end
