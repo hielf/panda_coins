@@ -217,9 +217,9 @@ module HuobisHelper
   def huobi_orders_log(symbol)
     begin
       order = Rails.cache.redis.hget("orders", symbol)
-      el = eval order
-      el[:symbol] = symbol
-      EventLog.create(el)
+      el = EventLog.new(eval order)
+      el.symbol = symbol
+      el.save
     rescue Exception => e
       Rails.logger.warn e.message
     end
