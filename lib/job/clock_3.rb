@@ -21,11 +21,11 @@ module Clockwork
       pid = s.gsub("\n", "")
       system("kill -9 #{pid}") if pid && pid.to_i > 0
 
-      check_time = current_time - 60
-      orders = []
-      orders = Rails.cache.redis.hgetall("orders")
-      c = orders.find {|x| (eval x[1])[:current_time].to_time >= check_time}
-      break if c && c.count > 0
+      # check_time = current_time - 60
+      # orders = []
+      # orders = Rails.cache.redis.hgetall("orders")
+      # c = orders.find {|x| (eval x[1])[:current_time].to_time >= check_time}
+      # break if c && c.count > 0
 
       loop do
         count_1 = ApplicationController.helpers.huobi_orders_check
