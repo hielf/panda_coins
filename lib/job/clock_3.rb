@@ -23,18 +23,19 @@ module Clockwork
           count_2 = ApplicationController.helpers.huobi_orders_close
           # Rails.logger.warn "closing #{count_2} of symbols at #{Time.now.to_s}" if count_2 > 0
           sleep 0.2
-          break if Time.now.strftime('%S') == "59"
+          break if Time.now.strftime('%M:%S') == "59:59"
         end
       rescue Exception => e
         Rails.logger.warn "orders error: #{e.message}"
       end
     end
 
-    if job == 'huobi.live_check'
+    if job == 'huobi.alive_check'
       current_time = Time.now
       check_time = current_time - 60
       orders = []
       orders = Rails.cache.redis.hgetall("orders")
+      break if orders.empty?
       c = orders.find {|x| (eval x[1])[:current_time].to_time >= check_time}
       if c.nil? || (c && c.count == 0)
         s = `ps aux | grep 'clockworkd.clock_3' | grep -v grep| awk '{print $2}'`
@@ -45,8 +46,8 @@ module Clockwork
     end
   end
 
-  every(1.minute, 'huobi.orders_check')
-  every(1.hour, 'huobi.live_check')
+  every(1.minute, 'huobi.alive_check')
+  every(1.hour, 'huobi.orders_check')
   #
   # every(1.day, 'midnight.job', :at => '00:00')
 end
