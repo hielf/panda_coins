@@ -135,7 +135,9 @@ module HuobisHelper
 
         pnl = change.truncate(4)
         # Rails.logger.warn "#{symbol[0]} pnl: #{pnl}"
-        redis.rpush("pnl:#{symbol[0]}", pnl)
+        # redis.rpush("pnl:#{symbol[0]}", pnl)
+        h = {:current_time => ticker_time, :change => pnl}
+        redis.sadd("pnl:#{symbol[0]}", h.to_s)
         redis.quit
       end
     end
@@ -144,8 +146,10 @@ module HuobisHelper
   end
 
   def huobi_pnls(symbol)
-    pnls = Rails.cache.redis.lrange("pnl:#{symbol}", 0, -1)
-    return pnls.map(&:to_f)
+    pnls = Rails.cache.redis.smembers("pnl:#{symbol}")
+    # pnls = Rails.cache.redis.lrange("pnl:#{symbol}", 0, -1)
+    # return pnls.map(&:to_f)
+    return pnls
   end
 
   def huobi_orders_close
@@ -237,13 +241,17 @@ module HuobisHelper
     end
   end
 
+  # symbol = "paiusdt"
   def huobi_pnls_log(symbol, pnls)
-    begin
-      pnls.each do |change|
-        ProfitLoss.create(symbol: symbol, change: change)
+    if pnls && pnls.any?
+      begin
+        pnls.each do |change|
+          h = eval change
+          ProfitLoss.create(symbol: symbol, change: h[:change], current_time: h[:current_time])
+        end
+      rescue Exception => e
+        Rails.logger.warn e.message
       end
-    rescue Exception => e
-      Rails.logger.warn e.message
     end
   end
 
