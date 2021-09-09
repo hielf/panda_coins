@@ -19,7 +19,7 @@ module Clockwork
       Rails.logger.warn "huobi.orders_check started.."
       # Rails.cache.redis.del("orders")
       current_time = Time.now
-      runtime = Rails.cache.read('runnting:clock_3')
+      runtime = Rails.cache.read('running:clock_3')
       if runtime && (current_time - runtime).abs < 30
         break
       else
@@ -32,9 +32,9 @@ module Clockwork
             #   break
             # end
           rescue Exception => e
-            Rails.logger.warn "orders error: #{e.message}"
+            Rails.logger.warn "orders_check error: #{e.message}"
           ensure
-            Rails.cache.write('runnting:clock_3', Time.now, expires_in: 1.minute)
+            Rails.cache.write('running:clock_3', Time.now, expires_in: 1.minute)
           end
         end
       end

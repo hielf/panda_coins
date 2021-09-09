@@ -16,23 +16,34 @@ module Clockwork
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
     if job == 'huobi.tickers_check'
-      check_time = Time.now - 60
-      tickers = []
-      tickers = Rails.cache.redis.hgetall("tickers")
-      if tickers && !tickers.empty?
-        c = tickers.find {|x| (eval x[1])[:time] >= check_time}
-        break if c && c.count > 0
-      end
+      # check_time = Time.now - 60
+      # tickers = []
+      # tickers = Rails.cache.redis.hgetall("tickers")
+      # if tickers && !tickers.empty?
+      #   c = tickers.find {|x| (eval x[1])[:time] >= check_time}
+      #   return if c && c.count > 0
+      # end
+      current_time = Time.now
+      runtime = Rails.cache.read('running:clock_2')
+      if runtime && (current_time - runtime).abs < 30
+        break
+      else
+        loop do
+          begin
+            start_time = Time.now - 120
+            end_time = Time.now
 
-      loop do
-        start_time = Time.now - 120
-        end_time = Time.now
+            symbols = ApplicationController.helpers.huobi_tickers_check(start_time, end_time)
+            open_count = ApplicationController.helpers.huobi_open_symbols(symbols)
+            Rails.logger.warn "openning #{open_count} of new symbols at #{end_time.to_s}" if open_count > 0
 
-        symbols = ApplicationController.helpers.huobi_tickers_check(start_time, end_time)
-        open_count = ApplicationController.helpers.huobi_open_symbols(symbols)
-        Rails.logger.warn "openning #{open_count} of new symbols at #{end_time.to_s}" if open_count > 0
-
-        sleep 6
+            sleep 6
+          rescue Exception => e
+            Rails.logger.warn "tickers_check error: #{e.message}"
+          ensure
+            Rails.cache.write('running:clock_2', Time.now, expires_in: 1.minute)
+          end
+        end
       end
     end
   end
