@@ -206,7 +206,7 @@ module HuobisHelper
             Rails.logger.warn e.message
           ensure
             ApplicationController.helpers.huobi_pnls_log(symbol, pnls)
-            Rails.cache.redis.del("pnl:#{symbol}")
+            # Rails.cache.redis.del("pnl:#{symbol}")
             Rails.logger.warn "#{symbol} closed due to pnl limit"
           end
         end

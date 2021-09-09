@@ -17,7 +17,11 @@ module Clockwork
   handler do |job, time|
     if job == 'huobi.orders_check'
       # Rails.cache.redis.del("orders")
-      check_time = Time.now - 60
+      s = `ps aux | grep 'clockworkd.clock_3' | grep -v grep| awk '{print $2}'`
+      pid = s.gsub("\n", "")
+      system("kill -9 #{pid}") if pid && pid.to_i > 0
+
+      check_time = current_time - 60
       orders = []
       orders = Rails.cache.redis.hgetall("orders")
       c = orders.find {|x| (eval x[1])[:current_time].to_time >= check_time}
@@ -27,6 +31,8 @@ module Clockwork
         count_1 = ApplicationController.helpers.huobi_orders_check
         count_2 = ApplicationController.helpers.huobi_orders_close
         Rails.logger.warn "closing #{count_2} of symbols at #{Time.now.to_s}" if count_2 > 0
+
+        break if Time.now.strftime("%S") == "59"
         sleep 0.2
       end
     end
