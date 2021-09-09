@@ -151,6 +151,7 @@ module HuobisHelper
     if orders && orders.any?
       orders.each do |order|
         symbol = order[0]
+        pnls = ApplicationController.helpers.huobi_pnls(symbol)
         begin
           ApplicationController.helpers.huobi_orders_log(symbol)
           Rails.cache.redis.hdel("orders", symbol)
@@ -173,6 +174,7 @@ module HuobisHelper
     if orders && orders.any?
       orders.each do |order|
         symbol = order[0]
+        pnls = ApplicationController.helpers.huobi_pnls(symbol)
         begin
           ApplicationController.helpers.huobi_orders_log(symbol)
           Rails.cache.redis.hdel("orders", symbol)
