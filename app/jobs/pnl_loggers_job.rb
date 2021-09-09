@@ -1,7 +1,7 @@
 class PnlLoggersJob < ApplicationJob
   queue_as :low_priority
 
-  # after_perform :around_check
+  after_perform :around_check
 
   def perform(*args)
     @symbol = args[0]
@@ -12,7 +12,8 @@ class PnlLoggersJob < ApplicationJob
 
   private
   def around_check
-
+    # Rails.cache.redis.del("pnl:#{@symbol}")
+    Rails.cache.redis.expire("pnl:#{@symbol}", 600)
   end
 
 end

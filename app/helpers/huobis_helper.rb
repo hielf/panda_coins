@@ -124,7 +124,6 @@ module HuobisHelper
     if opened_symbols && opened_symbols.any?
       Parallel.each(opened_symbols, in_thread: opened_symbols.count) do |symbol|
       # opened_symbols.each do |symbol|
-        p symbol
         redis = Redis.new(Rails.application.config_for(:redis))
         huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
         tick = huobi_pro.merged(symbol[0])
@@ -139,7 +138,9 @@ module HuobisHelper
         # redis.rpush("pnl:#{symbol[0]}", pnl)
         # ticker_time = Time.now.to_s
         h = {:current_time => ticker_time, :change => pnl}
-        redis.sadd("pnl:#{symbol[0]}", h.to_s)
+        # redis.sadd("pnl:#{symbol[0]}", h.to_s)
+        redis.lrem("pnl:#{symbol[0]}", 0, h.to_s)
+        redis.rpush("pnl:#{symbol[0]}", h.to_s)
         redis.quit
       end
     end
@@ -148,8 +149,8 @@ module HuobisHelper
   end
 
   def huobi_pnls(symbol)
-    pnls = Rails.cache.redis.smembers("pnl:#{symbol}")
-    # pnls = Rails.cache.redis.lrange("pnl:#{symbol}", 0, -1)
+    # pnls = Rails.cache.redis.smembers("pnl:#{symbol}")
+    pnls = Rails.cache.redis.lrange("pnl:#{symbol}", 0, -1)
     # return pnls.map(&:to_f)
     return pnls
   end
@@ -171,7 +172,6 @@ module HuobisHelper
           Rails.logger.warn e.message
         ensure
           PnlLoggersJob.perform_later symbol, pnls
-          Rails.cache.redis.del("pnl:#{symbol}")
           Rails.logger.warn "#{symbol} closed due to down limit"
         end
 
@@ -194,7 +194,6 @@ module HuobisHelper
           Rails.logger.warn e.message
         ensure
           PnlLoggersJob.perform_later symbol, pnls
-          Rails.cache.redis.del("pnl:#{symbol}")
           Rails.logger.warn "#{symbol} closed due to up limit"
         end
 
@@ -210,9 +209,10 @@ module HuobisHelper
       orders.each do |order|
         symbol = order[0]
         pnls = ApplicationController.helpers.huobi_pnls(symbol)
-        pnl_samples = (pnls.select.with_index{|_,i| (i+1) % ENV["pnl_interval"].to_i == 0}).last(3)
+        array = pnls.map{|x| (eval x)[:change]}
+        pnl_samples = (array.select.with_index{|_,i| (i+1) % ENV["pnl_interval"].to_i == 0}).last(3)
 
-        if pnl_samples.any? && pnl_samples.count == 3 && pnl_samples.sort.reverse == pnl_samples
+        if pnl_samples.any? && pnl_samples.count == 3 && pnl_samples.sort.reverse == pnl_samples && pnl_samples[0] != pnl_samples[-1]
           begin
             ApplicationController.helpers.huobi_orders_log(symbol)
             Rails.cache.redis.hdel("orders", symbol)
@@ -220,7 +220,6 @@ module HuobisHelper
             Rails.logger.warn e.message
           ensure
             PnlLoggersJob.perform_later symbol, pnls
-            Rails.cache.redis.del("pnl:#{symbol}")
             Rails.logger.warn "#{symbol} closed due to pnl limit"
           end
         end
