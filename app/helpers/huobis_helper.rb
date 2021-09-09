@@ -121,9 +121,10 @@ module HuobisHelper
 
   def huobi_orders_check
     opened_symbols = Rails.cache.redis.hgetall("orders")
-    # opened_symbols.each do |symbol|
     if opened_symbols && opened_symbols.any?
       Parallel.each(opened_symbols, in_thread: opened_symbols.count) do |symbol|
+      # opened_symbols.each do |symbol|
+        p symbol
         redis = Redis.new(Rails.application.config_for(:redis))
         huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
         tick = huobi_pro.merged(symbol[0])
