@@ -16,6 +16,7 @@ module Clockwork
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
     if job == 'huobi.orders_check'
+      Rails.logger.warn "huobi.orders_check started.."
       # Rails.cache.redis.del("orders")
       begin
         loop do
@@ -23,7 +24,10 @@ module Clockwork
           count_2 = ApplicationController.helpers.huobi_orders_close
           # Rails.logger.warn "closing #{count_2} of symbols at #{Time.now.to_s}" if count_2 > 0
           sleep 0.2
-          break if Time.now.strftime('%M:%S') == "59:59"
+          if Time.now.strftime('%M:%S') == "59:59"
+            Rails.logger.warn "huobi.orders_check ended.."
+            break
+          end
         end
       rescue Exception => e
         Rails.logger.warn "orders error: #{e.message}"
