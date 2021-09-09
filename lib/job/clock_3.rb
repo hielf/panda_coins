@@ -18,19 +18,19 @@ module Clockwork
     if job == 'huobi.orders_check'
       Rails.logger.warn "huobi.orders_check started.."
       # Rails.cache.redis.del("orders")
-      begin
-        loop do
-          count_1 = ApplicationController.helpers.huobi_orders_check
-          count_2 = ApplicationController.helpers.huobi_orders_close
-          # Rails.logger.warn "closing #{count_2} of symbols at #{Time.now.to_s}" if count_2 > 0
-          sleep 0.2
-          if Time.now.strftime('%M:%S') == "59:59"
-            Rails.logger.warn "huobi.orders_check ended.."
-            break
-          end
+      loop do
+        begin
+            count_1 = ApplicationController.helpers.huobi_orders_check
+            count_2 = ApplicationController.helpers.huobi_orders_close
+            # Rails.logger.warn "closing #{count_2} of symbols at #{Time.now.to_s}" if count_2 > 0
+            sleep 0.2
+            if Time.now.strftime('%M:%S') == "59:59"
+              Rails.logger.warn "huobi.orders_check ended.."
+              break
+            end
+        rescue Exception => e
+          Rails.logger.warn "orders error: #{e.message}"
         end
-      rescue Exception => e
-        Rails.logger.warn "orders error: #{e.message}"
       end
     end
 
@@ -42,10 +42,12 @@ module Clockwork
       break if orders.empty?
       c = orders.find {|x| (eval x[1])[:current_time].to_time >= check_time}
       if c.nil? || (c && c.count == 0)
+        Rails.logger.warn "huobi.alive_check restarting.."
         s = `ps aux | grep 'clockworkd.clock_3' | grep -v grep| awk '{print $2}'`
         pid = s.gsub("\n", "")
         system("kill -9 #{pid}") if pid && pid.to_i > 0
         `god start panda_coins-clock_3`
+        Rails.logger.warn "huobi.alive_check restarted.."
       end
     end
   end

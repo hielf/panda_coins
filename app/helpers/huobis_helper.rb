@@ -136,6 +136,7 @@ module HuobisHelper
         pnl = change.truncate(4)
         # Rails.logger.warn "#{symbol[0]} pnl: #{pnl}"
         # redis.rpush("pnl:#{symbol[0]}", pnl)
+        # ticker_time = Time.now.to_s
         h = {:current_time => ticker_time, :change => pnl}
         redis.sadd("pnl:#{symbol[0]}", h.to_s)
         redis.quit
@@ -168,7 +169,7 @@ module HuobisHelper
         rescue Exception => e
           Rails.logger.warn e.message
         ensure
-          ApplicationController.helpers.huobi_pnls_log(symbol, pnls)
+          PnlLoggersJob.perform_later symbol, pnls
           Rails.cache.redis.del("pnl:#{symbol}")
           Rails.logger.warn "#{symbol} closed due to down limit"
         end
@@ -191,7 +192,7 @@ module HuobisHelper
         rescue Exception => e
           Rails.logger.warn e.message
         ensure
-          ApplicationController.helpers.huobi_pnls_log(symbol, pnls)
+          PnlLoggersJob.perform_later symbol, pnls
           Rails.cache.redis.del("pnl:#{symbol}")
           Rails.logger.warn "#{symbol} closed due to up limit"
         end
@@ -217,7 +218,7 @@ module HuobisHelper
           rescue Exception => e
             Rails.logger.warn e.message
           ensure
-            ApplicationController.helpers.huobi_pnls_log(symbol, pnls)
+            PnlLoggersJob.perform_later symbol, pnls
             Rails.cache.redis.del("pnl:#{symbol}")
             Rails.logger.warn "#{symbol} closed due to pnl limit"
           end
