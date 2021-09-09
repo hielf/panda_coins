@@ -37,15 +37,16 @@ module Clockwork
       orders = Rails.cache.redis.hgetall("orders")
       c = orders.find {|x| (eval x[1])[:current_time].to_time >= check_time}
       if c.nil? || (c && c.count == 0)
-        # s = `ps aux | grep 'clockworkd.clock_3' | grep -v grep| awk '{print $2}'`
-        # pid = s.gsub("\n", "")
-        # system("kill -9 #{pid}") if pid && pid.to_i > 0
+        s = `ps aux | grep 'clockworkd.clock_3' | grep -v grep| awk '{print $2}'`
+        pid = s.gsub("\n", "")
+        system("kill -9 #{pid}") if pid && pid.to_i > 0
+        `god start panda_coins-clock_3`
       end
     end
   end
 
   every(1.minute, 'huobi.orders_check')
-  # every(1.hour, 'hourly.job')
+  every(1.hour, 'huobi.live_check')
   #
   # every(1.day, 'midnight.job', :at => '00:00')
 end
