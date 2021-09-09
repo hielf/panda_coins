@@ -156,6 +156,7 @@ module HuobisHelper
         rescue Exception => e
           Rails.logger.warn e.message
         ensure
+          ApplicationController.helpers.huobi_pnls_log(symbol, pnls)
           Rails.cache.redis.del("pnl:#{symbol}")
         end
 
@@ -176,6 +177,7 @@ module HuobisHelper
         rescue Exception => e
           Rails.logger.warn e.message
         ensure
+          ApplicationController.helpers.huobi_pnls_log(symbol, pnls)
           Rails.cache.redis.del("pnl:#{symbol}")
         end
 
@@ -200,6 +202,7 @@ module HuobisHelper
           rescue Exception => e
             Rails.logger.warn e.message
           ensure
+            ApplicationController.helpers.huobi_pnls_log(symbol, pnls)
             Rails.cache.redis.del("pnl:#{symbol}")
           end
         end
@@ -214,7 +217,19 @@ module HuobisHelper
   def huobi_orders_log(symbol)
     begin
       order = Rails.cache.redis.hget("orders", symbol)
-      EventLog.create(eval order)
+      el = eval order
+      el[:symbol] = symbol
+      EventLog.create(el)
+    rescue Exception => e
+      Rails.logger.warn e.message
+    end
+  end
+
+  def huobi_pnls_log(symbol, pnls)
+    begin
+      pnls.each do |change|
+        EventLog.create(symbol: symbol, change: change)
+      end
     rescue Exception => e
       Rails.logger.warn e.message
     end
