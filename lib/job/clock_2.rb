@@ -22,17 +22,17 @@ module Clockwork
       if tickers && !tickers.empty?
         c = tickers.find {|x| (eval x[1])[:time] >= check_time}
         break if c && c.count > 0
+      end
 
-        loop do
-          start_time = Time.now - 120
-          end_time = Time.now
+      loop do
+        start_time = Time.now - 120
+        end_time = Time.now
 
-          symbols = ApplicationController.helpers.huobi_tickers_check(start_time, end_time)
-          open_count = ApplicationController.helpers.huobi_open_symbols(symbols)
-          Rails.logger.warn "openning #{open_count} of new symbols at #{end_time.to_s}" if open_count > 0
+        symbols = ApplicationController.helpers.huobi_tickers_check(start_time, end_time)
+        open_count = ApplicationController.helpers.huobi_open_symbols(symbols)
+        Rails.logger.warn "openning #{open_count} of new symbols at #{end_time.to_s}" if open_count > 0
 
-          sleep 6
-        end
+        sleep 6
       end
     end
   end
