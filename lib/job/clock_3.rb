@@ -21,6 +21,7 @@ module Clockwork
       # pid = s.gsub("\n", "")
       # system("kill -9 #{pid}") if pid && pid.to_i > 0
 
+      current_time = Time.now
       check_time = current_time - 60
       orders = []
       orders = Rails.cache.redis.hgetall("orders")
