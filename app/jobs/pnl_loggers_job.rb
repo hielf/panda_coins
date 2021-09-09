@@ -1,5 +1,5 @@
 class PnlLoggersJob < ApplicationJob
-  queue_as :default
+  queue_as :low_priority
 
   # after_perform :around_check
 
