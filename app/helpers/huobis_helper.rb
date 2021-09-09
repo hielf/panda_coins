@@ -128,6 +128,7 @@ module HuobisHelper
         redis.hset("orders", symbol[0], {"open_price": sym_data[:open_price], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:open_time], "current_time": ticker_time})
 
         pnl = change.truncate(4)
+        Rails.logger.warn "#{symbol[0]} pnl: #{pnl}"
         redis.rpush("pnl:#{symbol[0]}", pnl)
         redis.quit
       end
@@ -158,6 +159,7 @@ module HuobisHelper
         ensure
           ApplicationController.helpers.huobi_pnls_log(symbol, pnls)
           Rails.cache.redis.del("pnl:#{symbol}")
+          Rails.logger.warn "#{symbol} closed due to down limit"
         end
 
         count = count + 1
@@ -179,6 +181,7 @@ module HuobisHelper
         ensure
           ApplicationController.helpers.huobi_pnls_log(symbol, pnls)
           Rails.cache.redis.del("pnl:#{symbol}")
+          Rails.logger.warn "#{symbol} closed due to up limit"
         end
 
         count = count + 1
@@ -193,9 +196,9 @@ module HuobisHelper
       orders.each do |order|
         symbol = order[0]
         pnls = ApplicationController.helpers.huobi_pnls(symbol)
-        pnls = (pnls.select.with_index{|_,i| (i+1) % ENV["pnl_interval"].to_i == 0}).last(3)
+        pnl_samples = (pnls.select.with_index{|_,i| (i+1) % ENV["pnl_interval"].to_i == 0}).last(3)
 
-        if pnls.any? && pnls.sort.reverse == pnls
+        if pnl_samples.any? && pnl_samples.sort.reverse == pnl_samples
           begin
             ApplicationController.helpers.huobi_orders_log(symbol)
             Rails.cache.redis.hdel("orders", symbol)
@@ -204,6 +207,7 @@ module HuobisHelper
           ensure
             ApplicationController.helpers.huobi_pnls_log(symbol, pnls)
             Rails.cache.redis.del("pnl:#{symbol}")
+            Rails.logger.warn "#{symbol} closed due to pnl limit"
           end
         end
 
