@@ -5,6 +5,7 @@
 # require 'faye/websocket'
 # require 'eventmachine'
 # ApplicationController.helpers.huobi_tickers_cache
+
 module HuobisHelper
 # ["ethusdt", "btcusdt", "dogeusdt", "xrpusdt", "lunausdt", "adausdt", "bttusdt", "nftusdt", "dotusdt", "trxusdt", "icpusdt", "abtusdt", "skmusdt", "bhdusdt", "aacusdt", "canusdt", "fisusdt", "nhbtcusdt", "letusdt", "massusdt", "achusdt", "ringusdt", "stnusdt", "mtausdt", "itcusdt", "atpusdt", "gofusdt", "pvtusdt", "auctionus", "ocnusdt"]
 
@@ -67,24 +68,27 @@ module HuobisHelper
     keys.each do |key|
       times << key if (!key.to_time.nil? && key.to_time >= start_time && key.to_time <= end_time)
     end
-    p times[0]
-    begin
-      data_s = Rails.cache.read(times[0])
-      data_l = Rails.cache.read(times[-1])
-      if data_s && !data_s.empty? && data_l && !data_l.empty?
-        data_s.each do |ticker|
-          symbol = ticker["symbol"]
-          last = data_l.find {|x| x["symbol"] == symbol}
-          change = (ticker["close"] == 0 ? 0 : (last["close"]-ticker["close"])/ticker["close"])
-          Rails.cache.redis.hset("tickers", ticker["symbol"], {"time": times[-1], "open": ticker["close"], "close": last["close"], "change": change})
-        end
+    # p times[0]
+    if times && times.any?
+      begin
+        data_s = Rails.cache.read(times[0])
+        data_l = Rails.cache.read(times[-1])
+        if data_s && !data_s.empty? && data_l && !data_l.empty?
+          data_s.each do |ticker|
+            symbol = ticker["symbol"]
+            last = data_l.find {|x| x["symbol"] == symbol}
+            change = (ticker["close"] == 0 ? 0 : (last["close"]-ticker["close"])/ticker["close"])
+            Rails.cache.redis.hset("tickers", ticker["symbol"], {"time": times[-1], "open": ticker["close"], "close": last["close"], "change": change})
+          end
 
-        changes = Rails.cache.redis.hgetall("tickers")
-        symbols = changes.find_all {|x| (eval x[1])[:change] >= ENV["up_floor_limit"].to_f}
+          changes = Rails.cache.redis.hgetall("tickers")
+          symbols = changes.find_all {|x| (eval x[1])[:change] >= ENV["up_floor_limit"].to_f && (eval x[1])[:change] <= ENV["up_up_limit"].to_f}
+        end
+      rescue Exception => e
+        Rails.logger.warn e.message
       end
-    rescue Exception => e
-      Rails.logger.warn e.message
     end
+
     return symbols
   end
 
@@ -202,26 +206,48 @@ module HuobisHelper
     end
 
     # 3 pnl_limit
+    # data = Rails.cache.redis.hgetall("orders")
+    # orders = data
+    #
+    # if orders && orders.any?
+    #   orders.each do |order|
+    #     symbol = order[0]
+    #     pnls = ApplicationController.helpers.huobi_pnls(symbol)
+    #     array = pnls.map{|x| (eval x)[:change]}
+    #     pnl_samples = (array.select.with_index{|_,i| (i+1) % ENV["pnl_interval"].to_i == 0}).last(3)
+    #
+    #     if pnl_samples.any? && pnl_samples.count == 3 && pnl_samples.sort.reverse == pnl_samples && pnl_samples[0] != pnl_samples[-1] && pnl_samples[1] != pnl_samples[-1]
+    #       begin
+    #         ApplicationController.helpers.huobi_orders_log(symbol)
+    #         Rails.cache.redis.hdel("orders", symbol)
+    #       rescue Exception => e
+    #         Rails.logger.warn e.message
+    #       ensure
+    #         PnlLoggersJob.perform_later symbol, pnls
+    #         Rails.logger.warn "#{symbol} closed due to pnl limit"
+    #       end
+    #     end
+    #
+    #     count = count + 1
+    #   end
+    # end
+
+    # 4 timer limit
     data = Rails.cache.redis.hgetall("orders")
-    orders = data
+    orders = data.find_all {|x| (eval x[1])[:open_time] <= ENV["close_timer_up"].to_i.seconds.ago}
 
     if orders && orders.any?
       orders.each do |order|
         symbol = order[0]
         pnls = ApplicationController.helpers.huobi_pnls(symbol)
-        array = pnls.map{|x| (eval x)[:change]}
-        pnl_samples = (array.select.with_index{|_,i| (i+1) % ENV["pnl_interval"].to_i == 0}).last(3)
-
-        if pnl_samples.any? && pnl_samples.count == 3 && pnl_samples.sort.reverse == pnl_samples && pnl_samples[0] != pnl_samples[-1] && pnl_samples[1] != pnl_samples[-1]
-          begin
-            ApplicationController.helpers.huobi_orders_log(symbol)
-            Rails.cache.redis.hdel("orders", symbol)
-          rescue Exception => e
-            Rails.logger.warn e.message
-          ensure
-            PnlLoggersJob.perform_later symbol, pnls
-            Rails.logger.warn "#{symbol} closed due to pnl limit"
-          end
+        begin
+          ApplicationController.helpers.huobi_orders_log(symbol)
+          Rails.cache.redis.hdel("orders", symbol)
+        rescue Exception => e
+          Rails.logger.warn e.message
+        ensure
+          PnlLoggersJob.perform_later symbol, pnls
+          Rails.logger.warn "#{symbol} closed due to timer limit"
         end
 
         count = count + 1
@@ -271,6 +297,7 @@ module HuobisHelper
     return tick
   end
 
+  # ApplicationController.helpers.huobi_data_insert
   def huobi_data_insert
     table_name = "huobi_start_1min"
     dir = Rails.root.to_s + "/lib/python/cryptocurrency/"
