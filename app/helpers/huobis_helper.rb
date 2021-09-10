@@ -128,24 +128,28 @@ module HuobisHelper
     if opened_symbols && opened_symbols.any?
       Parallel.each(opened_symbols, in_thread: opened_symbols.count) do |symbol|
       # opened_symbols.each do |symbol|
-        redis = Redis.new(Rails.application.config_for(:redis))
-        huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
-        tick = huobi_pro.merged(symbol[0])
-        ticker_time = Time.at(tick["ts"]/1000).to_s
-        # p [symbol[0], ticker_time, tick["tick"]["close"]]
-        sym_data = eval symbol[1]
-        change = (sym_data[:open_price] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:open_price])/sym_data[:open_price])
-        redis.hset("orders", symbol[0], {"open_price": sym_data[:open_price], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:open_time], "current_time": ticker_time})
+        begin
+          redis = Redis.new(Rails.application.config_for(:redis))
+          huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
+          tick = huobi_pro.merged(symbol[0])
+          ticker_time = Time.at(tick["ts"]/1000).to_s
+          # p [symbol[0], ticker_time, tick["tick"]["close"]]
+          sym_data = eval symbol[1]
+          change = (sym_data[:open_price] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:open_price])/sym_data[:open_price])
+          redis.hset("orders", symbol[0], {"open_price": sym_data[:open_price], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:open_time], "current_time": ticker_time})
 
-        pnl = change.truncate(4)
-        # Rails.logger.warn "#{symbol[0]} pnl: #{pnl}"
-        # redis.rpush("pnl:#{symbol[0]}", pnl)
-        # ticker_time = Time.now.to_s
-        h = {:current_time => ticker_time, :change => pnl}
-        # redis.sadd("pnl:#{symbol[0]}", h.to_s)
-        redis.lrem("pnl:#{symbol[0]}", 0, h.to_s)
-        redis.rpush("pnl:#{symbol[0]}", h.to_s)
-        redis.quit
+          pnl = change.truncate(4)
+          # Rails.logger.warn "#{symbol[0]} pnl: #{pnl}"
+          # redis.rpush("pnl:#{symbol[0]}", pnl)
+          # ticker_time = Time.now.to_s
+          h = {:current_time => ticker_time, :change => pnl}
+          # redis.sadd("pnl:#{symbol[0]}", h.to_s)
+          redis.lrem("pnl:#{symbol[0]}", 0, h.to_s)
+          redis.rpush("pnl:#{symbol[0]}", h.to_s)
+          redis.quit
+        rescue Exception => e
+          Rails.logger.warn e.message
+        end
       end
     end
 
