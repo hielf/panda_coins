@@ -50,7 +50,7 @@ module HuobisHelper
           Rails.cache.write(ticker_time, data, expires_in: 2.minute)
           # redis.hset("tickers",ticker_time,data, expires_in: 2.minute)
         rescue Exception => e
-          Rails.logger.warn e.message
+          Rails.logger.warn "huobi_tickers_cache: #{e.message}"
         end
       end
       # Parallel::Stop
@@ -148,7 +148,7 @@ module HuobisHelper
           redis.rpush("pnl:#{symbol[0]}", h.to_s)
           redis.quit
         rescue Exception => e
-          Rails.logger.warn e.message
+          Rails.logger.warn "huobi_orders_check: #{e.message}"
         end
       end
     end
@@ -177,7 +177,7 @@ module HuobisHelper
           ApplicationController.helpers.huobi_orders_log(symbol)
           Rails.cache.redis.hdel("orders", symbol)
         rescue Exception => e
-          Rails.logger.warn e.message
+          Rails.logger.warn "huobi_orders_close 1: #{e.message}"
         ensure
           PnlLoggersJob.perform_later symbol, pnls
           Rails.logger.warn "#{symbol} closed due to down limit"
@@ -199,7 +199,7 @@ module HuobisHelper
           ApplicationController.helpers.huobi_orders_log(symbol)
           Rails.cache.redis.hdel("orders", symbol)
         rescue Exception => e
-          Rails.logger.warn e.message
+          Rails.logger.warn "huobi_orders_close 2: #{e.message}"
         ensure
           PnlLoggersJob.perform_later symbol, pnls
           Rails.logger.warn "#{symbol} closed due to up limit"
@@ -225,7 +225,7 @@ module HuobisHelper
     #         ApplicationController.helpers.huobi_orders_log(symbol)
     #         Rails.cache.redis.hdel("orders", symbol)
     #       rescue Exception => e
-    #         Rails.logger.warn e.message
+    #         Rails.logger.warn "huobi_orders_close 3: #{e.message}"
     #       ensure
     #         PnlLoggersJob.perform_later symbol, pnls
     #         Rails.logger.warn "#{symbol} closed due to pnl limit"
@@ -248,7 +248,7 @@ module HuobisHelper
           ApplicationController.helpers.huobi_orders_log(symbol)
           Rails.cache.redis.hdel("orders", symbol)
         rescue Exception => e
-          Rails.logger.warn e.message
+          Rails.logger.warn "huobi_orders_close 4: #{e.message}"
         ensure
           PnlLoggersJob.perform_later symbol, pnls
           Rails.logger.warn "#{symbol} closed due to timer limit"
@@ -296,7 +296,7 @@ module HuobisHelper
       tick = json["tick"]
       tick["ticker_time"] = ticker_time
     rescue Exception => e
-      Rails.logger.warn e.message
+      Rails.logger.warn "huobi_symbol_ticker: #{e.message}"
     end
     return tick
   end
@@ -396,7 +396,8 @@ module HuobisHelper
         end
       end
     rescue PG::Error => e
-      Rails.logger.warn e.message
+      p "huobi_ticker_insert: #{e.message}"
+      Rails.logger.warn "huobi_ticker_insert: #{e.message}"
     ensure
       postgres.close if postgres
     end
