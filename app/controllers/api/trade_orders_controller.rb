@@ -25,6 +25,15 @@ class Api::TradeOrdersController < Api::ApplicationController
     pnls = ProfitLoss.all.group("symbol").select("symbol").count
   end
 
+  def event_logs
+    begin
+      data = EventLog.today
+      result = [0, "success", data.as_json]
+    rescue Exception => e
+      result = [1, e.value.to_s]
+    end
+    render_json(result)
+  end
 
   private
 

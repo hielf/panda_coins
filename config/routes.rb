@@ -4,15 +4,17 @@ Rails.application.routes.draw do
   resources :trade_orders do
     collection do
       get :pre_orders
+      get :event_logs
     end
   end
-  
+
   namespace :api, defaults: {format: :json} do
     root 'root#home'
     resources :trade_orders do
       collection do
         get :pre_orders
         get :tickers
+        get :event_logs
         get :positions
         get :account_values
         get :contract_data

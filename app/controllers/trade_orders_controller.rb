@@ -23,6 +23,11 @@ class TradeOrdersController < ApplicationController
 
   end
 
+  def event_logs
+    data = Faraday.get "#{request.protocol}#{request.host_with_port}/api/trade_orders/event_logs"
+    @event_logs = (JSON.parse data.body)["data"]
+  end
+
   def balances
     huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
     @balances = huobi_pro.balances["data"]["list"].find_all {|x| x["balance"].to_f != 0 }

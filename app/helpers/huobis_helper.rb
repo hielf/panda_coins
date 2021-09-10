@@ -212,7 +212,7 @@ module HuobisHelper
         array = pnls.map{|x| (eval x)[:change]}
         pnl_samples = (array.select.with_index{|_,i| (i+1) % ENV["pnl_interval"].to_i == 0}).last(3)
 
-        if pnl_samples.any? && pnl_samples.count == 3 && pnl_samples.sort.reverse == pnl_samples && pnl_samples[0] != pnl_samples[-1]
+        if pnl_samples.any? && pnl_samples.count == 3 && pnl_samples.sort.reverse == pnl_samples && pnl_samples[0] != pnl_samples[-1] && pnl_samples[1] != pnl_samples[-1]
           begin
             ApplicationController.helpers.huobi_orders_log(symbol)
             Rails.cache.redis.hdel("orders", symbol)
