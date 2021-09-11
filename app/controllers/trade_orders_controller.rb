@@ -26,6 +26,7 @@ class TradeOrdersController < ApplicationController
   def event_logs
     data = Faraday.get "#{request.protocol}#{request.host_with_port}/api/trade_orders/event_logs"
     @event_logs = (JSON.parse data.body)["data"]
+    @today_change_sum = EventLog.today.sum(:change)
   end
 
   def balances
