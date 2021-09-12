@@ -46,17 +46,17 @@ every 1.day, at: '6:00' do
   command "cat /dev/null > /var/www/panda_coins/current/log/puma.error.log"
 end
 
-every 1.day, at: '20:00' do
-  command "god stop panda_coins-clock_1"
-  command "god stop panda_coins-clock_2"
-  command "god stop panda_coins-clock_3"
-  command "god stop panda_coins-clock_4"
-end
-
-every 1.day, at: '9:00' do
-  command "god start panda_coins-clock_1"
-  command "god start panda_coins-clock_2"
-  command "god start panda_coins-clock_3"
-  command "god start panda_coins-clock_4"
-end
+# every 1.day, at: '20:00' do
+#   command "god stop panda_coins-clock_1"
+#   command "god stop panda_coins-clock_2"
+#   command "god stop panda_coins-clock_3"
+#   command "god stop panda_coins-clock_4"
+# end
+#
+# every 1.day, at: '9:00' do
+#   command "god start panda_coins-clock_1"
+#   command "god start panda_coins-clock_2"
+#   command "god start panda_coins-clock_3"
+#   command "god start panda_coins-clock_4"
+# end
 #
