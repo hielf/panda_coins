@@ -27,7 +27,7 @@ end
     w.start_grace = 20.seconds
     w.restart_grace = 20.seconds
     w.interval = 60.seconds
-    # w.keepalive
+    w.keepalive
 
     w.start_if do |start|
       start.condition(:process_running) do |c|
@@ -49,9 +49,9 @@ end
       end
     end
 
-    w.transition(:up, :start) do |on|
-      on.condition(:process_exits)
-    end
+    # w.transition(:up, :start) do |on|
+    #   on.condition(:process_exits)
+    # end
 
     w.lifecycle do |on|
       on.condition(:flapping) do |c|
