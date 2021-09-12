@@ -49,6 +49,10 @@ end
       end
     end
 
+    w.transition(:up, :start) do |on|
+      on.condition(:process_exits)
+    end
+
     w.lifecycle do |on|
       on.condition(:flapping) do |c|
         c.to_state = [:start, :restart]
