@@ -89,8 +89,8 @@ end
   God.watch do |w|
     w.name = app_name + "-" + env_2
     w.group = app_name
-    w.start = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_1.rb start --log -d #{app_root}/shared/log"
-    w.restart = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_1.rb restart --log -d #{app_root}/shared/log"
+    w.start = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_1.rb start --log -d #{app_root}/current/lib/job"
+    w.restart = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_1.rb restart --log -d #{app_root}/current/lib/job"
     w.stop = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_1.rb stop"
     w.pid_file = "#{app_root}/current/lib/job/tmp/clockworkd.clock_1.pid"
 
@@ -105,8 +105,8 @@ end
   God.watch do |w|
     w.name = app_name + "-" + env_3
     w.group = app_name
-    w.start = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_2.rb start --log -d #{app_root}/shared/log"
-    w.restart = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_2.rb restart --log -d #{app_root}/shared/log"
+    w.start = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_2.rb start --log -d #{app_root}/current/lib/job"
+    w.restart = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_2.rb restart --log -d #{app_root}/current/lib/job"
     w.stop = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_2.rb stop"
     w.pid_file = "#{app_root}/current/lib/job/tmp/clockworkd.clock_2.pid"
 
@@ -121,8 +121,8 @@ end
   God.watch do |w|
     w.name = app_name + "-" + env_4
     w.group = app_name
-    w.start = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_3.rb start --log -d #{app_root}/shared/log"
-    w.restart = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_3.rb restart --log -d #{app_root}/shared/log"
+    w.start = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_3.rb start --log -d #{app_root}/current/lib/job"
+    w.restart = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_3.rb restart --log -d #{app_root}/current/lib/job"
     w.stop = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_3.rb stop"
     w.pid_file = "#{app_root}/current/lib/job/tmp/clockworkd.clock_3.pid"
 
