@@ -1,65 +1,34 @@
 class OrdersJob < ApplicationJob
   queue_as :first
 
-  after_perform :event_log
+  after_perform :orders_log
 
   rescue_from(ActiveRecord::RecordNotFound) do |exception|
      Rails.logger.warn "#{exception.message.to_s}"
   end
 
   def perform(*args)
-    @order = args[0]
-    @amount = args[1]
-    @move_order = args[2]
-    @move_price = args[3]
+    @symbol = args[0]
+    @type = args[1]
+    @price = args[2]
+    @count = args[3]
 
-    @contract = ENV['contract']
-    @version = ENV['backtrader_version']
-    # @ib = args[2]
-
-    # @ib = ApplicationController.helpers.ib_connect if @ib.nil?
-
-    @ib = ApplicationController.helpers.ib_connect
-    if @ib.isConnected()
-      Rails.logger.warn "ib placing order: #{@order}, amount:#{@amount.to_s}, move_order:#{@move_order}, move_price:#{@move_price}"
-
-      if @order != "" && @amount != 0 && @order != "CLOSE"
-        ApplicationController.helpers.ib_order(@order, @amount, 0)
-      elsif @order == "CLOSE"
-        @order, @amount = ApplicationController.helpers.close_position
-      end
-    else
-      SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["backtrader_version"], "无法连接"
+    huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
+    begin
+      order = huobi_pro.new_order(@symbol,@type,@price,@count)
+    rescue Exception => e
+      Rails.logger.warn "OrdersJob error: #{e.message}"
     end
-    ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
+
+    # huobi_pro.history_matchresults(symbol)
+    # huobi_pro.new_order(symbol,"sell-market",0,5)
+
+    # SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["backtrader_version"], "无法连接"
   end
 
   private
-  def event_log
-
+  def orders_log
     job1 = PositionsJob.set(wait: 2.seconds).perform_later(@contract, @version)
-    job2 = TradesJob.set(wait: 6.seconds).perform_later(@contract, @version)
-
-    # begin
-    #   job = PositionsJob.set(wait: 6.seconds).perform_later(@contract)
-    #   100.times do
-    #     status = ActiveJob::Status.get(job)
-    #     break if status.completed?
-    #     sleep 0.2
-    #   end
-    # rescue Exception => e
-    #   error_message = e.message
-    # end
-    # begin
-    #   job = TradesJob.set(wait: 15.seconds).perform_later(@contract)
-    #   100.times do
-    #     status = ActiveJob::Status.get(job)
-    #     break if status.completed?
-    #     sleep 0.2
-    #   end
-    # rescue Exception => e
-    #   error_message = e.message
-    # end
   end
 
 end
