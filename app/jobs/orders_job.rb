@@ -31,6 +31,7 @@ class OrdersJob < ApplicationJob
   def logger
     # if @order["status"] == "ok"
     @account_id, @status = ApplicationController.helpers.huobi_balances
+    ApplicationController.helpers.huobi_histroy_matchresults(@symbol)
     # end
   end
 

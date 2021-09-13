@@ -120,7 +120,7 @@ module HuobisHelper
       Rails.cache.redis.hset("orders", symbol[0], {"open_price": sym_data[:close], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:time], "current_time": ticker_time})
     end
 
-    return symbols.count
+    return symbols.count, symbols
   end
 
   def huobi_orders_check
@@ -309,6 +309,36 @@ module HuobisHelper
     end
 
     return @account_id, @status
+  end
+
+  def huobi_histroy_matchresults(symbol)
+    count = 0
+    huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
+    @matchresults = huobi_pro.history_matchresults(symbol)
+    @matchresults["data"].each do |result|
+      begin
+        trade = Trade.find_or_initialize_by(symbol: result["symbol"],trade_id: result["trade-id"])
+        trade.attributes = {fee_currency: result["fee-currency"],
+                            match_id: result["match-id"],
+                            order_id: result["order-id"],
+                            price: result["price"],
+                            created_time: Time.at(result["created-at"]/1000),
+                            role: result["role"],
+                            filled_amount: result["filled-amount"],
+                            filled_fees: result["filled-fees"],
+                            filled_points: result["filled-points"],
+                            fee_deduct_currency: result["fee-deduct-currency"],
+                            fee_deduct_state: result["fee-deduct-state"],
+                            tid: result["id"],
+                            trade_type: result["type"]}
+
+        if trade.save
+          count = count + 1
+        end
+      rescue Exception => e
+        Rails.logger.warn "huobi_histroy_matchresults error: #{e.message}"
+      end
+    end
   end
 
   def huobi_symbol_ticker(symbol)

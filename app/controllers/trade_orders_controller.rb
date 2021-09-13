@@ -35,9 +35,7 @@ class TradeOrdersController < ApplicationController
   end
 
   def histroy_matchresults
-    symbol = params['symbol']
-    huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
-    @matchresults = huobi_pro.history_matchresults(symbol)
+    @histroy_matchresults
   end
 
 end

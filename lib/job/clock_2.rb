@@ -34,8 +34,18 @@ module Clockwork
             end_time = Time.now
 
             symbols = ApplicationController.helpers.huobi_tickers_check(start_time, end_time)
-            open_count = ApplicationController.helpers.huobi_open_symbols(symbols)
-            Rails.logger.warn "openning #{open_count} of new symbols at #{end_time.to_s}" if open_count > 0
+            open_count, open_symbols = ApplicationController.helpers.huobi_open_symbols(symbols)
+            
+            if open_count > 0
+              Rails.logger.warn "openning #{open_count} of new symbols at #{end_time.to_s}"
+              open_symbols.each do |data|
+                symbol = data[0]
+                hash = eval data[1]
+                p symbol
+                p hash
+                Rails.logger.warn "symbol #{symbol} opened @ #{hash[:close]}"
+              end
+            end
 
             sleep 6
           rescue Exception => e
