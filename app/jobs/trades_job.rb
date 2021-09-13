@@ -18,7 +18,7 @@ class TradesJob < ApplicationJob
 
   private
   def around_check
-    ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
+    ApplicationController.helpers.huobi_balances
   end
 
 end

@@ -34,4 +34,10 @@ class TradeOrdersController < ApplicationController
     @balances = huobi_pro.balances["data"]["list"].find_all {|x| x["balance"].to_f != 0 }
   end
 
+  def histroy_matchresults
+    symbol = params['symbol']
+    huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
+    @matchresults = huobi_pro.history_matchresults(symbol)
+  end
+
 end

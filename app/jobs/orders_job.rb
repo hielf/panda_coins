@@ -1,7 +1,7 @@
 class OrdersJob < ApplicationJob
   queue_as :first
 
-  after_perform :orders_log
+  after_perform :logger
 
   rescue_from(ActiveRecord::RecordNotFound) do |exception|
      Rails.logger.warn "#{exception.message.to_s}"
@@ -15,7 +15,8 @@ class OrdersJob < ApplicationJob
 
     huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
     begin
-      order = huobi_pro.new_order(@symbol,@type,@price,@count)
+      @order = huobi_pro.new_order(@symbol,@type,@price,@count)
+      p @order
     rescue Exception => e
       Rails.logger.warn "OrdersJob error: #{e.message}"
     end
@@ -27,8 +28,14 @@ class OrdersJob < ApplicationJob
   end
 
   private
-  def orders_log
-    job1 = PositionsJob.set(wait: 2.seconds).perform_later(@contract, @version)
+  def logger
+    # if @order["status"] == "ok"
+    @account_id, @status = ApplicationController.helpers.huobi_balances
+    # end
   end
 
 end
+
+# h = eval Rails.cache.redis.hget("symbols", 'wozxusdt')
+# huobi_pro.history_matchresults('wozxusdt')
+# OrdersJob.perform_later 'wozxusdt', 'buy-market', 0, 5

@@ -286,6 +286,31 @@ module HuobisHelper
     end
   end
 
+  def huobi_balances
+    huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
+    balances = huobi_pro.balances
+    @status = false
+    if balances && balances["status"] == "ok"
+      @account_id = balances["data"]["id"]
+      data = balances["data"]["list"].find_all{|x| x["balance"].to_f != 0}
+
+      data.each do |d|
+        begin
+          tb = TraderBalance.init(@account_id, d["currency"], d["type"])
+          tb.balance = d["balance"]
+          tb.seq_num = d["seq-num"]
+          if tb.save!
+            @status = true
+          end
+        rescue Exception => e
+          Rails.logger.warn "huobi_balances save error: #{e.message}"
+        end
+      end
+    end
+
+    return @account_id, @status
+  end
+
   def huobi_symbol_ticker(symbol)
     url = "https://api.huobi.pro/market/detail/merged?symbol=#{symbol}"
     tick = false
