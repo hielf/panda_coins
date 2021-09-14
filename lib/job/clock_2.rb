@@ -41,13 +41,11 @@ module Clockwork
               open_symbols.each do |data|
                 symbol = data[0]
                 hash = eval data[1]
-                # p symbol
-                # p hash
                 current_balance = TraderBalance.find_by(account_id: ENV["huobi_accounts"], currency: "usdt", balance_type: "trade").balance
                 current_trades = Rails.cache.redis.hgetall("trades")
                 amount = (current_balance / (ENV['dvide_shares'].to_i - current_trades.count)).truncate(0)
 
-                # OrdersJob.perform_now symbol, 'buy-market', 0, amount
+                OrdersJob.perform_now symbol, 'buy-market', 0, amount
 
                 Rails.logger.warn "symbol #{symbol} opened @ #{hash[:close]} amount: #{amount}"
               end
