@@ -5,6 +5,9 @@ Rails.application.routes.draw do
     collection do
       get :pre_orders
       get :event_logs
+      get :histroy_matchresults
+      get :trader_balances
+      get :accounts_history
     end
   end
 

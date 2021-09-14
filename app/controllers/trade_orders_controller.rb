@@ -29,17 +29,13 @@ class TradeOrdersController < ApplicationController
     @today_change_sum = EventLog.today.sum(:change)
   end
 
-  def balances
-    huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
-    @balances = huobi_pro.balances["data"]["list"].find_all {|x| x["balance"].to_f != 0 }
+  def trader_balances
+    @trader_balances_all = TraderBalance.all
+    @trader_balances = TraderBalance.where("balance > ?", 0.0001)
   end
 
   def histroy_matchresults
     @histroy_matchresults = Trade.today
-  end
-
-  def trader_balances
-    @trader_balances = TraderBalance.today
   end
 
   def accounts_history

@@ -1,0 +1,37 @@
+<div>
+  <span style="font-size:20px;">资金流水</span>
+  <span><%= link_to "当前指令监控", "/trade_orders/pre_orders"%></span>
+  <span><%= link_to "今日指令成交", "/trade_orders/event_logs"%></span>
+  <span><%= link_to "今日成交", "/trade_orders/histroy_matchresults"%></span>
+  <span><%= link_to "资金余额", "/trade_orders/trader_balances"%></span>
+</div>
+
+<div style="padding-top: 25px;">
+  <table border="1" cellpadding="0" cellspacing="" width="100%" >
+    <thead>
+      <tr>
+        <th colspan="3"><%= link_to "账户编号", :sort => "account_id"%> </th>
+        <th colspan="3"><%= link_to "币种", :sort => "currency"%> </th>
+        <th colspan="3"><%= link_to "变动金额", :sort => "transact_amt"%> </th>
+        <th colspan="3"><%= link_to "变动类型", :sort => "transact_type"%> </th>
+        <th colspan="3"><%= link_to "可用余额", :sort => "avail_balance"%> </th>
+        <th colspan="3"><%= link_to "账户余额", :sort => "acct_balance"%> </th>
+        <th colspan="3"><%= link_to "交易时间", :sort => "transact_time"%> </th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% @accounts_history.each do |data| %>
+        <tr>
+          <td colspan="3"><%= data["account_id"] %></td>
+          <td colspan="3"><%= data["currency"] %></td>
+          <td colspan="3"><%= data["transact_amt"] %></td>
+          <td colspan="3"><%= data["transact_type"] %></td>
+          <td colspan="3"><%= data["avail_balance"] %></td>
+          <td colspan="3"><%= data["acct_balance"] %></td>
+          <td colspan="3"><%= data["transact_time"] %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
