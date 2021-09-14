@@ -1,7 +1,7 @@
 class OrdersJob < ApplicationJob
   queue_as :first
 
-  after_perform :logger
+  # after_perform :logger
 
   rescue_from(ActiveRecord::RecordNotFound) do |exception|
      Rails.logger.warn "#{exception.message.to_s}"
@@ -13,12 +13,23 @@ class OrdersJob < ApplicationJob
     @price = args[2]
     @count = args[3]
 
+    message = "交易错误"
     huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
     begin
       @order = huobi_pro.new_order(@symbol,@type,@price,@count)
-      p @order
+      if @order["status"] == "error"
+        message = @order["err-msg"]
+        SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["version"], message
+      else
+        # Rails.cache.redis.hset("trades", symbol[0], @order["data"])
+        Rails.cache.redis.hset("trades", @symbol, {:order_id =>@order["data"]}) if @type.include? "buy"
+        Rails.cache.redis.hdel("trades", @symbol) if @type.include? "sell"
+      end
     rescue Exception => e
       Rails.logger.warn "OrdersJob error: #{e.message}"
+      SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["version"], message
+    ensure
+      AccountLoggerJob.set(wait: 1.second).perform_later(@symbol)
     end
 
     # huobi_pro.history_matchresults(symbol)
@@ -27,13 +38,12 @@ class OrdersJob < ApplicationJob
     # SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["backtrader_version"], "无法连接"
   end
 
-  private
-  def logger
-    # if @order["status"] == "ok"
-    @account_id, @status = ApplicationController.helpers.huobi_balances
-    ApplicationController.helpers.huobi_histroy_matchresults(@symbol)
-    # end
-  end
+  # private
+  # def logger
+  #   # if @order["status"] == "ok"
+  #
+  #   # end
+  # end
 
 end
 

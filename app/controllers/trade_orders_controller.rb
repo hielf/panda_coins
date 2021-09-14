@@ -35,7 +35,15 @@ class TradeOrdersController < ApplicationController
   end
 
   def histroy_matchresults
-    @histroy_matchresults
+    @histroy_matchresults = Trade.today
+  end
+
+  def trader_balances
+    @trader_balances = TraderBalance.today
+  end
+
+  def accounts_history
+    @accounts_history = AccountHi.today
   end
 
 end

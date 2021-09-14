@@ -35,15 +35,21 @@ module Clockwork
 
             symbols = ApplicationController.helpers.huobi_tickers_check(start_time, end_time)
             open_count, open_symbols = ApplicationController.helpers.huobi_open_symbols(symbols)
-            
+
             if open_count > 0
               Rails.logger.warn "openning #{open_count} of new symbols at #{end_time.to_s}"
               open_symbols.each do |data|
                 symbol = data[0]
                 hash = eval data[1]
-                p symbol
-                p hash
-                Rails.logger.warn "symbol #{symbol} opened @ #{hash[:close]}"
+                # p symbol
+                # p hash
+                current_balance = TraderBalance.find_by(account_id: ENV["huobi_accounts"], currency: "usdt", balance_type: "trade").balance
+                current_trades = Rails.cache.redis.hgetall("trades")
+                amount = (current_balance / (ENV['dvide_shares'].to_i - current_trades.count)).truncate(0)
+
+                OrdersJob.perform_now symbol, 'buy-market', 0, amount
+
+                Rails.logger.warn "symbol #{symbol} opened @ #{hash[:close]} amount: #{amount}"
               end
             end
 

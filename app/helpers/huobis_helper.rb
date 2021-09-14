@@ -163,6 +163,15 @@ module HuobisHelper
     return pnls
   end
 
+  def huobi_close_amount(symbol)
+    amount = 0
+    hash = eval Rails.cache.redis.hget("symbols", symbol)
+    precision = hash[:"amount-precision"]
+    amount = TraderBalance.find_by(currency: 'insur', balance_type: 'trade').balance.truncate(precision)
+
+    return amount
+  end
+
   def huobi_orders_close
     # 1 down limit
     count = 0
@@ -174,6 +183,9 @@ module HuobisHelper
         symbol = order[0]
         pnls = ApplicationController.helpers.huobi_pnls(symbol)
         begin
+          amount = ApplicationController.helpers.huobi_close_amount(symbol)
+          OrdersJob.perform_now symbol, 'sell-market', 0, amount
+
           ApplicationController.helpers.huobi_orders_log(symbol)
           Rails.cache.redis.hdel("orders", symbol)
         rescue Exception => e
@@ -196,6 +208,9 @@ module HuobisHelper
         symbol = order[0]
         pnls = ApplicationController.helpers.huobi_pnls(symbol)
         begin
+          amount = ApplicationController.helpers.huobi_close_amount(symbol)
+          OrdersJob.perform_now symbol, 'sell-market', 0, amount
+
           ApplicationController.helpers.huobi_orders_log(symbol)
           Rails.cache.redis.hdel("orders", symbol)
         rescue Exception => e
@@ -245,6 +260,9 @@ module HuobisHelper
         symbol = order[0]
         pnls = ApplicationController.helpers.huobi_pnls(symbol)
         begin
+          amount = ApplicationController.helpers.huobi_close_amount(symbol)
+          OrdersJob.perform_now symbol, 'sell-market', 0, amount
+          
           ApplicationController.helpers.huobi_orders_log(symbol)
           Rails.cache.redis.hdel("orders", symbol)
         rescue Exception => e
@@ -315,30 +333,62 @@ module HuobisHelper
     count = 0
     huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
     @matchresults = huobi_pro.history_matchresults(symbol)
-    @matchresults["data"].each do |result|
-      begin
-        trade = Trade.find_or_initialize_by(symbol: result["symbol"],trade_id: result["trade-id"])
-        trade.attributes = {fee_currency: result["fee-currency"],
-                            match_id: result["match-id"],
-                            order_id: result["order-id"],
-                            price: result["price"],
-                            created_time: Time.at(result["created-at"]/1000),
-                            role: result["role"],
-                            filled_amount: result["filled-amount"],
-                            filled_fees: result["filled-fees"],
-                            filled_points: result["filled-points"],
-                            fee_deduct_currency: result["fee-deduct-currency"],
-                            fee_deduct_state: result["fee-deduct-state"],
-                            tid: result["id"],
-                            trade_type: result["type"]}
+    if @matchresults && @matchresults["data"].any?
+      @matchresults["data"].each do |result|
+        begin
+          trade = Trade.find_or_initialize_by(symbol: result["symbol"],trade_id: result["trade-id"])
+          trade.attributes = {fee_currency: result["fee-currency"],
+                              match_id: result["match-id"],
+                              order_id: result["order-id"],
+                              price: result["price"],
+                              created_time: Time.at(result["created-at"]/1000),
+                              role: result["role"],
+                              filled_amount: result["filled-amount"],
+                              filled_fees: result["filled-fees"],
+                              filled_points: result["filled-points"],
+                              fee_deduct_currency: result["fee-deduct-currency"],
+                              fee_deduct_state: result["fee-deduct-state"],
+                              tid: result["id"],
+                              trade_type: result["type"]}
 
-        if trade.save
-          count = count + 1
+          if trade.save
+            count = count + 1
+          end
+        rescue Exception => e
+          Rails.logger.warn "huobi_histroy_matchresults error: #{e.message}"
         end
-      rescue Exception => e
-        Rails.logger.warn "huobi_histroy_matchresults error: #{e.message}"
       end
     end
+
+    return count
+  end
+
+  def huobi_accounts_history
+    count = 0
+    huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
+    @accounts_history = huobi_pro.accounts_history
+    if @accounts_history && @accounts_history["status"] == "ok"
+      data = @accounts_history["data"]
+      data.each do |his|
+        begin
+          ah = AccountHi.find_or_initialize_by(account_id: his["account-id"],record_id: his["record-id"].to_s)
+          ah.attributes = { currency: his["currency"],
+                            transact_amt: his["transact-amt"],
+                            transact_type: his["transact-type"],
+                            avail_balance: his["avail-balance"],
+                            acct_balance: his["acct-balance"],
+                            transact_time: Time.at(his["transact-time"]/1000) }
+
+          if ah.save
+            count = count + 1
+          end
+        rescue Exception => e
+          Rails.logger.warn "huobi_histroy_matchresults error: #{e.message}"
+        end
+      end
+    end
+
+    return count
   end
 
   def huobi_symbol_ticker(symbol)

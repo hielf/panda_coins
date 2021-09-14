@@ -147,7 +147,7 @@ class HuobiPro
   end
 
   ## 查询某个订单详情
-  def order_status(order_id,market)
+  def order_status(order_id)
     path = "/v1/order/orders/#{order_id}"
     request_method = "GET"
     params ={"order-id" => order_id}
@@ -197,6 +197,17 @@ class HuobiPro
     util(path,params,request_method)
   end
 
+  ## 账户流水
+  def accounts_history
+    path = "/v1/account/history"
+    params ={
+      "account-id" => @account_id,
+      "size" => 100
+    }
+    request_method = "GET"
+    util(path,params,request_method)
+  end
+
   ## 现货账户划入至借贷账户
   def transfer_in_margin(symbol,currency,amount)
     path = "/v1/dw/transfer-in/margin"
@@ -228,6 +239,7 @@ class HuobiPro
     request_method = "GET"
     util(path,params,request_method)
   end
+
   ## 借贷账户详情
   def margin_accounts_balance(symbol)
     path = "/v1/margin/accounts/balance?symbol={symbol}"
@@ -235,6 +247,7 @@ class HuobiPro
     request_method = "GET"
     util(path,params,request_method)
   end
+
   ## 申请借贷
   def margin_orders(symbol,currency,amount)
     path = "/v1/margin/orders"
