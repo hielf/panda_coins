@@ -165,11 +165,14 @@ module HuobisHelper
 
   def huobi_close_amount(symbol)
     amount = 0
-    hash = eval Rails.cache.redis.hget("symbols", symbol)
-    precision = hash[:"amount-precision"]
-    tr = TraderBalance.find_by(currency: symbol.sub("usdt",""), balance_type: 'trade')
-    amount = tr.balance.truncate(precision) if tr
-
+    begin
+      hash = eval Rails.cache.redis.hget("symbols", symbol)
+      precision = hash[:"amount-precision"]
+      tr = TraderBalance.find_by(currency: symbol.sub("usdt",""), balance_type: 'trade')
+      amount = tr.balance.truncate(precision) if tr
+    rescue Exception => e
+      Rails.logger.warn "huobi_close_amount error: #{e.message}"
+    end
     return amount
   end
 
@@ -334,7 +337,7 @@ module HuobisHelper
     count = 0
     huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
     @matchresults = huobi_pro.history_matchresults(symbol)
-    if !@matchresults.nil? && @matchresults["data"].any?
+    if !@matchresults.nil? && @matchresults["status"] != "error" && @matchresults["data"].any?
       @matchresults["data"].each do |result|
         begin
           trade = Trade.find_or_initialize_by(symbol: result["symbol"],trade_id: result["trade-id"])
