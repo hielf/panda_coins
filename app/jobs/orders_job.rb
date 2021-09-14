@@ -16,21 +16,25 @@ class OrdersJob < ApplicationJob
     message = "交易错误"
     huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
     current_time = Time.now.strftime("%H:%M")
+    run_flag = true
     begin
       if @type.include? "buy" && (current_time > "00:15" && current_time <= "23:59")
         Rails.logger.warn "OrdersJob skip openning: #{@symbol}"
+        run_flag = false
         exit!
       end
 
-      @order = huobi_pro.new_order(@symbol,@type,@price,@count)
+      if run_flag
+        @order = huobi_pro.new_order(@symbol,@type,@price,@count)
 
-      if @order["status"] == "error"
-        message = @order["err-msg"]
-        SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["version"], message
-      else
-        # Rails.cache.redis.hset("trades", symbol[0], @order["data"])
-        Rails.cache.redis.hset("trades", @symbol, {:order_id =>@order["data"]}) if @type.include? "buy"
-        Rails.cache.redis.hdel("trades", @symbol) if @type.include? "sell"
+        if @order["status"] == "error"
+          message = @order["err-msg"]
+          SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["version"], message
+        else
+          # Rails.cache.redis.hset("trades", symbol[0], @order["data"])
+          Rails.cache.redis.hset("trades", @symbol, {:order_id =>@order["data"]}) if @type.include? "buy"
+          Rails.cache.redis.hdel("trades", @symbol) if @type.include? "sell"
+        end
       end
     rescue Exception => e
       Rails.logger.warn "OrdersJob error: #{e.message}"
