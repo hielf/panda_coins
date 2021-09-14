@@ -21,7 +21,7 @@ class OrdersJob < ApplicationJob
       if @type.include? "buy" && (current_time > "00:15" && current_time <= "23:59")
         Rails.logger.warn "OrdersJob skip openning: #{@symbol}"
         run_flag = false
-        exit!
+        # exit!
       end
 
       if run_flag
