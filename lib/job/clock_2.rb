@@ -47,7 +47,7 @@ module Clockwork
                 current_trades = Rails.cache.redis.hgetall("trades")
                 amount = (current_balance / (ENV['dvide_shares'].to_i - current_trades.count)).truncate(0)
 
-                OrdersJob.perform_now symbol, 'buy-market', 0, amount
+                # OrdersJob.perform_now symbol, 'buy-market', 0, amount
 
                 Rails.logger.warn "symbol #{symbol} opened @ #{hash[:close]} amount: #{amount}"
               end
