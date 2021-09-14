@@ -167,8 +167,7 @@ module HuobisHelper
     amount = 0
     hash = eval Rails.cache.redis.hget("symbols", symbol)
     precision = hash[:"amount-precision"]
-    symbol.slice! "usdt"
-    tr = TraderBalance.find_by(currency: symbol, balance_type: 'trade')
+    tr = TraderBalance.find_by(currency: symbol.sub("usdt",""), balance_type: 'trade')
     amount = tr.balance.truncate(precision) if tr
 
     return amount
