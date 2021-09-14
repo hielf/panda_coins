@@ -18,7 +18,8 @@ class OrdersJob < ApplicationJob
     current_time = Time.now.strftime("%H:%M")
     begin
       if @type.include? "buy" && (current_time > "00:15" && current_time <= "23:59")
-        abort Rails.logger.warn "OrdersJob skip openning: #{@symbol}"
+        Rails.logger.warn "OrdersJob skip openning: #{@symbol}"
+        exit!
       end
 
       @order = huobi_pro.new_order(@symbol,@type,@price,@count)
