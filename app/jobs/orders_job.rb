@@ -15,8 +15,14 @@ class OrdersJob < ApplicationJob
 
     message = "交易错误"
     huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
+    current_time = Time.now.strftime("%H:%M")
     begin
+      if @type.include? "buy" && (current_time > "00:15" && current_time <= "23:59")
+        abort Rails.logger.warn "OrdersJob skip openning: #{@symbol}"
+      end
+
       @order = huobi_pro.new_order(@symbol,@type,@price,@count)
+
       if @order["status"] == "error"
         message = @order["err-msg"]
         SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["version"], message
