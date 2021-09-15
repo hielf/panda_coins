@@ -21,7 +21,7 @@ module Clockwork
       current_time = Time.now
       runtime = Rails.cache.read('running:clock_3')
       if runtime && (current_time - runtime).abs < 30
-        break
+        exit!
       else
         loop do
           begin
