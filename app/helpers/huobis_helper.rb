@@ -169,7 +169,7 @@ module HuobisHelper
       hash = eval Rails.cache.redis.hget("symbols", symbol)
       precision = hash[:"amount-precision"]
       tr = TraderBalance.find_by(currency: symbol.sub("usdt",""), balance_type: 'trade')
-      amount = tr.balance.to_d.truncate(4).to_f if tr
+      amount = tr.balance.to_d.truncate(precision).to_f if tr
     rescue Exception => e
       Rails.logger.warn "huobi_close_amount error: #{e.message}"
     end
