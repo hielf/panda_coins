@@ -9,6 +9,22 @@
 module HuobisHelper
 # ["ethusdt", "btcusdt", "dogeusdt", "xrpusdt", "lunausdt", "adausdt", "bttusdt", "nftusdt", "dotusdt", "trxusdt", "icpusdt", "abtusdt", "skmusdt", "bhdusdt", "aacusdt", "canusdt", "fisusdt", "nhbtcusdt", "letusdt", "massusdt", "achusdt", "ringusdt", "stnusdt", "mtausdt", "itcusdt", "atpusdt", "gofusdt", "pvtusdt", "auctionus", "ocnusdt"]
 
+  def huobi_close_all
+    @trader_balances = TraderBalance.where("balance > ?", 0.0001)
+    symbol = ""
+    @trader_balances.each do |tb|
+      if tb.currency != "usdt"
+        symbol = tb.currency + "usdt"
+        # @count_match = ApplicationController.helpers.huobi_histroy_matchresults(symbol)
+        # @account_id, @status = ApplicationController.helpers.huobi_balances
+        amount = ApplicationController.helpers.huobi_close_amount(symbol)
+        p [symbol, amount]
+        OrdersJob.perform_now symbol, 'sell-market', 0, amount
+        sleep 0.3
+      end
+    end
+  end
+
   def usdts_symbols
     huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
     list = huobi_pro.symbols["data"]
@@ -203,12 +219,12 @@ module HuobisHelper
       tr = (eval rbalance)[:balance] if rbalance
       balance = tr.to_d.truncate(precision).to_f if tr
 
-      if balance < sell_market_min_order_amt
+      if balance && balance < sell_market_min_order_amt
         amount = 0
-      elsif balance > sell_market_max_order_amt
+      elsif balance && balance > sell_market_max_order_amt
         amount = sell_market_max_order_amt
       else
-        amount = tr.to_d.truncate(precision).to_f if tr
+        amount = balance.nil? ? 0 : balance
       end
     rescue Exception => e
       Rails.logger.warn "huobi_close_amount error: #{e.message}"
