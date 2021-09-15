@@ -22,6 +22,9 @@ class OrdersJob < ApplicationJob
         Rails.logger.warn "OrdersJob skip openning: #{@symbol}"
         run_flag = false
         exit!
+      elsif amount == 0
+        run_flag = false
+        exit!
       end
 
       if run_flag
