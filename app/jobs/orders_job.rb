@@ -34,7 +34,7 @@ class OrdersJob < ApplicationJob
           message = @order["err-msg"]
           SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["version"], message
         else
-          # Rails.cache.redis.hset("trades", symbol[0], @order["data"])
+          # Rails.cache.redis.hgetall("trades")
           Rails.cache.redis.hset("trades", @symbol, {:order_id =>@order["data"]}) if @type.include? "buy"
           Rails.cache.redis.hdel("trades", @symbol) if @type.include? "sell"
         end
