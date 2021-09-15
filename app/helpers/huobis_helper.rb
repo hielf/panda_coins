@@ -329,7 +329,7 @@ module HuobisHelper
       el.symbol = symbol
       el.save
     rescue Exception => e
-      Rails.logger.warn e.message
+      Rails.logger.warn "huobi_orders_log error: #{e.message}"
     end
   end
 
@@ -342,7 +342,7 @@ module HuobisHelper
           ProfitLoss.create(symbol: symbol, change: h[:change], current_time: h[:current_time])
         end
       rescue Exception => e
-        Rails.logger.warn e.message
+        Rails.logger.warn "huobi_pnls_log error: #{e.message}"
       end
     end
   end

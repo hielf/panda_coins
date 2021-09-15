@@ -46,11 +46,11 @@ class TradeOrdersController < ApplicationController
   end
 
   def histroy_matchresults
-    @histroy_matchresults = Trade.today
+    @histroy_matchresults = Trade.today.order(:created_time)
   end
 
   def accounts_history
-    @accounts_history = AccountHi.today
+    @accounts_history = AccountHi.today.order(:transact_time)
   end
 
 end
