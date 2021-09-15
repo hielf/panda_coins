@@ -318,11 +318,7 @@ module HuobisHelper
 
       data.each do |d|
         begin
-          tb = TraderBalance.init(@account_id, d["currency"], d["type"])
-          tb.attributes = { balance: d["balance"], seq_num: d["seq-num"] }
-          if tb.save!
-            @status = true
-          end
+          Rails.cache.redis.hset("balances", "#{d["currency"]}:#{d["type"]}", {"currency": d["currency"],"type": d["type"], "balance": d["balance"], "seq-num": d["seq-num"]} )
         rescue Exception => e
           Rails.logger.warn "huobi_balances save error: #{e.message}"
         end

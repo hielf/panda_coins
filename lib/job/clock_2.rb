@@ -41,7 +41,10 @@ module Clockwork
               open_symbols.each do |data|
                 symbol = data[0]
                 hash = eval data[1]
-                current_balance = TraderBalance.find_by(account_id: ENV["huobi_accounts"], currency: "usdt", balance_type: "trade").balance.to_f
+                # current_balance = TraderBalance.find_by(account_id: ENV["huobi_accounts"], currency: "usdt", balance_type: "trade").balance.to_f
+                current_balance = 0
+                rbalance =  Rails.cache.redis.hget("balances", "usdt:trade")
+                current_balance = (eval rbalance)[:balance].to_f if rbalance
                 current_trades = Rails.cache.redis.hgetall("trades")
                 amount = (current_balance / (ENV['dvide_shares'].to_i - current_trades.count)).truncate(0)
 

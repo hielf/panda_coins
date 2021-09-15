@@ -30,6 +30,17 @@ class TradeOrdersController < ApplicationController
   end
 
   def trader_balances
+    data = Rails.cache.redis.hgetall("balances")
+    account_id = ENV["huobi_accounts"]
+    data.each do |d|
+      h = eval d[1]
+      tb = TraderBalance.init(account_id, h[:currency], h[:type])
+      tb.attributes = { balance: h[:balance], seq_num: h[:"seq-num"] }
+      if tb.save!
+        @status = true
+      end
+    end
+
     @trader_balances_all = TraderBalance.all
     @trader_balances = TraderBalance.where("balance > ?", 0.0001)
   end
