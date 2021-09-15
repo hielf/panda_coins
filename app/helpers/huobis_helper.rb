@@ -19,8 +19,36 @@ module HuobisHelper
       end
     end
 
+   #  {"base-currency"=>"em", "quote-currency"=>"usdt",
+   #    "price-precision"=>6, "amount-precision"=>2,
+   #    "symbol-partition"=>"innovation", "symbol"=>"emusdt",
+   #    "state"=>"online", "value-precision
+   # "=>8, "min-order-amt"=>1, "max-order-amt"=>120000000,
+   # "min-order-value"=>5, "limit-order-min-order-amt"=>1,
+   # "limit-order-max-order-amt"=>120000000,
+   # "limit-order-max-buy-amt"=>120000000,
+   # "limit-order-max
+   # -sell-amt"=>120000000, "sell-market-min-order-amt"=>1,
+   # "sell-market-max-order-amt"=>12000000,
+   # "buy-market-max-order-value"=>70000,
+   # "api-trading"=>"enabled", "tags"=>""}
+
     usdts.each do |usdt|
-      Rails.cache.redis.hset("symbols", usdt["symbol"], {"price-precision": usdt["price-precision"], "amount-precision": usdt["amount-precision"], "value-precision": usdt["value-precision"], "state": usdt["state"], "api-trading": usdt["api-trading"]})
+      Rails.cache.redis.hset("symbols", usdt["symbol"],
+        {"price-precision": usdt["price-precision"],
+          "amount-precision": usdt["amount-precision"],
+          "value-precision": usdt["value-precision"],
+          "min-order-amt": usdt["min-order-amt"],
+          "min-order-value": usdt["min-order-value"],
+          "limit-order-min-order-amt": usdt["limit-order-min-order-amt"],
+          "limit-order-max-order-amt": usdt["limit-order-max-order-amt"],
+          "limit-order-max-buy-amt": usdt["limit-order-max-buy-amt"],
+          "limit-order-max-sell-amt": usdt["limit-order-max-sell-amt"],
+          "sell-market-min-order-amt": usdt["sell-market-min-order-amt"],
+          "sell-market-max-order-amt": usdt["sell-market-max-order-amt"],
+          "buy-market-max-order-value": usdt["buy-market-max-order-value"],
+          "state": usdt["state"],
+          "api-trading": usdt["api-trading"]})
     end
 
     return usdts.count
@@ -168,8 +196,19 @@ module HuobisHelper
     begin
       hash = eval Rails.cache.redis.hget("symbols", symbol)
       precision = hash[:"amount-precision"]
-      tr = TraderBalance.find_by(currency: symbol.sub("usdt",""), balance_type: 'trade')
-      amount = tr.balance.to_d.truncate(precision).to_f if tr
+      sell_market_min_order_amt = hash[:"sell-market-min-order-amt"]
+      sell_market_max_order_amt = hash[:"sell-market-max-order-amt"]
+      # tr = TraderBalance.find_by(currency: symbol.sub("usdt",""), balance_type: 'trade')
+      rbalance =  Rails.cache.redis.hget("balances", "#{symbol.sub("usdt","")}:trade")
+      tr = (eval rbalance)[:balance] if rbalance
+
+      if amount < sell_market_min_order_amt
+        amount = 0
+      elsif amount > sell_market_max_order_amt
+        amount = sell_market_max_order_amt
+      else
+        amount = tr.to_d.truncate(precision).to_f if tr
+      end
     rescue Exception => e
       Rails.logger.warn "huobi_close_amount error: #{e.message}"
     end
