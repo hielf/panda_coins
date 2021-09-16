@@ -53,4 +53,15 @@ class TradeOrdersController < ApplicationController
     @accounts_history = AccountHi.today.order(:transact_time)
   end
 
+  def production_log
+    filename =
+    case Rails.env
+    when "production"
+      "#{Rails.root}/log/production.log"
+    when "development"
+      "#{Rails.root}/log/development.log"
+    end
+    @last_100_lines = `tail -n 100 #{filename}`
+  end
+
 end

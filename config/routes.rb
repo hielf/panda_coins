@@ -8,6 +8,7 @@ Rails.application.routes.draw do
       get :histroy_matchresults
       get :trader_balances
       get :accounts_history
+      get :production_log
     end
   end
 
