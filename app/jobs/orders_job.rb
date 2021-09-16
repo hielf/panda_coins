@@ -18,7 +18,7 @@ class OrdersJob < ApplicationJob
     current_time = Time.now.strftime("%H:%M")
     run_flag = true
     begin
-      if (@type.include? "buy") && (current_time > "00:15" && current_time <= "23:59")
+      if (@type.include? "buy") && (current_time >= "00:01" && current_time <= "23:59")
         Rails.logger.warn "OrdersJob skip openning: #{@symbol}"
         run_flag = false
       elsif @count == 0
