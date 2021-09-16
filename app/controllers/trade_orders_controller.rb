@@ -61,7 +61,12 @@ class TradeOrdersController < ApplicationController
     when "development"
       "#{Rails.root}/log/development.log"
     end
-    @last_100_lines = `tail -n 100 #{filename}`
+    # @last_100_lines = `tail -n 100 #{filename}`
+
+    @lines = IO.readlines(filename)[-100..-1]
+    # IO.readlines(filename)[-100..-1].each do |l|
+    #   @lines << l
+    # end
   end
 
 end

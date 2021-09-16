@@ -12,6 +12,8 @@
 
 <div style="padding-top: 25px;">
   <div>
-    <span style="font-size:12px;"><%= @last_100_lines %></span>
+    <% @lines.each do |line| %>
+      <div style="font-size:12px;"><%= line %></div>
+    <% end %>
   </div>
 </div>
