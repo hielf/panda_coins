@@ -143,18 +143,28 @@ module HuobisHelper
     # symbols = ApplicationController.helpers.huobi_tickers_check(Time.now - 120, Time.now)
     start_time = Time.now - 10
     symbols.delete_if {|x| (eval x[1])[:time].to_time <= start_time}
-    opened_symbols = Rails.cache.redis.hgetall("orders")
-    if !opened_symbols.empty?
-      opened_symbols.each do |sym|
-        symbols.delete_if {|x| x[0] == sym[0]}
+    begin
+      opened_symbols = Rails.cache.redis.hgetall("orders")
+      if !opened_symbols.empty?
+        opened_symbols.each do |sym|
+          symbols.delete_if {|x| x[0] == sym[0]}
+        end
       end
+    rescue Exception => e
+      Rails.logger.warn "huobi_tickers_check error: #{e.message}"
     end
-    closed_symbols = EventLog.today.where(current_time: 1.hour.ago..Time.now)
-    if closed_symbols && closed_symbols.any?
-      closed_symbols.each do |sym|
-        symbols.delete_if {|x| x[0] == sym.symbol}
+
+    begin
+      closed_symbols = EventLog.today.where(current_time: 1.hour.ago..Time.now)
+      if closed_symbols && closed_symbols.any?
+        closed_symbols.each do |sym|
+          symbols.delete_if {|x| x[0] == sym.symbol}
+        end
       end
+    rescue Exception => e
+      Rails.logger.warn "huobi_tickers_check error: #{e.message}"
     end
+
 
     # Parallel.each(symbols, in_thread: symbols.count) do |symbol|
     symbols.each do |symbol|
