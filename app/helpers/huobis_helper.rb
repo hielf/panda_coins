@@ -9,7 +9,9 @@
 module HuobisHelper
 # ["ethusdt", "btcusdt", "dogeusdt", "xrpusdt", "lunausdt", "adausdt", "bttusdt", "nftusdt", "dotusdt", "trxusdt", "icpusdt", "abtusdt", "skmusdt", "bhdusdt", "aacusdt", "canusdt", "fisusdt", "nhbtcusdt", "letusdt", "massusdt", "achusdt", "ringusdt", "stnusdt", "mtausdt", "itcusdt", "atpusdt", "gofusdt", "pvtusdt", "auctionus", "ocnusdt"]
 
+  # ApplicationController.helpers.huobi_close_all
   def huobi_close_all
+    @account_id, @status = ApplicationController.helpers.huobi_balances
     @trader_balances = TraderBalance.where("balance > ?", 0.0001)
     symbol = ""
     @trader_balances.each do |tb|
@@ -368,9 +370,9 @@ module HuobisHelper
   def huobi_balances
     huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
     balances = huobi_pro.balances
-    @status = false
+    status = false
     if balances && balances["status"] == "ok"
-      @account_id = balances["data"]["id"]
+      account_id = balances["data"]["id"]
       data = balances["data"]["list"].find_all{|x| x["balance"].to_f != 0}
 
       data.each do |d|
@@ -380,9 +382,10 @@ module HuobisHelper
           Rails.logger.warn "huobi_balances save error: #{e.message}"
         end
       end
+      status = true
     end
 
-    return @account_id, @status
+    return account_id, status
   end
 
   def huobi_histroy_matchresults(symbol)
