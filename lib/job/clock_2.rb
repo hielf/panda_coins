@@ -61,7 +61,7 @@ module Clockwork
               end
             end
 
-            sleep 2
+            sleep 0.3
           rescue Exception => e
             Rails.logger.warn "tickers_check error: #{e.message}"
           ensure
