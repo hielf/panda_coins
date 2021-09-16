@@ -26,12 +26,16 @@ module Clockwork
       current_time = Time.now
       runtime = Rails.cache.read('running:clock_2')
       if runtime && (current_time - runtime).abs < 30
-        break
+        nil
       else
         loop do
           begin
             start_time = Time.now - 120
             end_time = Time.now
+
+            if end_time >= Time.now.beginning_of_day && end_time <= Time.now.beginning_of_day + 120
+              start_time = nil
+            end
 
             symbols = ApplicationController.helpers.huobi_tickers_check(start_time, end_time)
             open_count, open_symbols = ApplicationController.helpers.huobi_open_symbols(symbols)
@@ -43,18 +47,21 @@ module Clockwork
                 hash = eval data[1]
                 # current_balance = TraderBalance.find_by(account_id: ENV["huobi_accounts"], currency: "usdt", balance_type: "trade").balance.to_f
                 current_balance = 0
-                rbalance =  Rails.cache.redis.hget("balances", "usdt:trade")
-                current_balance = (eval rbalance)[:balance].to_f if rbalance
-                current_trades = Rails.cache.redis.hgetall("trades")
-                amount = (current_balance / (ENV['dvide_shares'].to_i - current_trades.count)).truncate(0)
+                begin
+                  rbalance =  Rails.cache.redis.hget("balances", "usdt:trade")
+                  current_balance = (eval rbalance)[:balance].to_f if rbalance
+                  current_trades = Rails.cache.redis.hgetall("trades")
+                  amount = (current_balance / (ENV['dvide_shares'].to_i - current_trades.count)).truncate(0)
 
-                OrdersJob.perform_now symbol, 'buy-market', 0, amount
-
-                Rails.logger.warn "symbol #{symbol} opened @ #{hash[:close]} amount: #{amount}"
+                  OrdersJob.perform_now symbol, 'buy-market', 0, amount
+                  Rails.logger.warn "symbol #{symbol} opened @ #{hash[:close]} amount: #{amount}"
+                rescue FloatDomainError => e
+                  Rails.logger.warn "symbol #{symbol} opened skipped: shares all used"
+                end
               end
             end
 
-            sleep 6
+            sleep 2
           rescue Exception => e
             Rails.logger.warn "tickers_check error: #{e.message}"
           ensure

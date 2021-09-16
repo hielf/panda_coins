@@ -127,9 +127,10 @@ module HuobisHelper
 
           changes = Rails.cache.redis.hgetall("tickers")
           symbols = changes.find_all {|x| (eval x[1])[:change] >= ENV["up_floor_limit"].to_f && (eval x[1])[:change] <= ENV["up_up_limit"].to_f}
+          symbols.sort_by! { |s| -(eval s[1])[:change] }
         end
       rescue Exception => e
-        Rails.logger.warn e.message
+        Rails.logger.warn "huobi_tickers_check error: #{e.message}"
       end
     end
 
@@ -146,7 +147,7 @@ module HuobisHelper
         symbols.delete_if {|x| x[0] == sym[0]}
       end
     end
-    closed_symbols = EventLog.where(current_time: 1.hour.ago..Time.now)
+    closed_symbols = EventLog.today.where(current_time: 1.hour.ago..Time.now)
     if closed_symbols && closed_symbols.any?
       closed_symbols.each do |sym|
         symbols.delete_if {|x| x[0] == sym.symbol}
