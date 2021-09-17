@@ -50,7 +50,7 @@ class TradeOrdersController < ApplicationController
     @histroy_matchresults_all = Trade.order(:created_time)
     respond_to do |format|
        format.html
-       format.csv { send_data @histroy_matchresults.to_csv }
+       format.csv { send_data @histroy_matchresults_all.to_csv }
      end
   end
 
