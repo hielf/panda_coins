@@ -298,31 +298,31 @@ module HuobisHelper
     end
 
     # 3 pnl_limit
-    # data = Rails.cache.redis.hgetall("orders")
-    # orders = data
-    #
-    # if orders && orders.any?
-    #   orders.each do |order|
-    #     symbol = order[0]
-    #     pnls = ApplicationController.helpers.huobi_pnls(symbol)
-    #     array = pnls.map{|x| (eval x)[:change]}
-    #     pnl_samples = (array.select.with_index{|_,i| (i+1) % ENV["pnl_interval"].to_i == 0}).last(3)
-    #
-    #     if pnl_samples.any? && pnl_samples.count == 3 && pnl_samples.sort.reverse == pnl_samples && pnl_samples[0] != pnl_samples[-1] && pnl_samples[1] != pnl_samples[-1]
-    #       begin
-    #         ApplicationController.helpers.huobi_orders_log(symbol)
-    #         Rails.cache.redis.hdel("orders", symbol)
-    #       rescue Exception => e
-    #         Rails.logger.warn "huobi_orders_close 3: #{e.message}"
-    #       ensure
-    #         PnlLoggersJob.perform_later symbol, pnls
-    #         Rails.logger.warn "#{symbol} closed due to pnl limit"
-    #       end
-    #     end
-    #
-    #     count = count + 1
-    #   end
-    # end
+    data = Rails.cache.redis.hgetall("orders")
+    orders = data
+
+    if orders && orders.any?
+      orders.each do |order|
+        symbol = order[0]
+        pnls = ApplicationController.helpers.huobi_pnls(symbol)
+        array = pnls.map{|x| (eval x)[:change]}
+        pnl_samples = (array.select.with_index{|_,i| (i+1) % ENV["pnl_interval"].to_i == 0}).last(3)
+
+        if pnl_samples.any? && pnl_samples.count == 3 && pnl_samples.sort.reverse == pnl_samples && pnl_samples[0] != pnl_samples[-1] && pnl_samples[1] != pnl_samples[-1]
+          begin
+            ApplicationController.helpers.huobi_orders_log(symbol)
+            Rails.cache.redis.hdel("orders", symbol)
+          rescue Exception => e
+            Rails.logger.warn "huobi_orders_close 3: #{e.message}"
+          ensure
+            PnlLoggersJob.perform_later symbol, pnls
+            Rails.logger.warn "#{symbol} closed due to pnl limit"
+          end
+        end
+
+        count = count + 1
+      end
+    end
 
     # 4 timer limit
     data = Rails.cache.redis.hgetall("orders")
