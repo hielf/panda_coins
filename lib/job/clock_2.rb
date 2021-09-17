@@ -35,6 +35,10 @@ module Clockwork
 
             if end_time >= Time.now.beginning_of_day && end_time <= Time.now.beginning_of_day + 120
               start_time = nil
+              if end_time.strftime("%H:%M:%S") < "00:00:10"
+                # p end_time.strftime("%H:%M:%S")
+                next
+              end
             end
 
             symbols = ApplicationController.helpers.huobi_tickers_check(start_time, end_time)
