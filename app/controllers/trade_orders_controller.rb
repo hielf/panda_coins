@@ -47,6 +47,11 @@ class TradeOrdersController < ApplicationController
 
   def histroy_matchresults
     @histroy_matchresults = Trade.today.order(:created_time)
+    @histroy_matchresults_all = Trade.order(:created_time)
+    respond_to do |format|
+       format.html
+       format.csv { send_data @histroy_matchresults.to_csv }
+     end
   end
 
   def accounts_history
