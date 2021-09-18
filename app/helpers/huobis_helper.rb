@@ -327,7 +327,7 @@ module HuobisHelper
     # 4 timer limit
     data = Rails.cache.redis.hgetall("orders")
     orders = data.find_all {|x| (eval x[1])[:open_time] <= ENV["close_timer_up"].to_i.seconds.ago}
-    if Time.now.strftime('%H:%M') == "00:03"
+    if ENV["daily_clear_all_time"] && !ENV["daily_clear_all_time"].empty? && Time.now.strftime('%H:%M') == ENV["daily_clear_all_time"]
       orders = data
     end
 

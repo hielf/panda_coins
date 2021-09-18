@@ -30,12 +30,12 @@ module Clockwork
       else
         loop do
           begin
-            start_time = Time.now - 120
+            start_time = Time.now - ENV['tickers_check_interval'].to_i
             end_time = Time.now
 
             if end_time >= Time.now.beginning_of_day && end_time <= Time.now.beginning_of_day + 120
               start_time = nil
-              if end_time.strftime("%H:%M:%S") < "00:00:10"
+              if ENV["daily_start_time"] && !ENV["daily_start_time"].empty? && end_time.strftime("%H:%M:%S") < ENV["daily_start_time"]
                 # p end_time.strftime("%H:%M:%S")
                 next
               end
