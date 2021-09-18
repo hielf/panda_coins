@@ -55,7 +55,12 @@ module Clockwork
                   rbalance =  Rails.cache.redis.hget("balances", "usdt:trade")
                   current_balance = (eval rbalance)[:balance].to_f if rbalance
                   current_trades = Rails.cache.redis.hgetall("trades")
-                  amount = (current_balance / (ENV['dvide_shares'].to_i - current_trades.count)).truncate(0)
+                  divide_shares = ENV['divide_shares'].to_i
+                  if current_trades.count == 0
+                    divide_shares = ENV['first_share_divide'].to_i
+                  end
+
+                  amount = (current_balance / (divide_shares - current_trades.count)).truncate(0)
 
                   OrdersJob.perform_now symbol, 'buy-market', 0, amount
                   Rails.logger.warn "symbol #{symbol} opened @ #{hash[:close]} amount: #{amount}"
