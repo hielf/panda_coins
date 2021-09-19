@@ -66,6 +66,8 @@ module Clockwork
                   Rails.logger.warn "symbol #{symbol} opened @ #{hash[:close]} amount: #{amount}"
                 rescue FloatDomainError => e
                   Rails.logger.warn "symbol #{symbol} opened skipped: shares all used"
+                ensure
+                  Rails.cache.redis.hset("balance_his", end_time.strftime("%Y-%m-%d"), {:balance => current_balance})
                 end
               end
             end
