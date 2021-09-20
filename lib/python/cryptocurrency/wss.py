@@ -55,8 +55,8 @@ def on_open(ws, c):
     def run(*args):
         # for c in usdts:
         req = "market." + c + ".kline.1min"
-        begin_date = datetime.datetime(2021,8,16,0,0)
-        end_date = datetime.datetime(2021,9,16,0,0)
+        begin_date = datetime.datetime(2021,9,12,0,0)
+        end_date = datetime.datetime(2021,9,20,0,0)
 
         diff = end_date - begin_date
         for i in range(diff.days):

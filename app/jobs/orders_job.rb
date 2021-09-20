@@ -19,6 +19,7 @@ class OrdersJob < ApplicationJob
     current_time = Time.now.strftime("%H:%M")
     last_balance = Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")).nil? ? nil : (eval Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")))[:balance]
     today_balance = Rails.cache.redis.hget("balance_his", (Date.today).strftime("%Y-%m-%d")).nil? ? nil : (eval Rails.cache.redis.hget("balance_his", (Date.today).strftime("%Y-%m-%d")))[:balance]
+    white_list_symbols = ApplicationController.helpers.white_list
     run_flag = true
     begin
       if (@type.include? "buy") && (current_time <= ENV["buy_accept_start_time"] && current_time >= ENV["buy_accept_end_time"])
@@ -29,6 +30,9 @@ class OrdersJob < ApplicationJob
         run_flag = false
       elsif (last_balance && today_balance) && ((today_balance - last_balance) / last_balance) > ENV["daily_balance_up_limit"].to_f
         Rails.logger.warn "OrdersJob skip openning: balance up #{ENV["daily_balance_up_limit"]}"
+        run_flag = false
+      elsif !white_list_symbols.include? @symbol
+        Rails.logger.warn "OrdersJob skip openning: #{@symbol} due to new into market"
         run_flag = false
       end
 
