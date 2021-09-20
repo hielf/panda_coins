@@ -45,7 +45,8 @@ module Clockwork
 
   # # trades
   every(1.minute, 'huobi.tickers_cache')
-  every(1.day, 'huobi.usdts_symbols', :at => '06:00', :thread => true)
+  every(1.day, 'huobi.usdts_symbols', :at => '12:00', :thread => true)
+  every(1.day, 'huobi.usdts_symbols', :at => '00:00', :thread => true)
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')
   #

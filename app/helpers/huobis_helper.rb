@@ -11,6 +11,7 @@ module HuobisHelper
 
   # ApplicationController.helpers.huobi_close_all
   def huobi_close_all
+    ApplicationController.helpers.usdts_symbols
     @account_id, @status = ApplicationController.helpers.huobi_balances
     @trader_balances = TraderBalance.where("balance > ?", 0.0001)
     symbol = ""
@@ -21,7 +22,7 @@ module HuobisHelper
         # @account_id, @status = ApplicationController.helpers.huobi_balances
         amount = ApplicationController.helpers.huobi_close_amount(symbol)
         p [symbol, amount]
-        OrdersJob.perform_now symbol, 'sell-market', 0, amount
+        OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
         sleep 0.3
       end
     end
@@ -257,7 +258,7 @@ module HuobisHelper
         pnls = ApplicationController.helpers.huobi_pnls(symbol)
         begin
           amount = ApplicationController.helpers.huobi_close_amount(symbol)
-          OrdersJob.perform_now symbol, 'sell-market', 0, amount
+          OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
 
           ApplicationController.helpers.huobi_orders_log(symbol)
           Rails.cache.redis.hdel("orders", symbol)
@@ -282,7 +283,7 @@ module HuobisHelper
         pnls = ApplicationController.helpers.huobi_pnls(symbol)
         begin
           amount = ApplicationController.helpers.huobi_close_amount(symbol)
-          OrdersJob.perform_now symbol, 'sell-market', 0, amount
+          OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
 
           ApplicationController.helpers.huobi_orders_log(symbol)
           Rails.cache.redis.hdel("orders", symbol)
@@ -310,6 +311,9 @@ module HuobisHelper
     #
     #     if pnl_samples.any? && pnl_samples.count == 3 && pnl_samples.sort.reverse == pnl_samples && pnl_samples[0] != pnl_samples[-1] && pnl_samples[1] != pnl_samples[-1]
     #       begin
+    #         amount = ApplicationController.helpers.huobi_close_amount(symbol)
+    #         OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
+
     #         ApplicationController.helpers.huobi_orders_log(symbol)
     #         Rails.cache.redis.hdel("orders", symbol)
     #       rescue Exception => e
@@ -337,7 +341,7 @@ module HuobisHelper
         pnls = ApplicationController.helpers.huobi_pnls(symbol)
         begin
           amount = ApplicationController.helpers.huobi_close_amount(symbol)
-          OrdersJob.perform_now symbol, 'sell-market', 0, amount
+          OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
 
           ApplicationController.helpers.huobi_orders_log(symbol)
           Rails.cache.redis.hdel("orders", symbol)

@@ -12,6 +12,7 @@ class OrdersJob < ApplicationJob
     @type = args[1]
     @price = args[2]
     @count = args[3]
+    @manual = args[4]
 
     message = "交易错误"
     huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])

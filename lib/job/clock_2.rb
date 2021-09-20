@@ -62,7 +62,7 @@ module Clockwork
 
                   amount = (current_balance / (divide_shares - current_trades.count)).truncate(0)
 
-                  OrdersJob.perform_now symbol, 'buy-market', 0, amount
+                  OrdersJob.perform_now symbol, 'buy-market', 0, amount, false
                   Rails.logger.warn "symbol #{symbol} opened @ #{hash[:close]} amount: #{amount}"
                 rescue FloatDomainError => e
                   Rails.logger.warn "symbol #{symbol} opened skipped: shares all used"
