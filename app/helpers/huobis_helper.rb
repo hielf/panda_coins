@@ -451,20 +451,22 @@ module HuobisHelper
     if @accounts_history && @accounts_history["status"] == "ok"
       data = @accounts_history["data"]
       data.each do |his|
-        begin
-          ah = AccountHi.find_or_initialize_by(account_id: his["account-id"],record_id: his["record-id"].to_s)
-          ah.attributes = { currency: his["currency"],
-                            transact_amt: his["transact-amt"],
-                            transact_type: his["transact-type"],
-                            avail_balance: his["avail-balance"],
-                            acct_balance: his["acct-balance"],
-                            transact_time: Time.at(his["transact-time"]/1000) }
+        AccountHi.transaction do
+          begin
+            ah = AccountHi.find_or_initialize_by(account_id: his["account-id"],record_id: his["record-id"].to_s)
+            ah.attributes = { currency: his["currency"],
+                              transact_amt: his["transact-amt"],
+                              transact_type: his["transact-type"],
+                              avail_balance: his["avail-balance"],
+                              acct_balance: his["acct-balance"],
+                              transact_time: Time.at(his["transact-time"]/1000) }
 
-          if ah.save
-            count = count + 1
+            if ah.save
+              count = count + 1
+            end
+          rescue Exception => e
+            Rails.logger.warn "huobi_histroy_matchresults error: #{e.message}"
           end
-        rescue Exception => e
-          Rails.logger.warn "huobi_histroy_matchresults error: #{e.message}"
         end
       end
     end
@@ -489,6 +491,8 @@ module HuobisHelper
 
   # ApplicationController.helpers.huobi_data_insert
   def huobi_data_insert
+    require 'csv'
+
     table_name = "huobi_start_1min"
     dir = Rails.root.to_s + "/lib/python/cryptocurrency/"
     his_dir = Rails.root.to_s + "/lib/python/cryptocurrency/his/"
