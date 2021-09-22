@@ -114,9 +114,12 @@ module HuobisHelper
   def huobi_tickers_check(start_time, end_time)
     start_time = Time.now.beginning_of_day - 2 if start_time.nil?
     end_time = Time.now if end_time.nil?
+    current_time = Time.now.strftime("%H:%M")
     keys = Rails.cache.redis.keys.sort
     times = []
     symbols = []
+    white_list_symbols = ApplicationController.helpers.white_list
+    current_trades = Rails.cache.redis.hgetall("trades")
     keys.each do |key|
       times << key if (!key.to_time.nil? && key.to_time >= start_time && key.to_time <= end_time)
     end
@@ -128,13 +131,25 @@ module HuobisHelper
         if data_s && !data_s.empty? && data_l && !data_l.empty?
           data_s.each do |ticker|
             symbol = ticker["symbol"]
+            next if !white_list_symbols.include? symbol
+
             last = data_l.find {|x| x["symbol"] == symbol}
             change = (ticker["close"] == 0 ? 0 : (last["close"]-ticker["close"])/ticker["close"])
             Rails.cache.redis.hset("tickers", ticker["symbol"], {"time": times[-1], "open": ticker["close"], "close": last["close"], "change": change})
           end
 
           changes = Rails.cache.redis.hgetall("tickers")
-          symbols = changes.find_all {|x| (eval x[1])[:change] >= ENV["up_floor_limit"].to_f && (eval x[1])[:change] <= ENV["up_up_limit"].to_f}
+
+          symbols1 = changes.find_all {|x| (eval x[1])[:change] >= ENV["up_floor_limit"].to_f && (eval x[1])[:change] <= ENV["first_up_up_limit"].to_f}
+          symbols1.sort_by! { |s| -(eval s[1])[:change] }
+          symbols2 = changes.find_all {|x| (eval x[1])[:change] >= ENV["up_floor_limit"].to_f && (eval x[1])[:change] <= ENV["up_up_limit"].to_f}
+
+          if (current_trades.count == 0) && (current_time >= "00:00" && current_time <= ENV["buy_accept_end_time"]) && !symbols1.empty?
+            symbols = ([symbols1[0]] + symbols2).uniq
+          else
+            symbols = symbols2
+          end
+
           symbols.sort_by! { |s| -(eval s[1])[:change] }
         end
       rescue Exception => e
