@@ -99,7 +99,7 @@ module HuobisHelper
 
         # redis = Rails.cache.redis
         begin
-          Rails.cache.write(ticker_time, data, expires_in: 2.minute)
+          Rails.cache.write(ticker_time, data, expires_in: 15.minute)
           # redis.hset("tickers",ticker_time,data, expires_in: 2.minute)
         rescue Exception => e
           Rails.logger.warn "huobi_tickers_cache: #{e.message}"
@@ -195,6 +195,12 @@ module HuobisHelper
       ticker_time = Time.at(tick["ts"]/1000).to_s
       sym_data = eval symbol[1]
       change = (sym_data[:close] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:close])/sym_data[:close])
+
+      opened_symbols = Rails.cache.redis.hgetall("orders")
+      if opened_symbols.count >= ENV["max_opened_orders"].to_i
+        Rails.logger.warn "skip openning: #{symbol[0]} due to reach max_opened_orders"
+        break
+      end
       Rails.cache.redis.hset("orders", symbol[0], {"open_price": sym_data[:close], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:time], "current_time": ticker_time})
     end
 

@@ -33,9 +33,9 @@ module Clockwork
             start_time = Time.now - ENV['tickers_check_interval'].to_i
             end_time = Time.now
 
-            if end_time >= Time.now.beginning_of_day && end_time <= Time.now.beginning_of_day + 120
+            if end_time >= Time.now.beginning_of_day && end_time <= Time.now.beginning_of_day + ENV['tickers_check_interval'].to_i
               start_time = nil
-              if ENV["daily_start_time"] && !ENV["daily_start_time"].empty? && end_time.strftime("%H:%M:%S") < ENV["daily_start_time"]
+              if ENV["daily_start_time"] && !ENV["daily_start_time"].empty? && end_time.strftime("%H:%M:%S") <= ENV["daily_start_time"]
                 # p end_time.strftime("%H:%M:%S")
                 next
               end
@@ -63,9 +63,9 @@ module Clockwork
                   amount = (current_balance / (divide_shares - current_trades.count)).truncate(0)
 
                   OrdersJob.perform_now symbol, 'buy-market', 0, amount, false
-                  Rails.logger.warn "symbol #{symbol} opened @ #{hash[:close]} amount: #{amount}"
+                  Rails.logger.warn "symbol #{symbol} open @ #{hash[:close]} amount: #{amount}"
                 rescue FloatDomainError => e
-                  Rails.logger.warn "symbol #{symbol} opened skipped: shares all used"
+                  Rails.logger.warn "symbol #{symbol} open skipped: shares all used"
                 ensure
                   Rails.cache.redis.hset("balance_his", end_time.strftime("%Y-%m-%d"), {:balance => current_balance})
                 end
