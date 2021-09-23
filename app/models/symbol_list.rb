@@ -1,0 +1,2 @@
+class SymbolList < ApplicationRecord
+end
