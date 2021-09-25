@@ -301,7 +301,7 @@ module HuobisHelper
     # 1 down limit
     count = 0
     data = Rails.cache.redis.hgetall("orders")
-    orders = data.find_all {|x| (eval x[1])[:change] <= ENV["down_limit"].to_f}
+    orders = data.find_all {|x| ((eval x[1])[:change] <= ENV["down_limit"].to_f) && (Time.now - (eval x[1])[:open_time].to_time >= ENV["open_await_to_close_time"].to_i)}
 
     if orders && orders.any?
       orders.each do |order|
