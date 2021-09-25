@@ -1,0 +1,81 @@
+<div>
+  <span style="font-size:20px;">今日成交</span>
+  <span><%= link_to "当前指令", "/trade_orders/pre_orders"%></span>
+  <span><%= link_to "今日指令", "/trade_orders/event_logs"%></span>
+  <span><%= link_to "今日成交", "/trade_orders/histroy_matchresults"%></span>
+  <span><%= link_to "资金流水", "/trade_orders/accounts_history"%></span>
+  <span><%= link_to "资金余额", "/trade_orders/trader_balances"%></span>
+</div>
+
+<div style="padding-top: 25px;">
+  <%= form_with model: @trader_setting do |form| %>
+    <div class="display: inline-block;">
+      <label>合约上市后可交易日期：</label>
+      <%= form.text_field :days_after_symbol_listing, required: true %>
+    </div>
+    <div class="display: inline-block;">
+      <label>全局开仓数量上限：</label>
+      <%= form.text_field :max_opened_orders, required: true %>
+    </div>
+    <div class="display: inline-block;">
+      <label>头币份额：</label>
+      <%= form.text_field :first_share_divide, required: true %>
+    </div>
+    <div class="display: inline-block;">
+      <label>后续份额：</label>
+      <%= form.text_field :divide_shares, required: true %>
+    </div>
+    <div class="display: inline-block;">
+      <label>开仓涨幅下限：</label>
+      <%= form.text_field :up_floor_limit, required: true %>
+    </div>
+    <div class="display: inline-block;">
+      <label>开仓涨幅上限：</label>
+      <%= form.text_field :up_up_limit, required: true %>
+    </div>
+    <div class="display: inline-block;">
+      <label>头币开仓涨幅上限：</label>
+      <%= form.text_field :first_up_up_limit, required: true %>
+    </div>
+    <div class="display: inline-block;">
+      <label>止损平仓跌幅下限：</label>
+      <%= form.text_field :down_limit, required: true %>
+    </div>
+    <div class="display: inline-block;">
+      <label>止赢平仓涨幅上限：</label>
+      <%= form.text_field :up_limit, required: true %>
+    </div>
+    <div class="display: inline-block;">
+      <label>持仓盈亏监控间隔频率(秒)：</label>
+      <%= form.text_field :pnl_interval, required: true, enabled: false %>
+    </div>
+    <div class="display: inline-block;">
+      <label>持仓持续时间(秒)：</label>
+      <%= form.text_field :close_timer_up, required: true %>
+    </div>
+    <div class="display: inline-block;">
+      <label>ticker监控回溯时间(秒)：</label>
+      <%= form.text_field :tickers_check_interval, required: true %>
+    </div>
+    <div class="display: inline-block;">
+      <label>当日资产涨幅百分比上限：</label>
+      <%= form.text_field :daily_balance_up_limit, required: true %>
+    </div>
+    <div class="display: inline-block;">
+      <label>每日开仓起始时间：</label>
+      <%= form.text_field :daily_start_time, required: true %>
+    </div>
+    <div class="display: inline-block;">
+      <label>每日全清仓时间：</label>
+      <%= form.text_field :daily_clear_all_time, required: true %>
+    </div>
+    <div class="display: inline-block;">
+      <label>买入接受起始时间(不包含此刻)：</label>
+      <%= form.text_field :buy_accept_start_time, required: true %>
+    </div>
+    <div class="display: inline-block;">
+      <label>买入接受终止时间(不包含此刻)：</label>
+      <%= form.text_field :buy_accept_end_time, required: true %>
+    </div>
+  <% end %>
+</div>

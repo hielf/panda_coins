@@ -1,0 +1,2 @@
+class TraderSetting < ApplicationRecord
+end

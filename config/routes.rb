@@ -12,6 +12,12 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :trader_settings do
+    collection do
+      get :account_settings
+    end
+  end
+
   namespace :api, defaults: {format: :json} do
     root 'root#home'
     resources :trade_orders do

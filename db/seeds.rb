@@ -12,3 +12,23 @@
 #
 #   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
 #   Mayor.create(name: 'Emanuel', city: cities.first)
+
+ts = TraderSetting.find_or_initialize_by(account_id: 31434802)
+ts.attributes = { days_after_symbol_listing: "90",
+  max_opened_orders: "10",
+  first_share_divide: "3",
+  divide_shares: "5",
+  up_floor_limit: "0.01",
+  up_up_limit: "0.05",
+  first_up_up_limit: "0.05",
+  down_limit: "-0.03",
+  up_limit: "0.06",
+  pnl_interval: "3",
+  close_timer_up: "60",
+  tickers_check_interval: "120",
+  daily_balance_up_limit: "0.01",
+  daily_start_time: "00:00:05",
+  daily_clear_all_time: "00:05",
+  buy_accept_start_time: "23:59",
+  buy_accept_end_time: "00:03" }
+ts.save

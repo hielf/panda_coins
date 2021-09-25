@@ -281,7 +281,8 @@ module HuobisHelper
       # tr = TraderBalance.find_by(currency: symbol.sub("usdt",""), balance_type: 'trade')
       rbalance =  Rails.cache.redis.hget("balances", "#{symbol.sub("usdt","")}:trade")
       tr = (eval rbalance)[:balance] if rbalance
-      balance = tr.truncate(precision) if tr
+      balance = tr.to_d.truncate(precision).to_f if tr
+      balance = balance.to_i if precision == 0
 
       if balance && balance < sell_market_min_order_amt
         amount = 0
