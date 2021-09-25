@@ -10,12 +10,12 @@
 <div style="padding-top: 25px;">
   <%= form_with model: @trader_setting do |form| %>
     <div class="display: inline-block;">
-      <label>合约上市后可交易日期：</label>
+      <label>合约上市后交易等待日期：</label>
       <%= form.text_field :days_after_symbol_listing, required: true %>
     </div>
     <div class="display: inline-block;">
       <label>全局开仓数量上限：</label>
-      <%= form.text_field :max_opened_orders, required: true %>
+      <%= form.text_field :max_opened_orders, required: true, disabled: true %>
     </div>
     <div class="display: inline-block;">
       <label>头币份额：</label>
@@ -47,7 +47,7 @@
     </div>
     <div class="display: inline-block;">
       <label>持仓盈亏监控间隔频率(秒)：</label>
-      <%= form.text_field :pnl_interval, required: true, enabled: false %>
+      <%= form.text_field :pnl_interval, required: true, disabled: true %>
     </div>
     <div class="display: inline-block;">
       <label>持仓持续时间(秒)：</label>
@@ -59,7 +59,7 @@
     </div>
     <div class="display: inline-block;">
       <label>当日资产涨幅百分比上限：</label>
-      <%= form.text_field :daily_balance_up_limit, required: true %>
+      <%= form.text_field :daily_balance_up_limit, required: true, disabled: true %>
     </div>
     <div class="display: inline-block;">
       <label>每日开仓起始时间：</label>
@@ -77,5 +77,7 @@
       <label>买入接受终止时间(不包含此刻)：</label>
       <%= form.text_field :buy_accept_end_time, required: true %>
     </div>
+
+    <%= form.submit "保存" %>
   <% end %>
 </div>

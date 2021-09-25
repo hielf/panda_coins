@@ -33,12 +33,13 @@ module Clockwork
             start_time = Time.now - ENV['tickers_check_interval'].to_i
             end_time = Time.now
 
+            if ENV["daily_start_time"] && !ENV["daily_start_time"].empty? && end_time.strftime("%H:%M:%S") <= ENV["daily_start_time"]
+              # p end_time.strftime("%H:%M:%S")
+              next
+            end
+
             if end_time >= Time.now.beginning_of_day && end_time <= Time.now.beginning_of_day + ENV['tickers_check_interval'].to_i
               start_time = nil
-              if ENV["daily_start_time"] && !ENV["daily_start_time"].empty? && end_time.strftime("%H:%M:%S") <= ENV["daily_start_time"]
-                # p end_time.strftime("%H:%M:%S")
-                next
-              end
             end
 
             symbols = ApplicationController.helpers.huobi_tickers_check(start_time, end_time)
@@ -72,7 +73,7 @@ module Clockwork
               end
             end
 
-            sleep 0.3
+            sleep 0.2
           rescue Exception => e
             Rails.logger.warn "tickers_check error: #{e.message}"
           ensure
