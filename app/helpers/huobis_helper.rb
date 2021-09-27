@@ -122,7 +122,7 @@ module HuobisHelper
 
         # redis = Rails.cache.redis
         begin
-          Rails.cache.write(ticker_time, data, expires_in: 15.minute)
+          Rails.cache.write(ticker_time, data, expires_in: 126.seconds)
           # redis.hset("tickers",ticker_time,data, expires_in: 2.minute)
         rescue Exception => e
           Rails.logger.warn "huobi_tickers_cache: #{e.message}"

@@ -1,9 +1,34 @@
 class TraderSettingsController < ApplicationController
 
-  def account_settings
-    account_id = params[:account_id]
+  def update
+    id = params[:id]
+    verify_code = params[:trader_setting][:verify_code]
+    if verify_code == "0000"
+      begin
+        @trader_setting = TraderSetting.find_by(id: id)
+        @trader_setting.update!(trade_order_params)
+        result = [0, "success", @trader_setting.as_json]
+      rescue Exception => e
+        result = [1, e.to_s]
+      end
 
-    @trader_setting = TraderSetting.find_by(account_id: account_id)
+      redirect_to edit_trader_setting_path(@trader_setting)
+    else
+      flash.now[:error] = "验证码错误"
+    end
   end
 
+  def edit
+    id = params[:id]
+    @trader_setting = TraderSetting.find_by(id: id)
+  end
+
+  private
+  def trade_order_params
+    params["trader_setting"].permit(:days_after_symbol_listing, :max_opened_orders,
+      :first_share_divide, :divide_shares, :up_floor_limit, :up_up_limit, :first_up_up_limit,
+      :down_limit, :up_limit, :pnl_interval, :close_timer_up, :tickers_check_interval,
+      :daily_balance_up_limit, :daily_start_time, :daily_clear_all_time,
+      :buy_accept_start_time, :buy_accept_end_time, :open_await_to_close_time)
+  end
 end

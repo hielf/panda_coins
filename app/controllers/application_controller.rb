@@ -1,6 +1,6 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery prepend: true
-
+  add_flash_types :info, :error, :warning
 
   def current_user
     token, options = ActionController::HttpAuthentication::Token.token_and_options(request)
