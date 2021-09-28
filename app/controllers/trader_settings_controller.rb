@@ -3,18 +3,23 @@ class TraderSettingsController < ApplicationController
   def update
     id = params[:id]
     verify_code = params[:trader_setting][:verify_code]
-    if verify_code == "0000"
+    @trader_setting = TraderSetting.find_by(id: id)
+    if verify_code == ENV["verify_code"]
       begin
-        @trader_setting = TraderSetting.find_by(id: id)
         @trader_setting.update!(trade_order_params)
-        result = [0, "success", @trader_setting.as_json]
+        msg = "修改成功"
       rescue Exception => e
-        result = [1, e.to_s]
+        msg = "修改失败,#{e.to_s}"
       end
-
-      redirect_to edit_trader_setting_path(@trader_setting)
+      flash.now[:notice] = 'Message sent!'
+      # redirect_to edit_trader_setting_path(@trader_setting)
+      respond_to do |format|
+        format.html { redirect_to request.referer, alert: '修改成功' }
+      end
     else
-      flash.now[:error] = "验证码错误"
+      respond_to do |format|
+        format.html { redirect_to request.referer, alert: '验证码错误' }
+      end
     end
   end
 

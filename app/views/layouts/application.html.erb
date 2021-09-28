@@ -8,6 +8,11 @@
   </head>
 
   <body>
+    <div>
+      <% flash.each do |name, msg| %>
+        <%= content_tag :div, msg, style: 'text-align: center; padding: 10px; background-color: #f44336; color: white; margin-bottom: 5px;' %>
+      <% end %>
+    </div>
     <%= yield %>
   </body>
 </html>
