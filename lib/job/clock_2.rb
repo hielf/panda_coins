@@ -25,20 +25,21 @@ module Clockwork
       # end
       current_time = Time.now
       runtime = Rails.cache.read('running:clock_2')
+      settings = TraderSetting.current_settings
       if runtime && (current_time - runtime).abs < 30
         nil
       else
         loop do
           begin
-            start_time = Time.now - ENV['tickers_check_interval'].to_i
+            start_time = Time.now - settings.tickers_check_interval.to_i
             end_time = Time.now
 
-            if ENV["daily_start_time"] && !ENV["daily_start_time"].empty? && end_time.strftime("%H:%M:%S") <= ENV["daily_start_time"]
+            if settings.daily_start_time && !settings.daily_start_time.empty? && end_time.strftime("%H:%M:%S") <= settings.daily_start_time
               # p end_time.strftime("%H:%M:%S")
               next
             end
 
-            if end_time >= Time.now.beginning_of_day && end_time <= Time.now.beginning_of_day + ENV['tickers_check_interval'].to_i
+            if end_time >= Time.now.beginning_of_day && end_time <= Time.now.beginning_of_day + settings.tickers_check_interval.to_i
               start_time = nil
             end
 
@@ -50,13 +51,12 @@ module Clockwork
               open_symbols.each do |data|
                 symbol = data[0]
                 hash = eval data[1]
-                # current_balance = TraderBalance.find_by(account_id: ENV["huobi_accounts"], currency: "usdt", balance_type: "trade").balance.to_f
                 current_balance = 0
                 begin
                   rbalance =  Rails.cache.redis.hget("balances", "usdt:trade")
                   current_balance = (eval rbalance)[:balance].to_f if rbalance
                   current_trades = Rails.cache.redis.hgetall("trades")
-                  divide_shares = current_trades.count == 0 ? ENV['first_share_divide'].to_i : ENV['divide_shares'].to_i
+                  divide_shares = current_trades.count == 0 ? settings.first_share_divide.to_i : settings.divide_shares.to_i
                   amount = (current_balance / (divide_shares - current_trades.count)).truncate(0)
 
                   OrdersJob.perform_now symbol, 'buy-market', 0, amount, false

@@ -29,6 +29,7 @@ module HuobisHelper
   def white_list
     symbols = []
     usdts = Rails.cache.redis.hgetall("symbols")
+    settings = TraderSetting.current_settings
 
     usdts.each do |usdt|
       hash = eval usdt[1]
@@ -38,7 +39,7 @@ module HuobisHelper
       state = hash[:"state"]
       api_trading = hash[:"api-trading"]
       listing_date = hash[:"listing-date"]
-      symbols << usdt[0] if state == "online" && api_trading == "enabled" && listing_date.to_date <= ENV["days_after_symbol_listing"].to_i.days.ago
+      symbols << usdt[0] if state == "online" && api_trading == "enabled" && listing_date.to_date <= settings.days_after_symbol_listing.to_i.days.ago
     end
     # symbols = ['aacusdt','achusdt','ankrusdt','bsvusdt','cnnsusdt','creusdt','bixusdt','dacusdt','ektusdt','ethusdt','fildausdt','flowusdt','gxcusdt','ltc3susdt','mirusdt','mtausdt','mxcusdt','nasusdt','nbsusdt','neousdt','phausdt','skmusdt','steemusdt','utkusdt','wnxmusdt','xrp3lusdt','zilusdt','1inchusdt','aaveusdt','abtusdt','adausdt','aeusdt','akrousdt','antusdt','api3usdt','apnusdt','arusdt','atomusdt','axsusdt','bagsusdt','batusdt','bch3lusdt','bethusdt','bhdusdt','blzusdt','bntusdt','btc1susdt','btc3susdt','btmusdt','bttusdt','ckbusdt','cmtusdt','cruusdt','crvusdt','csprusdt','ctsiusdt','dashusdt','dfusdt','dkausdt','dogeusdt','dot2susdt','dotusdt','egtusdt','elausdt','elfusdt','eos3lusdt','eosusdt','etcusdt','eth1susdt','firousdt','fisusdt','forthusdt','forusdt','fttusdt','gnxusdt','grtusdt','gtusdt','hbcusdt','hitusdt','hptusdt','icpusdt','icxusdt','iostusdt','fsnusdt','pondusdt','actusdt','algousdt','arpausdt','astusdt','atpusdt','auctionusdt','avaxusdt','badgerusdt','balusdt','bandusdt','bch3susdt','bchusdt','bsv3lusdt','bsv3susdt','iotxusdt','irisusdt','itcusdt','jstusdt','kanusdt','kcashusdt','kncusdt','ksmusdt','lambusdt','latusdt','lbausdt','lhbusdt','linausdt','linkusdt','lrcusdt','ltc3lusdt','ltcusdt','lunausdt','manausdt','massusdt','maticusdt','mdxusdt','mlnusdt','mxusdt','newusdt','nftusdt','nknusdt','nsureusdt','o3usdt','ognusdt','ogousdt','oneusdt','polsusdt','btc3lusdt','btcusdt','btsusdt','canusdt','chrusdt','chzusdt','compusdt','crousdt','ctxcusdt','cvcusdt','cvpusdt','daiusdt','dcrusdt','dhtusdt','dockusdt','dot2lusdt','dtausdt','emusdt','enjusdt','eos3susdt','eth3lusdt','eth3susdt','fil3lusdt','filusdt','frontusdt','ftiusdt','glmusdt','gofusdt','hbarusdt','hcusdt','hiveusdt','hotusdt','htusdt','injusdt','insurusdt','iotausdt','kavausdt','letusdt','link3lusdt','link3susdt','lolusdt','loomusdt','lxtusdt','maskusdt','mdsusdt','mkrusdt','nanousdt','nearusdt','nestusdt','nexousdt','nhbtcusdt','nodeusdt','nulsusdt','nuusdt','ocnusdt','omgusdt','ontusdt','oxtusdt','paiusdt','paxusdt','pearlusdt','pvtusdt','qtumusdt','raiusdt','reefusdt','renusdt','ringusdt','rlcusdt','rndrusdt','rsrusdt','ruffusdt','topusdt','trbusdt','trxusdt','ttusdt','uipusdt','umausdt','uni2lusdt','uni2susdt','uniusdt','usdcusdt','uuuusdt','valueusdt','vetusdt','vidyusdt','vsysusdt','wavesusdt','waxpusdt','wbtcusdt','wiccusdt','woousdt','wtcusdt','wxtusdt','xchusdt','xemusdt','rvnusdt','sandusdt','scusdt','seeleusdt','shibusdt','sklusdt','smtusdt','sntusdt','snxusdt','socusdt','solusdt','stakeusdt','stnusdt','storjusdt','stptusdt','sunusdt','sushiusdt','swftcusdt','swrvusdt','thetausdt','titanusdt','tnbusdt','xlmusdt','xmrusdt','xmxusdt','xrpusdt','xrtusdt','xtzusdt','yamusdt','yeeusdt','yfiiusdt','yfiusdt','zec3lusdt','zec3susdt','zecusdt','zenusdt','zksusdt','zrxusdt']
     return symbols
@@ -142,6 +143,7 @@ module HuobisHelper
     symbols = []
     white_list_symbols = ApplicationController.helpers.white_list
     current_trades = Rails.cache.redis.hgetall("trades")
+    settings = TraderSetting.current_settings
     keys.each do |key|
       times << key if (!key.to_time.nil? && key.to_time >= start_time && key.to_time <= end_time)
     end
@@ -162,11 +164,11 @@ module HuobisHelper
 
           changes = Rails.cache.redis.hgetall("tickers")
 
-          symbols1 = changes.find_all {|x| (eval x[1])[:change] >= ENV["up_floor_limit"].to_f && (eval x[1])[:change] <= ENV["first_up_up_limit"].to_f}
+          symbols1 = changes.find_all {|x| (eval x[1])[:change] >= settings.up_floor_limit.to_f && (eval x[1])[:change] <= settings.first_up_up_limit.to_f}
           symbols1.sort_by! { |s| -(eval s[1])[:change] }
-          symbols2 = changes.find_all {|x| (eval x[1])[:change] >= ENV["up_floor_limit"].to_f && (eval x[1])[:change] <= ENV["up_up_limit"].to_f}
+          symbols2 = changes.find_all {|x| (eval x[1])[:change] >= settings.up_floor_limit.to_f && (eval x[1])[:change] <= settings.up_up_limit.to_f}
 
-          if (current_trades.count == 0) && (current_time >= "00:00" && current_time <= ENV["buy_accept_end_time"]) && !symbols1.empty?
+          if (current_trades.count == 0) && (current_time >= "00:00" && current_time <= settings.buy_accept_end_time) && !symbols1.empty?
             symbols = ([symbols1[0]] + symbols2).uniq
           else
             symbols = symbols2
@@ -185,6 +187,7 @@ module HuobisHelper
   def huobi_open_symbols(symbols)
     # symbols = ApplicationController.helpers.huobi_tickers_check(Time.now - 120, Time.now)
     start_time = Time.now - 10
+    settings = TraderSetting.current_settings
     symbols.delete_if {|x| (eval x[1])[:time].to_time <= start_time}
     begin
       opened_symbols = Rails.cache.redis.hgetall("orders")
@@ -219,7 +222,7 @@ module HuobisHelper
       change = (sym_data[:close] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:close])/sym_data[:close])
 
       opened_symbols = Rails.cache.redis.hgetall("orders")
-      if opened_symbols.count >= ENV["max_opened_orders"].to_i
+      if opened_symbols.count >= settings.max_opened_orders.to_i
         Rails.logger.warn "skip openning: #{symbol[0]} due to reach max_opened_orders"
         break
       end
@@ -301,7 +304,8 @@ module HuobisHelper
     # 1 down limit
     count = 0
     data = Rails.cache.redis.hgetall("orders")
-    orders = data.find_all {|x| ((eval x[1])[:change] <= ENV["down_limit"].to_f) && (Time.now - (eval x[1])[:open_time].to_time >= ENV["open_await_to_close_time"].to_i)}
+    settings = TraderSetting.current_settings
+    orders = data.find_all {|x| ((eval x[1])[:change] <= settings.down_limit.to_f) && (Time.now - (eval x[1])[:open_time].to_time >= settings.open_await_to_close_time.to_i)}
 
     if orders && orders.any?
       orders.each do |order|
@@ -326,7 +330,7 @@ module HuobisHelper
 
     # 2 up_limit
     data = Rails.cache.redis.hgetall("orders")
-    orders = data.find_all {|x| (eval x[1])[:change] > ENV["up_limit"].to_f}
+    orders = data.find_all {|x| (eval x[1])[:change] > settings.up_limit.to_f}
 
     if orders && orders.any?
       orders.each do |order|
@@ -358,7 +362,7 @@ module HuobisHelper
     #     symbol = order[0]
     #     pnls = ApplicationController.helpers.huobi_pnls(symbol)
     #     array = pnls.map{|x| (eval x)[:change]}
-    #     pnl_samples = (array.select.with_index{|_,i| (i+1) % ENV["pnl_interval"].to_i == 0}).last(3)
+    #     pnl_samples = (array.select.with_index{|_,i| (i+1) % settings.pnl_interval.to_i == 0}).last(3)
     #
     #     if pnl_samples.any? && pnl_samples.count == 3 && pnl_samples.sort.reverse == pnl_samples && pnl_samples[0] != pnl_samples[-1] && pnl_samples[1] != pnl_samples[-1]
     #       begin
@@ -381,8 +385,8 @@ module HuobisHelper
 
     # 4 timer limit
     data = Rails.cache.redis.hgetall("orders")
-    orders = data.find_all {|x| (eval x[1])[:open_time] <= ENV["close_timer_up"].to_i.seconds.ago}
-    if ENV["daily_clear_all_time"] && !ENV["daily_clear_all_time"].empty? && Time.now.strftime('%H:%M') == ENV["daily_clear_all_time"]
+    orders = data.find_all {|x| (eval x[1])[:open_time] <= settings.close_timer_up.to_i.seconds.ago}
+    if settings.daily_clear_all_time && !settings.daily_clear_all_time.empty? && Time.now.strftime('%H:%M') == settings.daily_clear_all_time
       orders = data
     end
 
