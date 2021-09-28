@@ -5,6 +5,7 @@
   <span><%= link_to "今日成交", "/trade_orders/histroy_matchresults"%></span>
   <span><%= link_to "资金流水", "/trade_orders/accounts_history"%></span>
   <span><%= link_to "资金余额", "/trade_orders/trader_balances"%></span>
+  <span><%= link_to "系统设置", "/trader_settings/#{TraderSetting.find_by(account_id: ENV["huobi_accounts"].to_i).id}/edit"%></span>
 </div>
 <div>
   <span style="font-size:10px;"><%= link_to "production log", "/trade_orders/production_log"%></span>
