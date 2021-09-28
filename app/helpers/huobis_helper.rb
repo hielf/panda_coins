@@ -231,8 +231,9 @@ module HuobisHelper
 
   def huobi_orders_check
     opened_symbols = Rails.cache.redis.hgetall("orders")
+    threads = opened_symbols.count < 4 ? opened_symbols.count : 4
     if opened_symbols && opened_symbols.any?
-      Parallel.each(opened_symbols, in_thread: opened_symbols.count) do |symbol|
+      Parallel.each(opened_symbols, in_thread: threads) do |symbol|
       # opened_symbols.each do |symbol|
         begin
           redis = Redis.new(Rails.application.config_for(:redis))
