@@ -26,7 +26,7 @@ module Clockwork
         loop do
           begin
             job = OrdersCheckJob.perform_now
-            sleep 0.3
+            sleep 0.2
             # if Time.now.strftime('%M:%S') == "59:59"
             #   Rails.logger.warn "huobi.orders_check ended.."
             #   break
