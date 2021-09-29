@@ -395,6 +395,7 @@ module HuobisHelper
     if orders && orders.any?
       orders.each do |order|
         symbol = order[0]
+        next if Rails.cache.redis.hget("orders", symbol).nil?
         pnls = ApplicationController.helpers.huobi_pnls(symbol)
         begin
           amount = ApplicationController.helpers.huobi_close_amount(symbol)
@@ -417,6 +418,7 @@ module HuobisHelper
   end
 
   def huobi_orders_log(symbol)
+    # last_el = EventLog.last
     begin
       order = Rails.cache.redis.hget("orders", symbol)
       el = EventLog.new(eval order)
