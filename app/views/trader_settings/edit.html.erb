@@ -20,18 +20,14 @@
     </div>
     <div class="display: inline-block;">
       <label>开仓后等待多少时间接受平仓指令(秒)：</label>
-      <%= form.text_field :open_await_to_close_time, required: true %>
+      <%= form.text_field :open_await_to_close_time, required: true, disabled: true %>
     </div>
     <div class="display: inline-block;">
       <label>单个货币对日交易量下限：</label>
       <%= form.text_field :amount_bottom_limit, required: true %>
     </div>
     <div class="display: inline-block;">
-      <label>头币份额：</label>
-      <%= form.text_field :first_share_divide, required: true %>
-    </div>
-    <div class="display: inline-block;">
-      <label>后续份额：</label>
+      <label>每币份额：</label>
       <%= form.text_field :divide_shares, required: true %>
     </div>
     <div class="display: inline-block;">
@@ -41,10 +37,6 @@
     <div class="display: inline-block;">
       <label>开仓涨幅上限：</label>
       <%= form.text_field :up_up_limit, required: true %>
-    </div>
-    <div class="display: inline-block;">
-      <label>头币开仓涨幅上限：</label>
-      <%= form.text_field :first_up_up_limit, required: true %>
     </div>
     <div class="display: inline-block;">
       <label>止损平仓跌幅下限：</label>

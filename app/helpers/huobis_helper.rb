@@ -164,16 +164,17 @@ module HuobisHelper
 
           changes = Rails.cache.redis.hgetall("tickers")
 
-          symbols1 = changes.find_all {|x| (eval x[1])[:change] >= settings.up_floor_limit.to_f && (eval x[1])[:change] <= settings.first_up_up_limit.to_f}
-          symbols1.sort_by! { |s| -(eval s[1])[:change] }
-          symbols2 = changes.find_all {|x| (eval x[1])[:change] >= settings.up_floor_limit.to_f && (eval x[1])[:change] <= settings.up_up_limit.to_f}
+          # symbols1 = changes.find_all {|x| (eval x[1])[:change] >= settings.up_floor_limit.to_f && (eval x[1])[:change] <= settings.first_up_up_limit.to_f}
+          # symbols1.sort_by! { |s| -(eval s[1])[:change] }
+          # symbols2 = changes.find_all {|x| (eval x[1])[:change] >= settings.up_floor_limit.to_f && (eval x[1])[:change] <= settings.up_up_limit.to_f}
+          #
+          # if (current_trades.count == 0) && (current_time >= "00:00" && current_time <= settings.buy_accept_end_time) && !symbols1.empty?
+          #   symbols = ([symbols1[0]] + symbols2).uniq
+          # else
+          #   symbols = symbols2
+          # end
 
-          if (current_trades.count == 0) && (current_time >= "00:00" && current_time <= settings.buy_accept_end_time) && !symbols1.empty?
-            symbols = ([symbols1[0]] + symbols2).uniq
-          else
-            symbols = symbols2
-          end
-
+          symbols = changes.find_all {|x| (eval x[1])[:change] >= settings.up_floor_limit.to_f && (eval x[1])[:change] <= settings.up_up_limit.to_f}
           symbols.sort_by! { |s| -(eval s[1])[:change] }
         end
       rescue Exception => e
