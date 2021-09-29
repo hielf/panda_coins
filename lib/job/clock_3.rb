@@ -42,7 +42,6 @@ module Clockwork
 
     if job == 'huobi.alive_check'
       Rails.logger.warn "huobi alive checking.."
-      current_time = Time.now
       runtime = Rails.cache.read('running:clock_3')
       if runtime.nil?
         Rails.logger.warn "clock_3 restarting.."
