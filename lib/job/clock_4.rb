@@ -15,17 +15,33 @@ module Clockwork
 
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
-    if job == 'IB.history'
-      
+    if job == 'huobi.orders_close'
+      Rails.logger.warn "huobi.orders_close started.."
+      # Rails.cache.redis.del("orders")
+      current_time = Time.now
+      runtime = Rails.cache.read('running:clock_4')
+      if runtime && (current_time - runtime).abs < 30
+        nil
+      else
+        loop do
+          begin
+            job = OrdersCloseJob.perform_now
+            sleep 0.2
+            # if Time.now.strftime('%M:%S') == "59:59"
+            #   Rails.logger.warn "huobi.orders_check ended.."
+            #   break
+            # end
+          rescue Exception => e
+            Rails.logger.warn "orders_check error: #{e.message}"
+          ensure
+            Rails.cache.write('running:clock_4', Time.now, expires_in: 1.minute)
+          end
+        end
+      end
     end
   end
 
-  # every(2.second, 'IB.realtime_bar_csv', :thread => true)
-  # every(1.minute, 'IB.realtime_bar_get', :thread => true)
-  # every(1.day, 'IB.history', :at => '18:00', :thread => true)
-
-  # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
-  # every(1.hour, 'hourly.job')
+  every(1.minute, 'huobi.orders_close', :thread => true)
   #
   # every(1.day, 'midnight.job', :at => '00:00')
 end
