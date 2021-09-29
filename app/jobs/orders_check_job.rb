@@ -5,7 +5,6 @@ class OrdersCheckJob < ApplicationJob
 
   def perform(*args)
     count_1 = ApplicationController.helpers.huobi_orders_check
-    # count_2 = ApplicationController.helpers.huobi_orders_close
   end
 
   private
