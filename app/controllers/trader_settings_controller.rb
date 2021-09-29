@@ -11,7 +11,7 @@ class TraderSettingsController < ApplicationController
       rescue Exception => e
         msg = "修改失败,#{e.to_s}"
       end
-      flash.now[:notice] = 'Message sent!'
+      # flash.now[:notice] = 'Message sent!'
       # redirect_to edit_trader_setting_path(@trader_setting)
       respond_to do |format|
         format.html { redirect_to request.referer, alert: '修改成功' }
