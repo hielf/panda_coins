@@ -41,6 +41,7 @@ module Clockwork
     end
 
     if job == 'huobi.alive_check'
+      Rails.logger.warn "huobi alive checking.."
       current_time = Time.now
       runtime = Rails.cache.read('running:clock_3')
       if runtime.nil?
@@ -51,7 +52,7 @@ module Clockwork
   end
 
   every(1.minute, 'huobi.orders_check')
-  every(5.minutes, 'huobi.alive_check')
+  every(5.minutes, 'huobi.alive_check', :thread => true)
   #
   # every(1.day, 'midnight.job', :at => '00:00')
 end
