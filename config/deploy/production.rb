@@ -12,6 +12,8 @@ server '139.162.149.116', port: 122, roles: [:web, :app, :db], user: "deploy", s
 server '139.162.149.116', port: 123, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
 
 set :branch, "main"
+set :migration_role, :db
+set :migration_servers, -> { release_roles(fetch(:migration_role)) }
 # set :branch, "V4_ATR"
 # set :rvm_ruby_version, '2.4.0@panda_coins'
 # set :rvm_type, :system

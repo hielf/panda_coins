@@ -39,9 +39,19 @@ module Clockwork
         end
       end
     end
+
+    if job == 'huobi.alive_check2'
+      Rails.logger.warn "huobi alive checking2.."
+      runtime = Rails.cache.read('running:clock_4')
+      if runtime.nil?
+        Rails.logger.warn "clock_4 restarting.."
+        `god restart panda_coins-clock_4`
+      end
+    end
   end
 
-  every(1.minute, 'huobi.orders_close', :thread => true)
+  every(1.minute, 'huobi.orders_close')
+  every(5.minutes, 'huobi.alive_check2', :thread => true)
   #
   # every(1.day, 'midnight.job', :at => '00:00')
 end
