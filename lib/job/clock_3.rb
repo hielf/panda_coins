@@ -21,7 +21,7 @@ module Clockwork
       current_time = Time.now
       runtime = Rails.cache.read('running:clock_3')
       if runtime && (current_time - runtime).abs < 30
-        return
+        nil
       else
         loop do
           begin
@@ -42,24 +42,16 @@ module Clockwork
 
     if job == 'huobi.alive_check'
       current_time = Time.now
-      check_time = current_time - 60
-      orders = []
-      orders = Rails.cache.redis.hgetall("orders")
-      break if orders.empty?
-      c = orders.find {|x| (eval x[1])[:current_time].to_time >= check_time}
-      if c.nil? || (c && c.count == 0)
-        Rails.logger.warn "huobi.alive_check restarting.."
-        s = `ps aux | grep 'clockworkd.clock_3' | grep -v grep| awk '{print $2}'`
-        pid = s.gsub("\n", "")
-        system("kill -9 #{pid}") if pid && pid.to_i > 0
-        `god start panda_coins-clock_3`
-        Rails.logger.warn "huobi.alive_check restarted.."
+      runtime = Rails.cache.read('running:clock_3')
+      if runtime.nil?
+        Rails.logger.warn "clock_3 restarting.."
+        `god restart panda_coins-clock_3`
       end
     end
   end
 
   every(1.minute, 'huobi.orders_check')
-  # every(1.hour, 'huobi.alive_check')
+  every(5.minutes, 'huobi.alive_check')
   #
   # every(1.day, 'midnight.job', :at => '00:00')
 end

@@ -34,7 +34,7 @@ module Clockwork
             start_time = Time.now - settings.tickers_check_interval.to_i
             end_time = Time.now
 
-            if settings.daily_start_time && !settings.daily_start_time.empty? && end_time.strftime("%H:%M:%S") <= settings.daily_start_time
+            if settings.daily_start_time && !settings.daily_start_time.empty? && end_time <= settings.daily_start_time.to_time
               # p end_time.strftime("%H:%M:%S")
               next
             end

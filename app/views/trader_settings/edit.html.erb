@@ -23,6 +23,10 @@
       <%= form.text_field :open_await_to_close_time, required: true %>
     </div>
     <div class="display: inline-block;">
+      <label>单个货币对日交易量下限：</label>
+      <%= form.text_field :amount_bottom_limit, required: true %>
+    </div>
+    <div class="display: inline-block;">
       <label>头币份额：</label>
       <%= form.text_field :first_share_divide, required: true %>
     </div>

@@ -29,9 +29,9 @@ class OrdersJob < ApplicationJob
       elsif @count == 0
         Rails.logger.warn "OrdersJob amount 0 skipping: #{@symbol}"
         run_flag = false
-      elsif (last_balance && today_balance) && ((today_balance - last_balance) / last_balance) > settings.daily_balance_up_limit.to_f
-        Rails.logger.warn "OrdersJob skip openning: balance up #{settings.daily_balance_up_limit}"
-        run_flag = false
+      # elsif (last_balance && today_balance) && ((today_balance - last_balance) / last_balance) > settings.daily_balance_up_limit.to_f
+      #   Rails.logger.warn "OrdersJob skip openning: balance up #{settings.daily_balance_up_limit}"
+      #   run_flag = false
       elsif !white_list_symbols.include? @symbol
         Rails.logger.warn "OrdersJob skip openning: #{@symbol} due to new into market"
         run_flag = false

@@ -223,8 +223,9 @@ module HuobisHelper
 
       opened_symbols = Rails.cache.redis.hgetall("orders")
       if opened_symbols.count >= settings.max_opened_orders.to_i
+        symbols.delete_if {|x| x[0] == symbol[0]}
         Rails.logger.warn "skip openning: #{symbol[0]} due to reach max_opened_orders"
-        break
+        next
       end
       Rails.cache.redis.hset("orders", symbol[0], {"open_price": sym_data[:close], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:time], "current_time": ticker_time})
     end

@@ -13,7 +13,7 @@
 #   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
 #   Mayor.create(name: 'Emanuel', city: cities.first)
 
-ts = TraderSetting.find_or_initialize_by(account_id: 31434802)
+ts = TraderSetting.find_or_initialize_by(account_id: ENV["huobi_accounts"])
 ts.attributes = { days_after_symbol_listing: "90",
   max_opened_orders: "10",
   first_share_divide: "3",
