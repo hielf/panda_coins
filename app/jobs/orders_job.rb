@@ -24,10 +24,13 @@ class OrdersJob < ApplicationJob
     run_flag = true
     begin
       if (@type.include? "buy") && (current_time <= settings.buy_accept_start_time && current_time >= settings.buy_accept_end_time)
-        Rails.logger.warn "OrdersJob skip openning: #{@symbol}"
+        Rails.logger.warn "OrdersJob skip openning: #{current_time}, #{@symbol}"
         run_flag = false
       elsif @count == 0
         Rails.logger.warn "OrdersJob amount 0 skipping: #{@symbol}"
+        run_flag = false
+      elsif (Time.now <= settings.daily_start_time.to_time)
+        Rails.logger.warn "OrdersJob skip openning: #{current_time}, #{@symbol}"
         run_flag = false
       # elsif (last_balance && today_balance) && ((today_balance - last_balance) / last_balance) > settings.daily_balance_up_limit.to_f
       #   Rails.logger.warn "OrdersJob skip openning: balance up #{settings.daily_balance_up_limit}"
