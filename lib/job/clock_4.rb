@@ -26,6 +26,7 @@ module Clockwork
         settings = TraderSetting.current_settings
 
         loop do
+          symbols = []
           begin
             # ApplicationController.helpers.huobi_orders_close
             # job = OrdersCloseJob.perform_now
@@ -47,6 +48,7 @@ module Clockwork
                 next if Rails.cache.redis.hget("orders", symbol).nil?
                 # pnls = ApplicationController.helpers.huobi_pnls(symbol)
                 begin
+                  symbols << symbol
                   amount = ApplicationController.helpers.huobi_close_amount(symbol)
                   OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
 
@@ -54,9 +56,6 @@ module Clockwork
                   # Rails.cache.redis.hdel("orders", symbol)
                 rescue Exception => e
                   Rails.logger.warn "huobi_orders_close 4: #{e.message}"
-                ensure
-                  PnlLoggersJob.perform_later symbol
-                  Rails.logger.warn "#{symbol} closed due to timer limit"
                 end
               end
             end
@@ -70,15 +69,13 @@ module Clockwork
                 symbol = order[0]
                 # pnls = ApplicationController.helpers.huobi_pnls(symbol)
                 begin
+                  symbols << symbol
                   amount = ApplicationController.helpers.huobi_close_amount(symbol)
                   OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
                   # ApplicationController.helpers.huobi_orders_log(symbol)
                   # Rails.cache.redis.hdel("orders", symbol)
                 rescue Exception => e
                   Rails.logger.warn "huobi_orders_close 1: #{e.message}"
-                ensure
-                  PnlLoggersJob.perform_later symbol
-                  Rails.logger.warn "#{symbol} closed due to down limit"
                 end
               end
             end
@@ -92,6 +89,7 @@ module Clockwork
                 symbol = order[0]
                 # pnls = ApplicationController.helpers.huobi_pnls(symbol)
                 begin
+                  symbols << symbol
                   amount = ApplicationController.helpers.huobi_close_amount(symbol)
                   OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
 
@@ -99,19 +97,23 @@ module Clockwork
                   # Rails.cache.redis.hdel("orders", symbol)
                 rescue Exception => e
                   Rails.logger.warn "huobi_orders_close 2: #{e.message}"
-                ensure
-                  PnlLoggersJob.perform_later symbol
-                  Rails.logger.warn "#{symbol} closed due to up limit"
                 end
               end
             end
 
+            begin
+              symbols.each do |symbol|
+                # PnlLoggersJob.perform_later symbol
+                ApplicationController.helpers.huobi_orders_log(symbol)
+              end
+            rescue Exception => e
+              Rails.logger.warn "orders_close logger error"
+            end
           rescue Exception => e
             Rails.logger.warn "orders_close clock_4 error: #{e.message}"
           ensure
             Rails.cache.write('running:clock_4', Time.now, expires_in: 1.minute)
           end
-
           sleep 0.2
         end
       end
