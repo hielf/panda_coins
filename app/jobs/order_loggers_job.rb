@@ -11,7 +11,7 @@ class OrderLoggersJob < ApplicationJob
 
   private
   def around_check
-    Rails.cache.redis.hdel("orders", symbol)
+    Rails.cache.redis.hdel("orders", @symbol)
   end
 
 end
