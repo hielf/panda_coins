@@ -303,7 +303,37 @@ module HuobisHelper
   end
 
   def huobi_orders_close
-    # 1 down limit
+    # 1 timer limit
+    data = Rails.cache.redis.hgetall("orders")
+    orders = data.find_all {|x| (eval x[1])[:open_time] <= settings.close_timer_up.to_i.seconds.ago}
+    if settings.daily_clear_all_time && !settings.daily_clear_all_time.empty? && Time.now.strftime('%H:%M') == settings.daily_clear_all_time
+      orders = data
+    end
+
+    if orders && orders.any?
+      orders.each do |order|
+        symbol = order[0]
+        next if Rails.cache.redis.hget("orders", symbol).nil?
+        pnls = ApplicationController.helpers.huobi_pnls(symbol)
+        begin
+          amount = ApplicationController.helpers.huobi_close_amount(symbol)
+          OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
+
+          # ApplicationController.helpers.huobi_orders_log(symbol)
+          # Rails.cache.redis.hdel("orders", symbol)
+        rescue Exception => e
+          Rails.logger.warn "huobi_orders_close 4: #{e.message}"
+        ensure
+          OrderLoggersJob.perform_now symbol
+          PnlLoggersJob.perform_now symbol, pnls
+          Rails.logger.warn "#{symbol} closed due to timer limit"
+        end
+
+        count = count + 1
+      end
+    end
+
+    # 2 down limit
     count = 0
     data = Rails.cache.redis.hgetall("orders")
     settings = TraderSetting.current_settings
@@ -330,7 +360,7 @@ module HuobisHelper
       end
     end
 
-    # 2 up_limit
+    # 3 up_limit
     data = Rails.cache.redis.hgetall("orders")
     orders = data.find_all {|x| (eval x[1])[:change] > settings.up_limit.to_f}
 
@@ -356,7 +386,7 @@ module HuobisHelper
       end
     end
 
-    # 3 pnl_limit
+    # 4 pnl_limit
     # data = Rails.cache.redis.hgetall("orders")
     # orders = data
     #
@@ -386,37 +416,6 @@ module HuobisHelper
     #     count = count + 1
     #   end
     # end
-
-    # 4 timer limit
-    data = Rails.cache.redis.hgetall("orders")
-    orders = data.find_all {|x| (eval x[1])[:open_time] <= settings.close_timer_up.to_i.seconds.ago}
-    if settings.daily_clear_all_time && !settings.daily_clear_all_time.empty? && Time.now.strftime('%H:%M') == settings.daily_clear_all_time
-      orders = data
-    end
-
-    if orders && orders.any?
-      orders.each do |order|
-        symbol = order[0]
-        next if Rails.cache.redis.hget("orders", symbol).nil?
-        pnls = ApplicationController.helpers.huobi_pnls(symbol)
-        begin
-          amount = ApplicationController.helpers.huobi_close_amount(symbol)
-          OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
-
-          # ApplicationController.helpers.huobi_orders_log(symbol)
-          # Rails.cache.redis.hdel("orders", symbol)
-        rescue Exception => e
-          Rails.logger.warn "huobi_orders_close 4: #{e.message}"
-        ensure
-          OrderLoggersJob.perform_later symbol
-          PnlLoggersJob.perform_later symbol, pnls
-          Rails.logger.warn "#{symbol} closed due to timer limit"
-        end
-
-        count = count + 1
-      end
-    end
-
     return count
   end
 
