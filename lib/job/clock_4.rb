@@ -33,7 +33,7 @@ module Clockwork
             #   break
             # end
           rescue Exception => e
-            Rails.logger.warn "orders_check error: #{e.message}"
+            Rails.logger.warn "orders_close clock_4 error: #{e.message}"
           ensure
             Rails.cache.write('running:clock_4', Time.now, expires_in: 1.minute)
           end
