@@ -5,9 +5,11 @@ class PnlLoggersJob < ApplicationJob
 
   def perform(*args)
     @symbol = args[0]
-    @pnls = args[1]
+    # @pnls = args[1]
 
+    @pnls = ApplicationController.helpers.huobi_pnls(@symbol)
     ApplicationController.helpers.huobi_pnls_log(@symbol, @pnls)
+    ApplicationController.helpers.huobi_orders_log(@symbol)
   end
 
   private
