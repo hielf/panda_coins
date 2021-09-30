@@ -26,7 +26,6 @@ module Clockwork
         settings = TraderSetting.current_settings
 
         loop do
-          symbols = []
           begin
             # ApplicationController.helpers.huobi_orders_close
             # job = OrdersCloseJob.perform_now
@@ -48,7 +47,7 @@ module Clockwork
                 next if Rails.cache.redis.hget("orders", symbol).nil?
                 # pnls = ApplicationController.helpers.huobi_pnls(symbol)
                 begin
-                  symbols << symbol
+                  ApplicationController.helpers.huobi_orders_log(symbol)
                   amount = ApplicationController.helpers.huobi_close_amount(symbol)
                   OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
 
@@ -69,7 +68,7 @@ module Clockwork
                 symbol = order[0]
                 # pnls = ApplicationController.helpers.huobi_pnls(symbol)
                 begin
-                  symbols << symbol
+                  ApplicationController.helpers.huobi_orders_log(symbol)
                   amount = ApplicationController.helpers.huobi_close_amount(symbol)
                   OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
                   # ApplicationController.helpers.huobi_orders_log(symbol)
@@ -89,7 +88,7 @@ module Clockwork
                 symbol = order[0]
                 # pnls = ApplicationController.helpers.huobi_pnls(symbol)
                 begin
-                  symbols << symbol
+                  ApplicationController.helpers.huobi_orders_log(symbol)
                   amount = ApplicationController.helpers.huobi_close_amount(symbol)
                   OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
 
@@ -101,14 +100,6 @@ module Clockwork
               end
             end
 
-            begin
-              symbols.each do |symbol|
-                # PnlLoggersJob.perform_later symbol
-                ApplicationController.helpers.huobi_orders_log(symbol)
-              end
-            rescue Exception => e
-              Rails.logger.warn "orders_close logger error"
-            end
           rescue Exception => e
             Rails.logger.warn "orders_close clock_4 error: #{e.message}"
           ensure
