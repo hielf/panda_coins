@@ -114,7 +114,7 @@ module Clockwork
           ensure
             Rails.cache.write('running:clock_4', Time.now, expires_in: 1.minute)
           end
-          sleep 1
+          # sleep 0.1
         end
       end
     end
