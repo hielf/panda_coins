@@ -421,13 +421,16 @@ module HuobisHelper
   end
 
   def huobi_orders_log(symbol)
+    last_el = EventLog.last
     begin
       order = Rails.cache.redis.hget("orders", symbol)
       if order
         Rails.cache.redis.hdel("orders", symbol)
-        el = EventLog.new(eval order)
-        el.symbol = symbol
-        el.save
+        if !(last_el && last_el.symbol == symbol)
+          el = EventLog.new(eval order)
+          el.symbol = symbol
+          el.save
+        end
       end
     rescue Exception => e
       Rails.logger.warn "huobi_orders_log error: #{e.message}"
