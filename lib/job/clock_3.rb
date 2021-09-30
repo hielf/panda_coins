@@ -51,7 +51,7 @@ module Clockwork
   end
 
   every(1.minute, 'huobi.orders_check')
-  # every(5.minutes, 'huobi.alive_check', :skip_first_run => true, :thread => true)
+  every(5.minutes, 'huobi.alive_check', :skip_first_run => true, :thread => true)
   #
   # every(1.day, 'midnight.job', :at => '00:00')
 end
