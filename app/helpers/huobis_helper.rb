@@ -303,6 +303,8 @@ module HuobisHelper
   end
 
   def huobi_orders_close
+    count = 0
+    settings = TraderSetting.current_settings
     # 1 timer limit
     data = Rails.cache.redis.hgetall("orders")
     orders = data.find_all {|x| (eval x[1])[:open_time] <= settings.close_timer_up.to_i.seconds.ago}
@@ -334,9 +336,7 @@ module HuobisHelper
     end
 
     # 2 down limit
-    count = 0
     data = Rails.cache.redis.hgetall("orders")
-    settings = TraderSetting.current_settings
     orders = data.find_all {|x| ((eval x[1])[:change] <= settings.down_limit.to_f) && (Time.now - (eval x[1])[:open_time].to_time >= settings.open_await_to_close_time.to_i)}
 
     if orders && orders.any?
