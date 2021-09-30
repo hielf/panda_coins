@@ -175,7 +175,7 @@ module HuobisHelper
           # end
 
           symbols = changes.find_all {|x| (eval x[1])[:change] >= settings.up_floor_limit.to_f && (eval x[1])[:change] <= settings.up_up_limit.to_f}
-          symbols.sort_by! { |s| -(eval s[1])[:change] }
+          symbols.sort_by! { |s| (eval s[1])[:change] }
         end
       rescue Exception => e
         Rails.logger.warn "huobi_tickers_check error: #{e.message}"
