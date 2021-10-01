@@ -208,6 +208,12 @@ module HuobisHelper
           symbols.delete_if {|x| x[0] == sym.symbol}
         end
       end
+      closed_symbols = Rails.cache.redis.hgetall("orders:closing")
+      if closed_symbols && closed_symbols.any?
+        closed_symbols.each do |sym|
+          symbols.delete_if {|x| x[0] == sym[0]}
+        end
+      end
     rescue Exception => e
       Rails.logger.warn "huobi_tickers_check error: #{e.message}"
     end
