@@ -13,7 +13,6 @@ class OrdersJob < ApplicationJob
     @price = args[2]
     @count = args[3]
     @manual = args[4]
-    @data = eval Rails.cache.redis.hget("orders", @symbol)
 
     message = "交易错误"
     huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
@@ -23,7 +22,7 @@ class OrdersJob < ApplicationJob
     white_list_symbols = ApplicationController.helpers.white_list
     settings = TraderSetting.current_settings
     run_flag = true
-    n = 1
+
     begin
       if (@type.include? "buy") && (current_time <= settings.buy_accept_start_time && current_time >= settings.buy_accept_end_time)
         Rails.logger.warn "OrdersJob skip openning: #{current_time}, #{@symbol}"
@@ -40,10 +39,6 @@ class OrdersJob < ApplicationJob
       elsif !white_list_symbols.include? @symbol
         Rails.logger.warn "OrdersJob skip openning: #{@symbol} due to new into market"
         run_flag = false
-      end
-
-      if @type.include? "sell"
-        n = Rails.cache.redis.hdel("orders", @symbol)
       end
 
       if run_flag
@@ -67,8 +62,7 @@ class OrdersJob < ApplicationJob
       Rails.logger.warn "OrdersJob error: #{e.message}"
       SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["version"], message
     ensure
-      AccountLoggerJob.set(wait: 1.second).perform_later(@symbol) if run_flag
-      OrderLoggersJob.set(wait: 1.second).perform_later(@symbol, @data) if n > 0
+      AccountLoggerJob.set(wait: 1.second).perform_later(@symbol)
     end
   end
 

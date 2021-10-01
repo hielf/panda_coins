@@ -318,6 +318,9 @@ module HuobisHelper
     if orders && orders.any?
       orders.each do |order|
         symbol = order[0]
+        data = eval Rails.cache.redis.hget("orders", symbol)
+        Rails.cache.redis.hset("orders:closing", symbol, data)
+        Rails.cache.redis.hdel("orders", symbol)
         closing_symbols << symbol if !closing_symbols.include?(symbol)
         # next if Rails.cache.redis.hget("orders", symbol).nil?
         # pnls = ApplicationController.helpers.huobi_pnls(symbol)
@@ -346,6 +349,9 @@ module HuobisHelper
     if orders && orders.any?
       orders.each do |order|
         symbol = order[0]
+        data = eval Rails.cache.redis.hget("orders", symbol)
+        Rails.cache.redis.hset("orders:closing", symbol, data)
+        Rails.cache.redis.hdel("orders", symbol)
         closing_symbols << symbol if !closing_symbols.include?(symbol)
         # pnls = ApplicationController.helpers.huobi_pnls(symbol)
         # begin
@@ -372,6 +378,9 @@ module HuobisHelper
     if orders && orders.any?
       orders.each do |order|
         symbol = order[0]
+        data = eval Rails.cache.redis.hget("orders", symbol)
+        Rails.cache.redis.hset("orders:closing", symbol, data)
+        Rails.cache.redis.hdel("orders", symbol)
         closing_symbols << symbol if !closing_symbols.include?(symbol)
         # pnls = ApplicationController.helpers.huobi_pnls(symbol)
         # begin
@@ -434,6 +443,8 @@ module HuobisHelper
       el.save
     rescue Exception => e
       Rails.logger.warn "huobi_orders_log error: #{e.message}"
+    ensure
+      Rails.cache.redis.hdel("orders:closing", symbol)
     end
   end
 
