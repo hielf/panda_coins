@@ -138,7 +138,7 @@ module Clockwork
   end
 
   every(1.minute, 'huobi.orders_close')
-  every(1.minute, 'huobi.orders_logger')
+  every(1.minute, 'huobi.orders_logger', :thread => true)
   # every(5.minutes, 'huobi.alive_check2', :skip_first_run => true, :thread => true)
   #
   # every(1.day, 'midnight.job', :at => '00:00')
