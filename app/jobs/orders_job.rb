@@ -23,6 +23,7 @@ class OrdersJob < ApplicationJob
     white_list_symbols = ApplicationController.helpers.white_list
     settings = TraderSetting.current_settings
     run_flag = true
+    n = 1
     begin
       if (@type.include? "buy") && (current_time <= settings.buy_accept_start_time && current_time >= settings.buy_accept_end_time)
         Rails.logger.warn "OrdersJob skip openning: #{current_time}, #{@symbol}"
@@ -42,7 +43,7 @@ class OrdersJob < ApplicationJob
       end
 
       if @type.include? "sell"
-        Rails.cache.redis.hdel("orders", @symbol)
+        n = Rails.cache.redis.hdel("orders", @symbol)
       end
 
       if run_flag
@@ -66,8 +67,8 @@ class OrdersJob < ApplicationJob
       Rails.logger.warn "OrdersJob error: #{e.message}"
       SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["version"], message
     ensure
-      AccountLoggerJob.set(wait: 1.second).perform_later(@symbol)
-      OrderLoggersJob.set(wait: 1.second).perform_later(@symbol, @data)
+      AccountLoggerJob.set(wait: 1.second).perform_later(@symbol) if run_flag
+      OrderLoggersJob.set(wait: 1.second).perform_later(@symbol, @data) if n > 0
     end
   end
 
