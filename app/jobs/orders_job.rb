@@ -16,7 +16,7 @@ class OrdersJob < ApplicationJob
     @data = eval Rails.cache.redis.hget("orders", @symbol)
 
     message = "交易错误"
-    Rails.cache.redis.hdel("trades", @symbol)
+    Rails.cache.redis.hdel("orders", @symbol)
     huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
     current_time = Time.now.strftime("%H:%M")
     # last_balance = Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")).nil? ? nil : (eval Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")))[:balance]
