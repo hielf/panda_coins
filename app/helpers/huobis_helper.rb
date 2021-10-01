@@ -306,6 +306,7 @@ module HuobisHelper
 
   def huobi_orders_close
     count = 0
+    closing_symbols = []
     settings = TraderSetting.current_settings
     # 1 timer limit
     data = Rails.cache.redis.hgetall("orders")
@@ -317,21 +318,22 @@ module HuobisHelper
     if orders && orders.any?
       orders.each do |order|
         symbol = order[0]
-        next if Rails.cache.redis.hget("orders", symbol).nil?
+        closing_symbols << symbol if !closing_symbols.include?(symbol)
+        # next if Rails.cache.redis.hget("orders", symbol).nil?
         # pnls = ApplicationController.helpers.huobi_pnls(symbol)
-        begin
-          amount = ApplicationController.helpers.huobi_close_amount(symbol)
-          OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
-
-          # ApplicationController.helpers.huobi_orders_log(symbol)
-          # Rails.cache.redis.hdel("orders", symbol)
-        rescue Exception => e
-          Rails.logger.warn "huobi_orders_close 4: #{e.message}"
-        ensure
-          # OrderLoggersJob.perform_now symbol
-          PnlLoggersJob.perform_later symbol
-          Rails.logger.warn "#{symbol} closed due to timer limit"
-        end
+        # begin
+        #   amount = ApplicationController.helpers.huobi_close_amount(symbol)
+        #   OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
+        #
+        #   # ApplicationController.helpers.huobi_orders_log(symbol)
+        #   # Rails.cache.redis.hdel("orders", symbol)
+        # rescue Exception => e
+        #   Rails.logger.warn "huobi_orders_close 1: #{e.message}"
+        # ensure
+        #   # OrderLoggersJob.perform_now symbol
+        #   PnlLoggersJob.perform_later symbol
+        #   Rails.logger.warn "#{symbol} closed due to timer limit"
+        # end
 
         count = count + 1
       end
@@ -344,19 +346,20 @@ module HuobisHelper
     if orders && orders.any?
       orders.each do |order|
         symbol = order[0]
+        closing_symbols << symbol if !closing_symbols.include?(symbol)
         # pnls = ApplicationController.helpers.huobi_pnls(symbol)
-        begin
-          amount = ApplicationController.helpers.huobi_close_amount(symbol)
-          OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
-          # ApplicationController.helpers.huobi_orders_log(symbol)
-          # Rails.cache.redis.hdel("orders", symbol)
-        rescue Exception => e
-          Rails.logger.warn "huobi_orders_close 1: #{e.message}"
-        ensure
-          # OrderLoggersJob.perform_later symbol
-          PnlLoggersJob.perform_later symbol
-          Rails.logger.warn "#{symbol} closed due to down limit"
-        end
+        # begin
+        #   amount = ApplicationController.helpers.huobi_close_amount(symbol)
+        #   OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
+        #   # ApplicationController.helpers.huobi_orders_log(symbol)
+        #   # Rails.cache.redis.hdel("orders", symbol)
+        # rescue Exception => e
+        #   Rails.logger.warn "huobi_orders_close 2: #{e.message}"
+        # ensure
+        #   # OrderLoggersJob.perform_later symbol
+        #   PnlLoggersJob.perform_later symbol
+        #   Rails.logger.warn "#{symbol} closed due to down limit"
+        # end
 
         count = count + 1
       end
@@ -369,20 +372,21 @@ module HuobisHelper
     if orders && orders.any?
       orders.each do |order|
         symbol = order[0]
+        closing_symbols << symbol if !closing_symbols.include?(symbol)
         # pnls = ApplicationController.helpers.huobi_pnls(symbol)
-        begin
-          amount = ApplicationController.helpers.huobi_close_amount(symbol)
-          OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
-
-          # ApplicationController.helpers.huobi_orders_log(symbol)
-          # Rails.cache.redis.hdel("orders", symbol)
-        rescue Exception => e
-          Rails.logger.warn "huobi_orders_close 2: #{e.message}"
-        ensure
-          # OrderLoggersJob.perform_later symbol
-          PnlLoggersJob.perform_later symbol
-          Rails.logger.warn "#{symbol} closed due to up limit"
-        end
+        # begin
+        #   amount = ApplicationController.helpers.huobi_close_amount(symbol)
+        #   OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
+        #
+        #   # ApplicationController.helpers.huobi_orders_log(symbol)
+        #   # Rails.cache.redis.hdel("orders", symbol)
+        # rescue Exception => e
+        #   Rails.logger.warn "huobi_orders_close 3: #{e.message}"
+        # ensure
+        #   # OrderLoggersJob.perform_later symbol
+        #   PnlLoggersJob.perform_later symbol
+        #   Rails.logger.warn "#{symbol} closed due to up limit"
+        # end
 
         count = count + 1
       end
@@ -407,7 +411,7 @@ module HuobisHelper
     #      #  ApplicationController.helpers.huobi_orders_log(symbol)
     #      #  Rails.cache.redis.hdel("orders", symbol)
     #       rescue Exception => e
-    #         Rails.logger.warn "huobi_orders_close 3: #{e.message}"
+    #         Rails.logger.warn "huobi_orders_close 4: #{e.message}"
     #       ensure
     #         OrderLoggersJob.perform_later symbol
     #         PnlLoggersJob.perform_later symbol
@@ -418,7 +422,7 @@ module HuobisHelper
     #     count = count + 1
     #   end
     # end
-    return count
+    return count, closing_symbols
   end
 
   def huobi_orders_log(symbol)

@@ -23,11 +23,17 @@ module Clockwork
       if runtime && (current_time - runtime).abs < 30
         nil
       else
-        settings = TraderSetting.current_settings
-
         loop do
+          settings = TraderSetting.current_settings
+
           begin
-            # ApplicationController.helpers.huobi_orders_close
+            count, closing_symbols = ApplicationController.helpers.huobi_orders_close
+            if count > 0
+              closing_symbols.each do |symbol|
+                amount = ApplicationController.helpers.huobi_close_amount(symbol)
+                OrdersJob.perform_now symbol, 'sell-market', 0, amount, false #if amount > 0
+              end
+            end
             # job = OrdersCloseJob.perform_now
             # if Time.now.strftime('%M:%S') == "59:59"
             #   Rails.logger.warn "huobi.orders_check ended.."
@@ -35,70 +41,70 @@ module Clockwork
             # end
 
             # 1 timer limit
-            data = Rails.cache.redis.hgetall("orders")
-            orders = data.find_all {|x| (eval x[1])[:open_time] <= settings.close_timer_up.to_i.seconds.ago}
-            if settings.daily_clear_all_time && !settings.daily_clear_all_time.empty? && Time.now.strftime('%H:%M') == settings.daily_clear_all_time
-              orders = data
-            end
-
-            if orders && orders.any?
-              orders.each do |order|
-                symbol = order[0]
-                next if Rails.cache.redis.hget("orders", symbol).nil?
-                # pnls = ApplicationController.helpers.huobi_pnls(symbol)
-                begin
-                  ApplicationController.helpers.huobi_orders_log(symbol)
-                  amount = ApplicationController.helpers.huobi_close_amount(symbol)
-                  OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
-
-                  # ApplicationController.helpers.huobi_orders_log(symbol)
-                  # Rails.cache.redis.hdel("orders", symbol)
-                rescue Exception => e
-                  Rails.logger.warn "huobi_orders_close 4: #{e.message}"
-                end
-              end
-            end
-
-            # 2 down limit
-            data = Rails.cache.redis.hgetall("orders")
-            orders = data.find_all {|x| ((eval x[1])[:change] <= settings.down_limit.to_f) && (Time.now - (eval x[1])[:open_time].to_time >= settings.open_await_to_close_time.to_i)}
-
-            if orders && orders.any?
-              orders.each do |order|
-                symbol = order[0]
-                # pnls = ApplicationController.helpers.huobi_pnls(symbol)
-                begin
-                  ApplicationController.helpers.huobi_orders_log(symbol)
-                  amount = ApplicationController.helpers.huobi_close_amount(symbol)
-                  OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
-                  # ApplicationController.helpers.huobi_orders_log(symbol)
-                  # Rails.cache.redis.hdel("orders", symbol)
-                rescue Exception => e
-                  Rails.logger.warn "huobi_orders_close 1: #{e.message}"
-                end
-              end
-            end
-
-            # 3 up_limit
-            data = Rails.cache.redis.hgetall("orders")
-            orders = data.find_all {|x| (eval x[1])[:change] > settings.up_limit.to_f}
-
-            if orders && orders.any?
-              orders.each do |order|
-                symbol = order[0]
-                # pnls = ApplicationController.helpers.huobi_pnls(symbol)
-                begin
-                  ApplicationController.helpers.huobi_orders_log(symbol)
-                  amount = ApplicationController.helpers.huobi_close_amount(symbol)
-                  OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
-
-                  # ApplicationController.helpers.huobi_orders_log(symbol)
-                  # Rails.cache.redis.hdel("orders", symbol)
-                rescue Exception => e
-                  Rails.logger.warn "huobi_orders_close 2: #{e.message}"
-                end
-              end
-            end
+            # data = Rails.cache.redis.hgetall("orders")
+            # orders = data.find_all {|x| (eval x[1])[:open_time] <= settings.close_timer_up.to_i.seconds.ago}
+            # if settings.daily_clear_all_time && !settings.daily_clear_all_time.empty? && Time.now.strftime('%H:%M') == settings.daily_clear_all_time
+            #   orders = data
+            # end
+            #
+            # if orders && orders.any?
+            #   orders.each do |order|
+            #     symbol = order[0]
+            #     next if Rails.cache.redis.hget("orders", symbol).nil?
+            #     # pnls = ApplicationController.helpers.huobi_pnls(symbol)
+            #     begin
+            #       ApplicationController.helpers.huobi_orders_log(symbol)
+            #       amount = ApplicationController.helpers.huobi_close_amount(symbol)
+            #       OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
+            #
+            #       # ApplicationController.helpers.huobi_orders_log(symbol)
+            #       # Rails.cache.redis.hdel("orders", symbol)
+            #     rescue Exception => e
+            #       Rails.logger.warn "huobi_orders_close 4: #{e.message}"
+            #     end
+            #   end
+            # end
+            #
+            # # 2 down limit
+            # data = Rails.cache.redis.hgetall("orders")
+            # orders = data.find_all {|x| ((eval x[1])[:change] <= settings.down_limit.to_f) && (Time.now - (eval x[1])[:open_time].to_time >= settings.open_await_to_close_time.to_i)}
+            #
+            # if orders && orders.any?
+            #   orders.each do |order|
+            #     symbol = order[0]
+            #     # pnls = ApplicationController.helpers.huobi_pnls(symbol)
+            #     begin
+            #       ApplicationController.helpers.huobi_orders_log(symbol)
+            #       amount = ApplicationController.helpers.huobi_close_amount(symbol)
+            #       OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
+            #       # ApplicationController.helpers.huobi_orders_log(symbol)
+            #       # Rails.cache.redis.hdel("orders", symbol)
+            #     rescue Exception => e
+            #       Rails.logger.warn "huobi_orders_close 1: #{e.message}"
+            #     end
+            #   end
+            # end
+            #
+            # # 3 up_limit
+            # data = Rails.cache.redis.hgetall("orders")
+            # orders = data.find_all {|x| (eval x[1])[:change] > settings.up_limit.to_f}
+            #
+            # if orders && orders.any?
+            #   orders.each do |order|
+            #     symbol = order[0]
+            #     # pnls = ApplicationController.helpers.huobi_pnls(symbol)
+            #     begin
+            #       ApplicationController.helpers.huobi_orders_log(symbol)
+            #       amount = ApplicationController.helpers.huobi_close_amount(symbol)
+            #       OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
+            #
+            #       # ApplicationController.helpers.huobi_orders_log(symbol)
+            #       # Rails.cache.redis.hdel("orders", symbol)
+            #     rescue Exception => e
+            #       Rails.logger.warn "huobi_orders_close 2: #{e.message}"
+            #     end
+            #   end
+            # end
 
           rescue Exception => e
             Rails.logger.warn "orders_close clock_4 error: #{e.message}"
