@@ -13,8 +13,10 @@ class OrdersJob < ApplicationJob
     @price = args[2]
     @count = args[3]
     @manual = args[4]
+    @data = eval Rails.cache.redis.hget("orders", @symbol)
 
     message = "交易错误"
+    Rails.cache.redis.hdel("trades", @symbol)
     huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
     current_time = Time.now.strftime("%H:%M")
     # last_balance = Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")).nil? ? nil : (eval Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")))[:balance]
@@ -53,8 +55,6 @@ class OrdersJob < ApplicationJob
           end
 
           if @type.include? "sell"
-            Rails.cache.redis.hdel("trades", @symbol)
-            @data = Rails.cache.redis.hget("orders", @symbol)
             Rails.cache.redis.hdel("orders", @symbol)
           end
         end

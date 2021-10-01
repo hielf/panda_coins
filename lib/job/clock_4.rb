@@ -31,7 +31,7 @@ module Clockwork
             if count > 0
               closing_symbols.each do |symbol|
                 amount = ApplicationController.helpers.huobi_close_amount(symbol)
-                OrdersJob.perform_now symbol, 'sell-market', 0, amount, false if amount > 0
+                OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
               end
             end
             # job = OrdersCloseJob.perform_now
