@@ -57,6 +57,7 @@ class OrdersJob < ApplicationJob
       SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["version"], message
     ensure
       AccountLoggerJob.set(wait: 1.second).perform_later(@symbol)
+      OrderLoggersJob.set(wait: 1.second).perform_later(@symbol)
     end
   end
 
