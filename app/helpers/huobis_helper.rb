@@ -425,15 +425,13 @@ module HuobisHelper
     return count, closing_symbols
   end
 
-  def huobi_orders_log(symbol)
+  def huobi_orders_log(symbol, data)
     begin
-      order = Rails.cache.redis.hget("orders", symbol)
-      Rails.cache.redis.hdel("orders", symbol)
-      if order
-        el = EventLog.new(eval order)
-        el.symbol = symbol
-        el.save
-      end
+      # order = Rails.cache.redis.hget("orders", symbol)
+      # Rails.cache.redis.hdel("orders", symbol)
+      el = EventLog.new(data)
+      el.symbol = symbol
+      el.save
     rescue Exception => e
       Rails.logger.warn "huobi_orders_log error: #{e.message}"
     end

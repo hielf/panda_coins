@@ -48,8 +48,15 @@ class OrdersJob < ApplicationJob
           SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["version"], message
         else
           # Rails.cache.redis.hgetall("trades")
-          Rails.cache.redis.hset("trades", @symbol, {:order_id =>@order["data"]}) if @type.include? "buy"
-          Rails.cache.redis.hdel("trades", @symbol) if @type.include? "sell"
+          if @type.include? "buy"
+            Rails.cache.redis.hset("trades", @symbol, {:order_id =>@order["data"]})
+          end
+
+          if @type.include? "sell"
+            Rails.cache.redis.hdel("trades", @symbol)
+            @data = Rails.cache.redis.hget("orders", @symbol)
+            Rails.cache.redis.hdel("orders", @symbol)
+          end
         end
       end
     rescue Exception => e
@@ -57,7 +64,7 @@ class OrdersJob < ApplicationJob
       SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["version"], message
     ensure
       AccountLoggerJob.set(wait: 1.second).perform_later(@symbol)
-      OrderLoggersJob.set(wait: 1.second).perform_later(@symbol)
+      OrderLoggersJob.set(wait: 1.second).perform_later(@symbol, @data)
     end
   end
 

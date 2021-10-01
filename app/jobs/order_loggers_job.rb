@@ -5,8 +5,9 @@ class OrderLoggersJob < ApplicationJob
 
   def perform(*args)
     @symbol = args[0]
+    @data = args[1]
 
-    ApplicationController.helpers.huobi_orders_log(@symbol)
+    ApplicationController.helpers.huobi_orders_log(@symbol, @data)
   end
 
   private
