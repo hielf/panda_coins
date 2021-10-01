@@ -214,24 +214,26 @@ module HuobisHelper
 
 
     # Parallel.each(symbols, in_thread: symbols.count) do |symbol|
+    openning_symbols = []
     symbols.each do |symbol|
-      huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
-      tick = huobi_pro.merged(symbol[0])
-      # tick = ApplicationController.helpers.huobi_symbol_ticker(symbol[0])
-      ticker_time = Time.at(tick["ts"]/1000).to_s
-      sym_data = eval symbol[1]
-      change = (sym_data[:close] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:close])/sym_data[:close])
-
       opened_symbols = Rails.cache.redis.hgetall("orders")
       if opened_symbols.count >= settings.max_opened_orders.to_i
-        symbols.delete_if {|x| x[0] == symbol[0]}
+        # symbols.delete_if {|x| x[0] == symbol[0]}
         Rails.logger.warn "skip openning: #{symbol[0]} due to reach max_opened_orders"
-        next
+        # next
+      else
+        huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
+        tick = huobi_pro.merged(symbol[0])
+        # tick = ApplicationController.helpers.huobi_symbol_ticker(symbol[0])
+        ticker_time = Time.at(tick["ts"]/1000).to_s
+        sym_data = eval symbol[1]
+        change = (sym_data[:close] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:close])/sym_data[:close])
+        Rails.cache.redis.hset("orders", symbol[0], {"open_price": sym_data[:close], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:time], "current_time": ticker_time})
+        openning_symbols << symbol
       end
-      Rails.cache.redis.hset("orders", symbol[0], {"open_price": sym_data[:close], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:time], "current_time": ticker_time})
     end
 
-    return symbols.count, symbols
+    return openning_symbols.count, openning_symbols
   end
 
   def huobi_orders_check
