@@ -174,7 +174,7 @@ module HuobisHelper
           #   symbols = symbols2
           # end
 
-          symbols = changes.find_all {|x| (eval x[1])[:change] >= settings.up_floor_limit.to_f && (eval x[1])[:change] <= settings.up_up_limit.to_f}
+          symbols = changes.find_all {|x| (eval x[1])[:change] >= settings.up_floor_limit.to_f && (eval x[1])[:change] <= settings.up_up_limit.to_f && (eval x[1])[:vol] >= settings.amount_bottom_limit.to_f}
           symbols.sort_by! { |s| (eval s[1])[:change] }
         end
       rescue Exception => e
