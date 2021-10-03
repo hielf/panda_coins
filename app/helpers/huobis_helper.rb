@@ -159,7 +159,7 @@ module HuobisHelper
 
             last = data_l.find {|x| x["symbol"] == symbol}
             change = (ticker["close"] == 0 ? 0 : (last["close"]-ticker["close"])/ticker["close"])
-            Rails.cache.redis.hset("tickers", ticker["symbol"], {"time": times[-1], "open": ticker["close"], "close": last["close"], "change": change})
+            Rails.cache.redis.hset("tickers", ticker["symbol"], {"time": times[-1], "open": ticker["close"], "close": last["close"],  "amount": last["amount"],  "vol": last["vol"], "change": change})
           end
 
           changes = Rails.cache.redis.hgetall("tickers")
