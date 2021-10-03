@@ -32,6 +32,7 @@ class TradeOrdersController < ApplicationController
   def trader_balances
     data = Rails.cache.redis.hgetall("balances")
     account_id = ENV["huobi_accounts"]
+    TraderBalance.where(balance_type: "frozen").map {|t| t.update(balance: 0)}
     data.each do |d|
       h = eval d[1]
       tb = TraderBalance.init(account_id, h[:currency], h[:type])
