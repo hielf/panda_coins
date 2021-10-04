@@ -7,11 +7,16 @@ class OrderLoggersJob < ApplicationJob
     @symbol = args[0]
     # @pnls = args[1]
 
-    pnls = ApplicationController.helpers.huobi_pnls(@symbol)
-    ApplicationController.helpers.huobi_pnls_log(@symbol, pnls)
+    begin
+      pnls = ApplicationController.helpers.huobi_pnls(@symbol)
+      ApplicationController.helpers.huobi_pnls_log(@symbol, pnls)
 
-    data = Rails.cache.redis.hget("orders:closing", @symbol)
-    ApplicationController.helpers.huobi_orders_log(@symbol, data)
+      data = eval Rails.cache.redis.hget("orders:closing", @symbol)
+      ApplicationController.helpers.huobi_orders_log(@symbol, data)
+    rescue Exception => e
+      Rails.logger.warn "OrderLoggersJob error: #{e.message}"
+    end
+
   end
 
   private

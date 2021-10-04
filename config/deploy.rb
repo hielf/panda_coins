@@ -25,6 +25,7 @@ set :deploy_to, "/var/www/#{fetch(:application)}"
 
 # Default value for :pty is false
 # set :pty, true
+set :pty,  false
 
 # Default value for :linked_files is []
 append :linked_files, "config/database.yml", "config/redis.yml", "config/secrets.yml", "config/application.yml", "config/sidekiq.yml"
@@ -44,7 +45,7 @@ set :default_env, {rvm_bin_path: '~/.rvm/bin'}
 
 # Uncomment the following to require manually verifying the host key before first deploy.
 # set :ssh_options, verify_host_key: :secure
-set :pty, true
+# set :pty, true
 set :use_sudo, false
 set :stage, :production
 set :deploy_via, :remote_cache

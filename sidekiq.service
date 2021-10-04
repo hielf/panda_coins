@@ -1,0 +1,45 @@
+# /lib/systemd/system/sidekiq.service
+# 我们的 service 叫 sidekiq
+[Unit]
+Description=sidekiq
+After=syslog.target network.target
+
+# 这个 Type=simple 只是 systemd 要如何判断你的服务成功执行
+[Service]
+Type=simple
+WorkingDirectory=/var/www/panda_coins/current
+
+# 如果是用 rbenv:
+# ExecStart=/bin/bash -lc 'exec /home/deploy/.rbenv/shims/bundle exec sidekiq -e production'
+# 如果直接用系统安装的 ruby:
+# ExecStart=/usr/local/bin/bundle exec sidekiq -e production
+# 如果是用 rvm ，用 ruby 2.6.5 也无特定 gemset
+ExecStart=/usr/local/rvm/gems/ruby-2.7.2/wrappers/bundle exec sidekiq -e production
+# 如果是用 rvm ，用 ruby 2.6.5 且有特定 gemset
+# ExecStart=/home/deploy/.rvm/gems/ruby-2.6.5@gemset-name/wrappers/bundle exec sidekiq -e production
+# 如果是用 rvm ，用而且专案有 .ruby-version 指定版本
+# ExecStart=/home/deploy/.rvm/bin/rvm in /path/to/your/app/current do bundle exec sidekiq -e production
+
+User=deploy
+Group=deploy
+UMask=0002
+
+# 这行可以大大降低 Ruby memory 用量
+# 我也是抄来放上
+# 不过有看 MALLOC_ARENA_MAX=2 的意思是限制 sidekiq 只能用2个 tread_pool
+# https://www.mikeperham.com/2018/04/25/taming-rails-memory-bloat/
+Environment=MALLOC_ARENA_MAX=2
+
+# 如果挂掉就重启
+RestartSec=1
+Restart=on-failure
+
+# log 会记在 /var/log/syslog
+StandardOutput=syslog
+StandardError=syslog
+
+# 这个服务的id 是 sidekiq
+SyslogIdentifier=sidekiq
+
+[Install]
+WantedBy=multi-user.target

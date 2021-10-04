@@ -72,7 +72,7 @@ module Clockwork
 
             sleep 0.2
           rescue Exception => e
-            Rails.logger.warn "tickers_check error: #{e.message}"
+            Rails.logger.warn "tickers_check job error: #{e.message}"
           ensure
             Rails.cache.write('running:clock_2', Time.now, expires_in: 1.minute)
           end
