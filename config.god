@@ -70,7 +70,7 @@ end
     # assets = (env_1 == "production") ? "rake assets:precompile --trace RAILS_ENV=production && " : ""
     # cmd = "/usr/local/rvm/bin/rvm default do bundle exec puma -C /var/www/#{app_name}/shared/puma.rb --daemon"
     # w.start = "cd #{app_root} && #{assets}puma -e #{env_1}"
-    w.start = "cd #{app_root}/current && RAILS_ENV=production bundle exec sidekiq -d -c 1 -C config/sidekiq.yml -L #{app_root}/current/log/sidekiq.log"
+    w.start = "cd #{app_root}/current && RAILS_ENV=production bundle exec sidekiq -d -C #{app_root}/shared/config/sidekiq.yml -L #{app_root}/current/log/sidekiq.log -P #{app_root}/shared/tmp/pids/sidekiq.pid"
     # w.restart = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S #{app_root}/shared/tmp/pids/puma.state -F #{app_root}/shared/puma.rb restart"
     w.stop = "cd #{app_root}/current && RAILS_ENV=production bundle exec sidekiqctl stop #{w.pid_file} 60"
 
