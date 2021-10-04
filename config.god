@@ -70,7 +70,7 @@ end
     w.start = "cd #{app_root}/current && RAILS_ENV=production bundle exec sidekiq -d -C #{app_root}/shared/config/sidekiq.yml"
     # w.restart = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S #{app_root}/shared/tmp/pids/puma.state -F #{app_root}/shared/puma.rb restart"
     # w.stop = "cd #{app_root}/current && RAILS_ENV=production bundle exec sidekiqctl stop #{w.pid_file} 60"
-    w.stop = "ps -ef | grep sidekiq | grep -v grep | awk '{print $2}' | xargs kill -9"
+    w.stop = "ps -ef | grep sidekiq | grep -v grep | awk '{print $2}' | xargs kill -TSTP"
     w.log = "#{app_root}/current/log/sidekiq_production.log"
 
     w.behavior(:clean_pid_file)
