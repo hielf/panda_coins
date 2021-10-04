@@ -20,7 +20,7 @@ module Clockwork
       keys = Rails.cache.redis.keys.sort
       times = []
       keys.each do |key|
-        times << key if (!key.to_time.nil?)
+        times << key if (!(key.count("a-zA-Z") > 0) && (DateTime.parse key rescue nil))
       end
 
       if times.empty? || current_time - times[-1].to_time > 30
