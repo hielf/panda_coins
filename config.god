@@ -74,7 +74,7 @@ end
     # w.restart = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S #{app_root}/shared/tmp/pids/puma.state -F #{app_root}/shared/puma.rb restart"
     # w.stop = "cd #{app_root}/current && RAILS_ENV=production bundle exec sidekiqctl stop #{w.pid_file} 60"
     w.stop = "ps -ef | grep sidekiq | grep -v grep | awk '{print $2}' | xargs kill -9"
-    w.log = "#{app_root}/shared/log/rails_app.log"
+    w.log = "#{app_root}/current/log/rails_app.log"
 
     w.behavior(:clean_pid_file)
 
