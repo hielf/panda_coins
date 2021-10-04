@@ -122,7 +122,7 @@ module HuobisHelper
 
         # redis = Rails.cache.redis
         begin
-          Rails.cache.write(ticker_time, data, expires_in: 126.seconds)
+          Rails.cache.write(ticker_time, data, expires_in: 300.seconds)
           # redis.hset("tickers",ticker_time,data, expires_in: 2.minute)
         rescue Exception => e
           Rails.logger.warn "huobi_tickers_cache: #{e.message}"
@@ -145,7 +145,6 @@ module HuobisHelper
     current_trades = Rails.cache.redis.hgetall("trades")
     settings = TraderSetting.current_settings
     keys.each do |key|
-      p key
       times << key if (!(key.count("a-zA-Z") > 0) && (DateTime.parse key rescue nil) && key.to_time >= start_time && key.to_time <= end_time)
     end
     # p times[0]
@@ -319,6 +318,8 @@ module HuobisHelper
     data = Rails.cache.redis.hgetall("orders")
     orders = data.find_all {|x| (eval x[1])[:open_time] <= settings.close_timer_up.to_i.seconds.ago}
     if settings.daily_clear_all_time && !settings.daily_clear_all_time.empty? && Time.now.strftime('%H:%M') == settings.daily_clear_all_time
+      orders = data
+    elsif Time.now.strftime("%H:%M:%S") == "23:59:59"
       orders = data
     end
 
