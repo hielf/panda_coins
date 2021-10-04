@@ -78,6 +78,10 @@ GEM
     capistrano-rvm (0.1.2)
       capistrano (~> 3.0)
       sshkit (~> 1.2)
+    capistrano-sidekiq (2.0.0)
+      capistrano (>= 3.9.0)
+      capistrano-bundler
+      sidekiq (>= 6.0)
     chronic (0.10.2)
     clockwork (2.0.4)
       activesupport
@@ -317,6 +321,7 @@ DEPENDENCIES
   capistrano-bundler
   capistrano-rails
   capistrano-rvm
+  capistrano-sidekiq
   capistrano3-puma!
   clockwork
   coffee-rails (~> 4.2)

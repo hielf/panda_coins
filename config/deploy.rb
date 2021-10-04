@@ -25,6 +25,7 @@ set :deploy_to, "/var/www/#{fetch(:application)}"
 
 # Default value for :pty is false
 # set :pty, true
+set :pty,  false
 
 # Default value for :linked_files is []
 append :linked_files, "config/database.yml", "config/redis.yml", "config/secrets.yml", "config/application.yml", "config/sidekiq.yml"
