@@ -1,5 +1,5 @@
 class OrdersCloseJob < ApplicationJob
-  queue_as :high_priority
+  queue_as :high
 
   # after_perform :around_check
 

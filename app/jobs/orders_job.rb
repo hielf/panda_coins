@@ -1,5 +1,5 @@
 class OrdersJob < ApplicationJob
-  queue_as :first
+  queue_as :critical
 
   # after_perform :logger
 

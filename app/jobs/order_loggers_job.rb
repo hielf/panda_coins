@@ -1,5 +1,5 @@
 class OrderLoggersJob < ApplicationJob
-  queue_as :low_priority
+  queue_as :low
 
   after_perform :around_check
 

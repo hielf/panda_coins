@@ -72,6 +72,7 @@ gem 'listen', '>= 3.0.5', '< 3.2'
 #   gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 # end
 
+gem 'sidekiq'
 gem 'rack-cors', :require => 'rack/cors'
 gem 'kaminari'
 gem 'ransack'

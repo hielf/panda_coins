@@ -15,7 +15,7 @@ class Application < Rails::Application
   config.i18n.default_locale = 'zh-CN'
   config.encoding = "utf-8"
 
-  # config.active_job.queue_adapter = :sidekiq
+  config.active_job.queue_adapter = :sidekiq
 
   config.middleware.insert_before 0, Rack::Cors do
     allow do

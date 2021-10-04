@@ -1,5 +1,5 @@
 class AccountLoggerJob < ApplicationJob
-  queue_as :low_priority
+  queue_as :low
 
   def perform(*args)
     @symbol = args[0]
