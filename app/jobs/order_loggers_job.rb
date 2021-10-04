@@ -10,7 +10,7 @@ class OrderLoggersJob < ApplicationJob
     pnls = ApplicationController.helpers.huobi_pnls(@symbol)
     ApplicationController.helpers.huobi_pnls_log(@symbol, pnls)
 
-    data = Rails.cache.redis.hget("orders:closing", @symbol)
+    data = eval Rails.cache.redis.hget("orders:closing", @symbol)
     ApplicationController.helpers.huobi_orders_log(@symbol, data)
   end
 
