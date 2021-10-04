@@ -64,7 +64,7 @@ end
 
   env_0 = "sidekiq"
   God.watch do |w|
-    w.name = app_name + "-" + env_1
+    w.name = app_name + "-" + env_0
     w.group = app_name
     w.pid_file = "#{app_root}/shared/tmp/pids/sidekiq.pid"
     # assets = (env_1 == "production") ? "rake assets:precompile --trace RAILS_ENV=production && " : ""
