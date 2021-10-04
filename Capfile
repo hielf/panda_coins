@@ -45,14 +45,14 @@ install_plugin Capistrano::Puma::Workers  # if you want to control the workers (
 
 # require 'capistrano/god'
 
-require 'capistrano/sidekiq'
-install_plugin Capistrano::Sidekiq  # Default sidekiq tasks
+# require 'capistrano/sidekiq'
+# install_plugin Capistrano::Sidekiq  # Default sidekiq tasks
 # Then select your service manager
-install_plugin Capistrano::Sidekiq::Systemd
+# install_plugin Capistrano::Sidekiq::Systemd
 # or
-install_plugin Capistrano::Sidekiq::Upstart  # tests needed
+# install_plugin Capistrano::Sidekiq::Upstart  # tests needed
 # or
-install_plugin Capistrano::Sidekiq::Monit  # tests needed
+# install_plugin Capistrano::Sidekiq::Monit  # tests needed
 
 
 # Load custom tasks from `lib/capistrano/tasks` if you have any defined

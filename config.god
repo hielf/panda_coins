@@ -62,6 +62,25 @@ end
     end
   end
 
+  env_0 = "sidekiq"
+  God.watch do |w|
+    w.name = app_name + "-" + env_1
+    w.group = app_name
+    w.pid_file = "#{app_root}/shared/tmp/pids/sidekiq.pid"
+    # assets = (env_1 == "production") ? "rake assets:precompile --trace RAILS_ENV=production && " : ""
+    # cmd = "/usr/local/rvm/bin/rvm default do bundle exec puma -C /var/www/#{app_name}/shared/puma.rb --daemon"
+    # w.start = "cd #{app_root} && #{assets}puma -e #{env_1}"
+    w.start = "cd #{app_root}/current && RAILS_ENV=production bundle exec sidekiq -d -c 1 -C config/sidekiq.yml -L #{app_root}/current/log/sidekiq.log"
+    # w.restart = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S #{app_root}/shared/tmp/pids/puma.state -F #{app_root}/shared/puma.rb restart"
+    w.stop = "cd #{app_root}/current && RAILS_ENV=production bundle exec sidekiqctl stop #{w.pid_file} 60"
+
+    w.log = "#{app_root}/shared/log/rails_app.log"
+
+    w.behavior(:clean_pid_file)
+
+    generic_monitoring(w, :cpu_limit => 100.percent, :memory_limit => 1000.megabytes)
+  end
+
   env_1 = "production"
   God.watch do |w|
     w.name = app_name + "-" + env_1
