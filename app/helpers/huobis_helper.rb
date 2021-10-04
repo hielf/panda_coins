@@ -145,7 +145,8 @@ module HuobisHelper
     current_trades = Rails.cache.redis.hgetall("trades")
     settings = TraderSetting.current_settings
     keys.each do |key|
-      times << key if (!key.to_time.nil? && key.to_time >= start_time && key.to_time <= end_time)
+      p key
+      times << key if (!(key.count("a-zA-Z") > 0) && (DateTime.parse key rescue nil) && key.to_time >= start_time && key.to_time <= end_time)
     end
     # p times[0]
     if times && times.any?
