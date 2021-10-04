@@ -340,7 +340,6 @@ module HuobisHelper
         #   Rails.logger.warn "huobi_orders_close 1: #{e.message}"
         # ensure
         #   # OrderLoggersJob.perform_now symbol
-        #   PnlLoggersJob.perform_later symbol
         #   Rails.logger.warn "#{symbol} closed due to timer limit"
         # end
 
@@ -369,7 +368,6 @@ module HuobisHelper
         #   Rails.logger.warn "huobi_orders_close 2: #{e.message}"
         # ensure
         #   # OrderLoggersJob.perform_later symbol
-        #   PnlLoggersJob.perform_later symbol
         #   Rails.logger.warn "#{symbol} closed due to down limit"
         # end
 
@@ -399,7 +397,6 @@ module HuobisHelper
         #   Rails.logger.warn "huobi_orders_close 3: #{e.message}"
         # ensure
         #   # OrderLoggersJob.perform_later symbol
-        #   PnlLoggersJob.perform_later symbol
         #   Rails.logger.warn "#{symbol} closed due to up limit"
         # end
 
@@ -429,7 +426,6 @@ module HuobisHelper
     #         Rails.logger.warn "huobi_orders_close 4: #{e.message}"
     #       ensure
     #         OrderLoggersJob.perform_later symbol
-    #         PnlLoggersJob.perform_later symbol
     #         Rails.logger.warn "#{symbol} closed due to pnl limit"
     #       end
     #     end

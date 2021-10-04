@@ -23,6 +23,7 @@ module Clockwork
         symbol = cs[0]
         data = eval cs[1]
         ApplicationController.helpers.huobi_orders_log(symbol, data)
+        OrderLoggersJob.perform_later symbol
       end
     end
 

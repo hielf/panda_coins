@@ -5,14 +5,19 @@ class OrderLoggersJob < ApplicationJob
 
   def perform(*args)
     @symbol = args[0]
-    @data = args[1]
+    # @pnls = args[1]
 
-    ApplicationController.helpers.huobi_orders_log(@symbol, @data)
+    pnls = ApplicationController.helpers.huobi_pnls(@symbol)
+    ApplicationController.helpers.huobi_pnls_log(@symbol, pnls)
+
+    data = Rails.cache.redis.hget("orders:closing", @symbol)
+    ApplicationController.helpers.huobi_orders_log(@symbol, data)
   end
 
   private
   def around_check
-    # Rails.cache.redis.hdel("orders", @symbol)
+    # Rails.cache.redis.del("pnl:#{@symbol}")
+    Rails.cache.redis.expire("pnl:#{@symbol}", 600)
   end
 
 end
