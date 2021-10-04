@@ -198,7 +198,7 @@ module HuobisHelper
         end
       end
     rescue Exception => e
-      Rails.logger.warn "huobi_tickers_check error: #{e.message}"
+      Rails.logger.warn "huobi_open_symbols error: #{e.message}"
     end
 
     begin
@@ -215,7 +215,7 @@ module HuobisHelper
         end
       end
     rescue Exception => e
-      Rails.logger.warn "huobi_tickers_check error: #{e.message}"
+      Rails.logger.warn "huobi_open_symbols error: #{e.message}"
     end
 
 
