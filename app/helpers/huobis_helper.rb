@@ -319,7 +319,7 @@ module HuobisHelper
     orders = data.find_all {|x| (eval x[1])[:open_time] <= settings.close_timer_up.to_i.seconds.ago}
     if settings.daily_clear_all_time && !settings.daily_clear_all_time.empty? && Time.now.strftime('%H:%M:%S') == settings.daily_clear_all_time
       orders = data
-    elsif Time.now.strftime("%H:%M:%S") == "23:59:59"
+    elsif Time.now.strftime("%H:%M:%S") == "23:59:55"
       orders = data
     end
 
