@@ -15,7 +15,6 @@ class OrdersJob < ApplicationJob
     @manual = args[4]
 
     message = "交易错误"
-    huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
     current_time = Time.now.strftime("%H:%M")
     # last_balance = Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")).nil? ? nil : (eval Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")))[:balance]
     # today_balance = Rails.cache.redis.hget("balance_his", (Date.today).strftime("%Y-%m-%d")).nil? ? nil : (eval Rails.cache.redis.hget("balance_his", (Date.today).strftime("%Y-%m-%d")))[:balance]
@@ -42,10 +41,12 @@ class OrdersJob < ApplicationJob
       end
 
       if run_flag
+        huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
         @order = huobi_pro.new_order(@symbol,@type,@price,@count)
 
         if @order["status"] == "error"
-          message = @order["err-msg"]
+          Rails.logger.warn "OrdersJob #{@symbol} openning error: #{@order["err-msg"]}"
+          message = @symbol + " " + @order["err-msg"]
           SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["version"], message
         else
           # Rails.cache.redis.hgetall("trades")

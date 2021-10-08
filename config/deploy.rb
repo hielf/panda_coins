@@ -106,7 +106,7 @@ namespace :deploy do
   desc 'Restart application'
   task :restart do
     on roles(:app), in: :sequence, wait: 5 do
-      execute "ps -ef | grep sidekiq | grep -v grep | awk '{print $2}' | xargs kill -TERM"
+      # execute "ps -ef | grep sidekiq | grep -v grep | awk '{print $2}' | xargs kill -TERM"
       invoke 'puma:restart'
       # invoke 'god:deploy'
     end

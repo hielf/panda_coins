@@ -317,7 +317,7 @@ module HuobisHelper
     # 1 timer limit
     data = Rails.cache.redis.hgetall("orders")
     orders = data.find_all {|x| (eval x[1])[:open_time] <= settings.close_timer_up.to_i.seconds.ago}
-    if settings.daily_clear_all_time && !settings.daily_clear_all_time.empty? && Time.now.strftime('%H:%M') == settings.daily_clear_all_time
+    if settings.daily_clear_all_time && !settings.daily_clear_all_time.empty? && Time.now.strftime('%H:%M:%S') == settings.daily_clear_all_time
       orders = data
     elsif Time.now.strftime("%H:%M:%S") == "23:59:59"
       orders = data
