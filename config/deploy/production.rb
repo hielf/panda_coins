@@ -11,7 +11,7 @@
 server '139.162.165.15', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
 server '172.105.251.116', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
 
-set :branch, "main"
+set :branch, "s_version"
 set :migration_role, :db
 set :migration_servers, -> { release_roles(fetch(:migration_role)) }
 # set :branch, "V4_ATR"
