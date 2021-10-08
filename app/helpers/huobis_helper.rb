@@ -103,29 +103,30 @@ module HuobisHelper
 
   def huobi_tickers_cache
     url = "https://api.huobi.pro/market/tickers"
-    Parallel.map([1, 2, 3], in_processes: 3) do |i|
-      sleep i
+    Parallel.map([0, 1], in_processes: 2) do |i|
       # raise Parallel::Break # -> stops after all current items are finished
       loop do
-        sleep rand(0..0.5)
-        # current_time = Time.zone.now.strftime('%H:%M')
-        # p current_time
-        res = Faraday.get url
-        json = JSON.parse res.body
-        ticker_time = Time.at(json["ts"]/1000)
-        data = []
-        json["data"].each do |d|
-          if d["symbol"].end_with?("usdt")
-            data << d
+        if Time.now.sec.to_s.end_with? ENV["collect_sec"]
+          sleep 6 if i == 1
+          p "time_#{i.to_s}: #{Time.now}"
+          res = Faraday.get url
+          json = JSON.parse res.body
+          ticker_time = Time.at(json["ts"]/1000)
+          data = []
+          json["data"].each do |d|
+            if d["symbol"].end_with?("usdt")
+              data << d
+            end
           end
-        end
-
-        # redis = Rails.cache.redis
-        begin
-          Rails.cache.write(ticker_time, data, expires_in: 300.seconds)
-          # redis.hset("tickers",ticker_time,data, expires_in: 2.minute)
-        rescue Exception => e
-          Rails.logger.warn "huobi_tickers_cache: #{e.message}"
+          p "ticker_#{i.to_s}: #{ticker_time}"
+          # redis = Rails.cache.redis
+          begin
+            Rails.cache.write(ticker_time, data, expires_in: 300.seconds)
+            # redis.hset("tickers",ticker_time,data, expires_in: 2.minute)
+            sleep 1
+          rescue Exception => e
+            Rails.logger.warn "huobi_tickers_cache: #{e.message}"
+          end
         end
       end
       # Parallel::Stop
