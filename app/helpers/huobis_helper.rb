@@ -108,7 +108,7 @@ module HuobisHelper
       loop do
         if Time.now.sec.to_s.end_with? ENV["collect_sec"]
           sleep 6 if i == 1
-          p "time_#{i.to_s}: #{Time.now}"
+          # p "time_#{i.to_s}: #{Time.now}"
           res = Faraday.get url
           json = JSON.parse res.body
           ticker_time = Time.at(json["ts"]/1000)
@@ -118,7 +118,7 @@ module HuobisHelper
               data << d
             end
           end
-          p "ticker_#{i.to_s}: #{ticker_time}"
+          # p "ticker_#{i.to_s}: #{ticker_time}"
           # redis = Rails.cache.redis
           begin
             Rails.cache.write(ticker_time, data, expires_in: 300.seconds)
