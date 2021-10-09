@@ -70,7 +70,7 @@ end
     w.start = "cd #{app_root}/current && RAILS_ENV=production bundle exec sidekiq -C #{app_root}/shared/config/sidekiq.yml"
     # w.restart = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S #{app_root}/shared/tmp/pids/puma.state -F #{app_root}/shared/puma.rb restart"
     # w.stop = "cd #{app_root}/current && RAILS_ENV=production bundle exec sidekiqctl stop #{w.pid_file} 60"
-    w.stop = "sh /var/www/panda_coins/current/stop_sidekiq.sh"
+    w.stop = "sudo -H -u deploy /bin/bash -l -c 'sh /var/www/panda_coins/current/stop_sidekiq.sh'"
     # && ps -ef | grep sidekiq | grep -v grep | awk '{print $2}' | xargs kill -TERM
     w.log = "#{app_root}/current/log/sidekiq_production.log"
 
