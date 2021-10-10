@@ -26,6 +26,7 @@ module HuobisHelper
     end
   end
 # ["ethusdt", "btcusdt", "dogeusdt", "xrpusdt", "lunausdt", "adausdt", "bttusdt", "nftusdt", "dotusdt", "trxusdt", "icpusdt", "abtusdt", "skmusdt", "bhdusdt", "aacusdt", "canusdt", "fisusdt", "nhbtcusdt", "letusdt", "massusdt", "achusdt", "ringusdt", "stnusdt", "mtausdt", "itcusdt", "atpusdt", "gofusdt", "pvtusdt", "auctionus", "ocnusdt"]
+  # ApplicationController.helpers.white_list
   def white_list
     symbols = []
     usdts = Rails.cache.redis.hgetall("symbols")
@@ -235,7 +236,8 @@ module HuobisHelper
         ticker_time = Time.at(tick["ts"]/1000).to_s
         sym_data = eval symbol[1]
         change = (sym_data[:close] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:close])/sym_data[:close])
-        Rails.cache.redis.hset("orders", symbol[0], {"open_price": sym_data[:close], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:time], "current_time": ticker_time})
+        change_open = (sym_data[:open] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:open])/sym_data[:open])
+        Rails.cache.redis.hset("orders", symbol[0], {"open_price": sym_data[:close], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:time], "current_time": ticker_time, "change_open": change_open, "first_price": sym_data[:open]})
         openning_symbols << symbol
       end
     end
@@ -257,7 +259,8 @@ module HuobisHelper
           # p [symbol[0], ticker_time, tick["tick"]["close"]]
           sym_data = eval symbol[1]
           change = (sym_data[:open_price] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:open_price])/sym_data[:open_price])
-          redis.hset("orders", symbol[0], {"open_price": sym_data[:open_price], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:open_time], "current_time": ticker_time})
+          change_open = (sym_data[:first_price] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:first_price])/sym_data[:first_price])
+          redis.hset("orders", symbol[0], {"open_price": sym_data[:open_price], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:open_time], "current_time": ticker_time, "change_open": change_open, "first_price": sym_data[:first_price]})
 
           pnl = change.truncate(4)
           # Rails.logger.warn "#{symbol[0]} pnl: #{pnl}"
@@ -339,6 +342,22 @@ module HuobisHelper
     # 2 down limit
     data = Rails.cache.redis.hgetall("orders")
     orders = data.find_all {|x| ((eval x[1])[:change] <= settings.down_limit.to_f) && (Time.now - (eval x[1])[:open_time].to_time >= settings.open_await_to_close_time.to_i)}
+
+    if orders && orders.any?
+      orders.each do |order|
+        symbol = order[0]
+        data = eval Rails.cache.redis.hget("orders", symbol)
+        Rails.cache.redis.hset("orders:closing", symbol, data)
+        Rails.cache.redis.hdel("orders", symbol)
+        closing_symbols << symbol if !closing_symbols.include?(symbol)
+
+        count = count + 1
+      end
+    end
+
+    # 2.5 change_open down limit
+    data = Rails.cache.redis.hgetall("orders")
+    orders = data.find_all {|x| ((eval x[1])[:change_open] <= settings.down_limit.to_f) && (Time.now - (eval x[1])[:open_time].to_time >= settings.open_await_to_close_time.to_i)}
 
     if orders && orders.any?
       orders.each do |order|
