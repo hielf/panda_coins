@@ -80,6 +80,7 @@ namespace :deploy do
   task :stop_god do
     on roles(:app) do
       execute "sudo -H -u deploy /bin/bash -l -c 'god stop'"
+      execute 'bash', " #{release_path}/stop_sidekiq.sh"
     end
   end
   before 'deploy', 'deploy:stop_god'
