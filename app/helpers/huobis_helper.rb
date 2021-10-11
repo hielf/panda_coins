@@ -272,7 +272,7 @@ module HuobisHelper
           redis.rpush("pnl:#{symbol[0]}", h.to_s)
           redis.quit
         rescue Exception => e
-          Rails.logger.warn "huobi_orders_check: #{e.message}"
+          Rails.logger.warn "huobi_orders_check error: #{e.message} #{symbol[0]} #{symbol[1]}"
         end
       end
     end
