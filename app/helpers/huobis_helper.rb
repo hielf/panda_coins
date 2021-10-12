@@ -656,6 +656,40 @@ module HuobisHelper
       postgres.close if postgres
     end
   end
+  # 
+  # def huobi_em
+  #   c = "astusdt"
+  #   req = "market." + c + ".kline.1min"
+  #   @handshake = WebSocket::Handshake::Client.new(url: 'wss://api.huobi.pro/ws', headers: { "sub": req, "id": 1 })
+  #
+  #   EM.run do
+  #
+  #     ws = WebSocket::EventMachine::Client.connect(:uri => 'wss://api.huobi.pro/ws')
+  #
+  #     ws.onopen do
+  #       puts "Connected"
+  #     end
+  #
+  #     ws.onping do |message|
+  #       puts "Ping received: #{message}"
+  #       puts "pong"
+  #     end
+  #
+  #     ws.onmessage do |msg, type|
+  #       puts "Received message: #{msg}"
+  #     end
+  #
+  #     ws.onclose do |code, reason|
+  #       puts "Disconnected with status code: #{code}"
+  #     end
+  #
+  #     EventMachine.next_tick do
+  #       ws.send "Hello Server!"
+  #     end
+  #
+  #   end
+
+  end
 
   # sql = "CREATE TABLE public.#{table_name} (symbol varchar, time timestamp, open float8, high float8, low float8, close float8, vol float8, amount float8, count int8, bid float8, bidSize float8, ask float8, askSize float8);"
   # res = postgres.exec(sql)
