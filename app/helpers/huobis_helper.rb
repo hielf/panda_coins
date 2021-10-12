@@ -656,7 +656,7 @@ module HuobisHelper
       postgres.close if postgres
     end
   end
-  # 
+  
   # def huobi_em
   #   c = "astusdt"
   #   req = "market." + c + ".kline.1min"
@@ -689,7 +689,7 @@ module HuobisHelper
   #
   #   end
 
-  end
+  # end
 
   # sql = "CREATE TABLE public.#{table_name} (symbol varchar, time timestamp, open float8, high float8, low float8, close float8, vol float8, amount float8, count int8, bid float8, bidSize float8, ask float8, askSize float8);"
   # res = postgres.exec(sql)
