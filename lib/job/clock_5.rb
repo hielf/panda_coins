@@ -26,9 +26,19 @@ module Clockwork
       end
     end
 
+    if job == 'huobi.usdts_symbols'
+      begin
+        ApplicationController.helpers.usdts_symbols
+      rescue Exception => e
+        Rails.logger.warn "huobi.usdts_symbols error: #{e.message}"
+      end
+    end
+
   end
 
   every(1.minute, 'huobi.orders_logger')
+  every(1.day, 'huobi.usdts_symbols', :at => '12:00', :thread => true)
+  every(1.day, 'huobi.usdts_symbols', :at => '23:55', :thread => true)
   # every(5.minutes, 'huobi.alive_check2', :skip_first_run => true, :thread => true)
   #
   # every(1.day, 'midnight.job', :at => '00:00')

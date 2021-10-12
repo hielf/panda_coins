@@ -15,6 +15,7 @@ module Clockwork
 
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
+    
     if job == 'huobi.tickers_cache'
       current_time = Time.now
       keys = Rails.cache.redis.keys.sort
@@ -33,20 +34,11 @@ module Clockwork
       end
     end
 
-    if job == 'huobi.usdts_symbols'
-      begin
-        ApplicationController.helpers.usdts_symbols
-      rescue Exception => e
-        Rails.logger.warn "huobi.usdts_symbols error: #{e.message}"
-      end
-    end
-
   end
 
   # # trades
   every(1.minute, 'huobi.tickers_cache')
-  every(1.day, 'huobi.usdts_symbols', :at => '12:00', :thread => true)
-  every(1.day, 'huobi.usdts_symbols', :at => '23:55', :thread => true)
+
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')
   #

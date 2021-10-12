@@ -451,14 +451,19 @@ module HuobisHelper
     huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
     balances = huobi_pro.balances
     status = false
+    frozen_count = 0
     if balances && balances["status"] == "ok"
-      Rails.cache.redis.del("balances")
       account_id = balances["data"]["id"]
       data = balances["data"]["list"].find_all{|x| x["balance"].to_f != 0}
+
+      Rails.cache.redis.hgetall("balances").each do |d|
+        Rails.cache.redis.hdel("balances", d[0]) if d[0].include? "frozen"
+      end
 
       data.each do |d|
         begin
           Rails.cache.redis.hset("balances", "#{d["currency"]}:#{d["type"]}", {"currency": d["currency"],"type": d["type"], "balance": d["balance"], "seq-num": d["seq-num"]} )
+          frozen_count = frozen_count + 1 if (d["type"] == "frozen" && d["currency"] != "usdt")
         rescue Exception => e
           Rails.logger.warn "huobi_balances save error: #{e.message}"
         end
@@ -466,7 +471,7 @@ module HuobisHelper
       status = true
     end
 
-    return account_id, status
+    return frozen_count, status
   end
 
   def huobi_histroy_matchresults(symbol)
