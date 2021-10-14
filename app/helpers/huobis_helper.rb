@@ -104,11 +104,12 @@ module HuobisHelper
 
   def huobi_tickers_cache
     url = "https://api.huobi.pro/market/tickers"
-    Parallel.map([0, 1], in_processes: 2) do |i|
+    Parallel.map([0, 1, 2], in_processes: 3) do |i|
       # raise Parallel::Break # -> stops after all current items are finished
       loop do
         if Time.now.sec.to_s.end_with? ENV["collect_sec"]
-          sleep 6 if i == 1
+          sleep 4 if i == 1
+          sleep 8 if i == 2
           # p "time_#{i.to_s}: #{Time.now}"
           res = Faraday.get url
           json = JSON.parse res.body
@@ -656,7 +657,7 @@ module HuobisHelper
       postgres.close if postgres
     end
   end
-  
+
   # def huobi_em
   #   c = "astusdt"
   #   req = "market." + c + ".kline.1min"
