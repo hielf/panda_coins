@@ -10,7 +10,8 @@ class HuobiEm
     # ['aacusdt','achusdt','ankrusdt','bsvusdt','cnnsusdt','creusdt','bixusdt','dacusdt','ektusdt','ethusdt','fildausdt','flowusdt','gxcusdt','ltc3susdt','mirusdt','mtausdt','mxcusdt','nasusdt','nbsusdt','neousdt','phausdt','skmusdt','steemusdt','utkusdt','wnxmusdt','xrp3lusdt','zilusdt','1inchusdt','aaveusdt','abtusdt','adausdt','aeusdt','akrousdt','antusdt','api3usdt','apnusdt','arusdt','atomusdt','axsusdt','bagsusdt','batusdt','bch3lusdt','bethusdt','bhdusdt','blzusdt','bntusdt','btc1susdt','btc3susdt','btmusdt','bttusdt','ckbusdt','cmtusdt','cruusdt','crvusdt','csprusdt','ctsiusdt','dashusdt','dfusdt','dkausdt','dogeusdt','dot2susdt','dotusdt','egtusdt','elausdt','elfusdt','eos3lusdt','eosusdt','etcusdt','eth1susdt','firousdt','fisusdt','forthusdt','forusdt','fttusdt','gnxusdt','grtusdt','gtusdt','hbcusdt','hitusdt','hptusdt','icpusdt','icxusdt','iostusdt','fsnusdt','pondusdt','actusdt','algousdt','arpausdt','astusdt','atpusdt','auctionusdt','avaxusdt','badgerusdt','balusdt','bandusdt','bch3susdt','bchusdt','bsv3lusdt','bsv3susdt','iotxusdt','irisusdt','itcusdt','jstusdt','kanusdt','kcashusdt','kncusdt','ksmusdt','lambusdt','latusdt','lbausdt','lhbusdt','linausdt','linkusdt','lrcusdt','ltc3lusdt','ltcusdt','lunausdt','manausdt','massusdt','maticusdt','mdxusdt','mlnusdt','mxusdt','newusdt','nftusdt','nknusdt','nsureusdt','o3usdt','ognusdt','ogousdt','oneusdt','polsusdt','btc3lusdt','btcusdt','btsusdt','canusdt','chrusdt','chzusdt','compusdt','crousdt','ctxcusdt','cvcusdt','cvpusdt','daiusdt','dcrusdt','dhtusdt','dockusdt','dot2lusdt','dtausdt','emusdt','enjusdt','eos3susdt','eth3lusdt','eth3susdt','fil3lusdt','filusdt','frontusdt','ftiusdt','glmusdt','gofusdt','hbarusdt','hcusdt','hiveusdt','hotusdt','htusdt','injusdt','insurusdt','iotausdt','kavausdt','letusdt','link3lusdt','link3susdt','lolusdt','loomusdt','lxtusdt','maskusdt','mdsusdt','mkrusdt','nanousdt','nearusdt','nestusdt','nexousdt','nhbtcusdt','nodeusdt','nulsusdt','nuusdt','ocnusdt','omgusdt','ontusdt','oxtusdt','paiusdt','paxusdt','pearlusdt','pvtusdt','qtumusdt','raiusdt','reefusdt','renusdt','ringusdt','rlcusdt','rndrusdt','rsrusdt','ruffusdt','topusdt','trbusdt','trxusdt','ttusdt','uipusdt','umausdt','uni2lusdt','uni2susdt','uniusdt','usdcusdt','uuuusdt','valueusdt','vetusdt','vidyusdt','vsysusdt','wavesusdt','waxpusdt','wbtcusdt','wiccusdt','woousdt','wtcusdt','wxtusdt','xchusdt','xemusdt','rvnusdt','sandusdt','scusdt','seeleusdt','shibusdt','sklusdt','smtusdt','sntusdt','snxusdt','socusdt','solusdt','stakeusdt','stnusdt','storjusdt','stptusdt','sunusdt','sushiusdt','swftcusdt','swrvusdt','thetausdt','titanusdt','tnbusdt','xlmusdt','xmrusdt','xmxusdt','xrpusdt','xrtusdt','xtzusdt','yamusdt','yeeusdt','yfiiusdt','yfiusdt','zec3lusdt','zec3susdt','zecusdt','zenusdt','zksusdt','zrxusdt']
     list = ["ethusdt", "btcusdt", "dogeusdt", "xrpusdt", "lunausdt", "adausdt", "bttusdt", "nftusdt"]
 
-    tickers = []
+    tickers = SortedSet.new # SortedSet.new
+    symbols_list = Set.new
     Parallel.map(list, in_threads: list.count) do |symbol|
       c = "market." + symbol + ".ticker"
       req = JSON.dump({"sub": c, "id": symbol})
@@ -25,10 +26,11 @@ class HuobiEm
           else
             begin
               if data[:ts] && data[:tick]
+                symbols_list << {:symbol => data[:ch]}
                 current_ts = Time.at(data[:ts]/1000)
                 if current_ts != last_ts
                   p [Time.at(data[:ts]/1000), data[:ch], data[:tick][:close], data[:tick][:bid], data[:tick][:vol]]
-                  tickers << {:time => current_ts, :symbol => data[:ch], :tick => data[:tick]}
+                  # tickers << {:time => current_ts, :symbol => data[:ch], :tick => data[:tick]}
                   # Rails.cache.redis.hset(current_ts, data[:ch], data[:tick])
                   # Rails.cache.redis.expire(current_ts, 60)
                 end
@@ -39,13 +41,14 @@ class HuobiEm
             ensure
               last_ts = current_ts
               p "current_ts: #{current_ts}"
-              if tickers.last
-                p "tickers.last: #{tickers.last[:time]}"
+              if tickers.any?
+                p "tickers.last: #{tickers.to_a.last[:time]}"
                 p "finish count: #{(tickers.find_all {|x| x[:time] == current_ts}).count}"
               end
-              if (tickers.find_all {|x| x[:time] == current_ts}).count == 3
+              if (tickers.find_all {|x| x[:time] == current_ts}).count == 4
                 p current_ts
-                tickers = []
+                tickers.clear
+                p "ticker cleared"
               end
             end
           end
