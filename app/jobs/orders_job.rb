@@ -42,6 +42,7 @@ class OrdersJob < ApplicationJob
 
       # sell 0 double check
       if (@type.include? "sell") && @count == 0 && !(current_time <= settings.buy_accept_start_time && current_time >= settings.buy_accept_end_time)
+        Rails.logger.warn "OrdersJob accept_time sell 0 error: #{@symbol}"
         amount = ApplicationController.helpers.huobi_close_amount(@symbol)
         OrdersJob.set(wait: 2.second).perform_later @symbol, 'sell-market', 0, amount, false
       end
