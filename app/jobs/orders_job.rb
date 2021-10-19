@@ -40,12 +40,18 @@ class OrdersJob < ApplicationJob
         run_flag = false
       end
 
+      # sell 0 double check
+      if (@type.include? "sell") && @count == 0 && !(current_time <= settings.buy_accept_start_time && current_time >= settings.buy_accept_end_time)
+        amount = ApplicationController.helpers.huobi_close_amount(@symbol)
+        OrdersJob.set(wait: 2.second).perform_later @symbol, 'sell-market', 0, amount, false
+      end
+
       if run_flag
         huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
         @order = huobi_pro.new_order(@symbol,@type,@price,@count)
 
         if @order["status"] == "error"
-          Rails.logger.warn "OrdersJob #{@symbol} openning error: #{@order["err-msg"]}"
+          Rails.logger.warn "OrdersJob #{@symbol} error: #{@order["err-msg"]}"
           message = @symbol + " " + @order["err-msg"]
           SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["version"], message
         else
