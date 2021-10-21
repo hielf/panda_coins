@@ -47,7 +47,13 @@ class OrdersJob < ApplicationJob
         OrdersJob.set(wait: 2.second).perform_later @symbol, 'sell-market', 0, amount, false
       end
 
-      if run_flag || @manual
+
+      if @manual
+        Rails.logger.warn "OrdersJob manual #{@type} #{@symbol} #{@count}"
+        run_flag = true
+      end
+      
+      if run_flag
         huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
         @order = huobi_pro.new_order(@symbol,@type,@price,@count)
 
