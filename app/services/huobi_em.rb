@@ -45,7 +45,7 @@ class HuobiEm
                 p "tickers.last: #{tickers.to_a.last[:time]}"
                 p "finish count: #{(tickers.find_all {|x| x[:time] == current_ts}).count}"
               end
-              if (tickers.find_all {|x| x[:time] == current_ts}).count == 4
+              if (tickers.find_all {|x| x[:time] == current_ts}).count == symbols_list.count
                 p current_ts
                 tickers.clear
                 p "ticker cleared"
