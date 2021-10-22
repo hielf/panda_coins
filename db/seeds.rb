@@ -12,6 +12,8 @@
 #
 #   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
 #   Mayor.create(name: 'Emanuel', city: cities.first)
+ht = SymbolList.find_by(symbol: "htusdt")
+ht.update(disabled: true) if ht
 
 ts = TraderSetting.find_or_initialize_by(account_id: ENV["huobi_accounts"])
 ts.attributes = { days_after_symbol_listing: "90",

@@ -18,7 +18,7 @@
       <%= form.text_field :days_after_symbol_listing, required: true %>
     </div>
     <div class="display: inline-block;">
-      <label>全局开仓数量上限：</label>
+      <label>全局指令数量上限：</label>
       <%= form.text_field :max_opened_orders, required: true, disabled: true %>
     </div>
     <div class="display: inline-block;">
@@ -42,8 +42,12 @@
       <%= form.text_field :up_up_limit, required: true %>
     </div>
     <div class="display: inline-block;">
-      <label>止损平仓跌幅下限：</label>
+      <label>止损平仓跌幅下限(以开仓价涨跌幅计)：</label>
       <%= form.text_field :down_limit, required: true %>
+    </div>
+    <div class="display: inline-block;">
+      <label>止损平仓跌幅下限(以当日涨跌幅计)：</label>
+      <%= form.text_field :open_down_limit, required: true %>
     </div>
     <div class="display: inline-block;">
       <label>止赢平仓涨幅上限：</label>

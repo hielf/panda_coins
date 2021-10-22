@@ -15,7 +15,6 @@ class OrdersJob < ApplicationJob
     @manual = args[4]
 
     message = "交易错误"
-    huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
     current_time = Time.now.strftime("%H:%M")
     # last_balance = Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")).nil? ? nil : (eval Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")))[:balance]
     # today_balance = Rails.cache.redis.hget("balance_his", (Date.today).strftime("%Y-%m-%d")).nil? ? nil : (eval Rails.cache.redis.hget("balance_his", (Date.today).strftime("%Y-%m-%d")))[:balance]
@@ -41,11 +40,26 @@ class OrdersJob < ApplicationJob
         run_flag = false
       end
 
+      # sell 0 double check
+      if (@type.include? "sell") && @count == 0 && !(current_time <= settings.buy_accept_start_time && current_time >= settings.buy_accept_end_time)
+        Rails.logger.warn "OrdersJob accept_time sell 0 error: #{@symbol}"
+        amount, shares_amount = ApplicationController.helpers.huobi_close_amount(@symbol, 1)
+        OrdersJob.set(wait: 2.second).perform_later @symbol, 'sell-market', 0, amount, false
+      end
+
+
+      if @manual
+        Rails.logger.warn "OrdersJob manual #{@type} #{@symbol} #{@count}"
+        run_flag = true
+      end
+
       if run_flag
+        huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
         @order = huobi_pro.new_order(@symbol,@type,@price,@count)
 
         if @order["status"] == "error"
-          message = @order["err-msg"]
+          Rails.logger.warn "OrdersJob #{@symbol} error: #{@order["err-msg"]}"
+          message = @symbol + " " + @order["err-msg"]
           SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["version"], message
         else
           # Rails.cache.redis.hgetall("trades")

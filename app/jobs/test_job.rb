@@ -7,7 +7,7 @@ class TestJob < ApplicationJob
     @symbol = args[0]
     p "testing:        #{@symbol}"
     sleep 3
-    TestJob.perform_later "laggggggggggggggggggggg"
+    # TestJob.perform_later "laggggggggggggggggggggg"
     p "testing   done:        #{@symbol}"
     # Rails.logger.warn "testing: #{@symbol}"
   end

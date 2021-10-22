@@ -41,7 +41,7 @@
 #   # runner 'TradersJob.perform_later'
 # end
 
-every 1.day, at: '23:58' do
+every 1.day, at: '23:00' do
   command "cat /dev/null > /var/www/panda_coins/current/log/production.log"
   command "cat /dev/null > /var/www/panda_coins/current/log/puma.access.log"
   command "cat /dev/null > /var/www/panda_coins/current/log/puma.error.log"

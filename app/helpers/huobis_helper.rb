@@ -18,7 +18,7 @@ module HuobisHelper
         symbol = tb.currency + "usdt"
         # @count_match = ApplicationController.helpers.huobi_histroy_matchresults(symbol)
         # @account_id, @status = ApplicationController.helpers.huobi_balances
-        amount = ApplicationController.helpers.huobi_close_amount(symbol)
+        amount, shares_amount = ApplicationController.helpers.huobi_close_amount(symbol, 1)
         p [symbol, amount]
         OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
         sleep 0.3
@@ -26,10 +26,12 @@ module HuobisHelper
     end
   end
 # ["ethusdt", "btcusdt", "dogeusdt", "xrpusdt", "lunausdt", "adausdt", "bttusdt", "nftusdt", "dotusdt", "trxusdt", "icpusdt", "abtusdt", "skmusdt", "bhdusdt", "aacusdt", "canusdt", "fisusdt", "nhbtcusdt", "letusdt", "massusdt", "achusdt", "ringusdt", "stnusdt", "mtausdt", "itcusdt", "atpusdt", "gofusdt", "pvtusdt", "auctionus", "ocnusdt"]
+  # ApplicationController.helpers.white_list
   def white_list
     symbols = []
     usdts = Rails.cache.redis.hgetall("symbols")
     settings = TraderSetting.current_settings
+    black_list = SymbolList.black_list
 
     usdts.each do |usdt|
       hash = eval usdt[1]
@@ -39,7 +41,9 @@ module HuobisHelper
       state = hash[:"state"]
       api_trading = hash[:"api-trading"]
       listing_date = hash[:"listing-date"]
-      symbols << usdt[0] if state == "online" && api_trading == "enabled" && listing_date.to_date <= settings.days_after_symbol_listing.to_i.days.ago
+      if !black_list.map(&:symbol).include? usdt[0]
+        symbols << usdt[0] if state == "online" && api_trading == "enabled" && listing_date.to_date <= settings.days_after_symbol_listing.to_i.days.ago
+      end
     end
     # symbols = ['aacusdt','achusdt','ankrusdt','bsvusdt','cnnsusdt','creusdt','bixusdt','dacusdt','ektusdt','ethusdt','fildausdt','flowusdt','gxcusdt','ltc3susdt','mirusdt','mtausdt','mxcusdt','nasusdt','nbsusdt','neousdt','phausdt','skmusdt','steemusdt','utkusdt','wnxmusdt','xrp3lusdt','zilusdt','1inchusdt','aaveusdt','abtusdt','adausdt','aeusdt','akrousdt','antusdt','api3usdt','apnusdt','arusdt','atomusdt','axsusdt','bagsusdt','batusdt','bch3lusdt','bethusdt','bhdusdt','blzusdt','bntusdt','btc1susdt','btc3susdt','btmusdt','bttusdt','ckbusdt','cmtusdt','cruusdt','crvusdt','csprusdt','ctsiusdt','dashusdt','dfusdt','dkausdt','dogeusdt','dot2susdt','dotusdt','egtusdt','elausdt','elfusdt','eos3lusdt','eosusdt','etcusdt','eth1susdt','firousdt','fisusdt','forthusdt','forusdt','fttusdt','gnxusdt','grtusdt','gtusdt','hbcusdt','hitusdt','hptusdt','icpusdt','icxusdt','iostusdt','fsnusdt','pondusdt','actusdt','algousdt','arpausdt','astusdt','atpusdt','auctionusdt','avaxusdt','badgerusdt','balusdt','bandusdt','bch3susdt','bchusdt','bsv3lusdt','bsv3susdt','iotxusdt','irisusdt','itcusdt','jstusdt','kanusdt','kcashusdt','kncusdt','ksmusdt','lambusdt','latusdt','lbausdt','lhbusdt','linausdt','linkusdt','lrcusdt','ltc3lusdt','ltcusdt','lunausdt','manausdt','massusdt','maticusdt','mdxusdt','mlnusdt','mxusdt','newusdt','nftusdt','nknusdt','nsureusdt','o3usdt','ognusdt','ogousdt','oneusdt','polsusdt','btc3lusdt','btcusdt','btsusdt','canusdt','chrusdt','chzusdt','compusdt','crousdt','ctxcusdt','cvcusdt','cvpusdt','daiusdt','dcrusdt','dhtusdt','dockusdt','dot2lusdt','dtausdt','emusdt','enjusdt','eos3susdt','eth3lusdt','eth3susdt','fil3lusdt','filusdt','frontusdt','ftiusdt','glmusdt','gofusdt','hbarusdt','hcusdt','hiveusdt','hotusdt','htusdt','injusdt','insurusdt','iotausdt','kavausdt','letusdt','link3lusdt','link3susdt','lolusdt','loomusdt','lxtusdt','maskusdt','mdsusdt','mkrusdt','nanousdt','nearusdt','nestusdt','nexousdt','nhbtcusdt','nodeusdt','nulsusdt','nuusdt','ocnusdt','omgusdt','ontusdt','oxtusdt','paiusdt','paxusdt','pearlusdt','pvtusdt','qtumusdt','raiusdt','reefusdt','renusdt','ringusdt','rlcusdt','rndrusdt','rsrusdt','ruffusdt','topusdt','trbusdt','trxusdt','ttusdt','uipusdt','umausdt','uni2lusdt','uni2susdt','uniusdt','usdcusdt','uuuusdt','valueusdt','vetusdt','vidyusdt','vsysusdt','wavesusdt','waxpusdt','wbtcusdt','wiccusdt','woousdt','wtcusdt','wxtusdt','xchusdt','xemusdt','rvnusdt','sandusdt','scusdt','seeleusdt','shibusdt','sklusdt','smtusdt','sntusdt','snxusdt','socusdt','solusdt','stakeusdt','stnusdt','storjusdt','stptusdt','sunusdt','sushiusdt','swftcusdt','swrvusdt','thetausdt','titanusdt','tnbusdt','xlmusdt','xmrusdt','xmxusdt','xrpusdt','xrtusdt','xtzusdt','yamusdt','yeeusdt','yfiiusdt','yfiusdt','zec3lusdt','zec3susdt','zecusdt','zenusdt','zksusdt','zrxusdt']
     return symbols
@@ -103,29 +107,31 @@ module HuobisHelper
 
   def huobi_tickers_cache
     url = "https://api.huobi.pro/market/tickers"
-    Parallel.map([1, 2, 3], in_processes: 3) do |i|
-      sleep i
+    Parallel.map([0, 1, 2], in_processes: 3) do |i|
       # raise Parallel::Break # -> stops after all current items are finished
       loop do
-        sleep rand(0..0.5)
-        # current_time = Time.zone.now.strftime('%H:%M')
-        # p current_time
-        res = Faraday.get url
-        json = JSON.parse res.body
-        ticker_time = Time.at(json["ts"]/1000)
-        data = []
-        json["data"].each do |d|
-          if d["symbol"].end_with?("usdt")
-            data << d
+        if Time.now.sec.to_s.end_with? ENV["collect_sec"]
+          sleep 4 if i == 1
+          sleep 8 if i == 2
+          # p "time_#{i.to_s}: #{Time.now}"
+          res = Faraday.get url
+          json = JSON.parse res.body
+          ticker_time = Time.at(json["ts"]/1000)
+          data = []
+          json["data"].each do |d|
+            if d["symbol"].end_with?("usdt")
+              data << d
+            end
           end
-        end
-
-        # redis = Rails.cache.redis
-        begin
-          Rails.cache.write(ticker_time, data, expires_in: 126.seconds)
-          # redis.hset("tickers",ticker_time,data, expires_in: 2.minute)
-        rescue Exception => e
-          Rails.logger.warn "huobi_tickers_cache: #{e.message}"
+          # p "ticker_#{i.to_s}: #{ticker_time}"
+          # redis = Rails.cache.redis
+          begin
+            Rails.cache.write(ticker_time, data, expires_in: 300.seconds)
+            # redis.hset("tickers",ticker_time,data, expires_in: 2.minute)
+            sleep 1
+          rescue Exception => e
+            Rails.logger.warn "huobi_tickers_cache: #{e.message}"
+          end
         end
       end
       # Parallel::Stop
@@ -145,7 +151,6 @@ module HuobisHelper
     current_trades = Rails.cache.redis.hgetall("trades")
     settings = TraderSetting.current_settings
     keys.each do |key|
-      p key
       times << key if (!(key.count("a-zA-Z") > 0) && (DateTime.parse key rescue nil) && key.to_time >= start_time && key.to_time <= end_time)
     end
     # p times[0]
@@ -235,7 +240,8 @@ module HuobisHelper
         ticker_time = Time.at(tick["ts"]/1000).to_s
         sym_data = eval symbol[1]
         change = (sym_data[:close] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:close])/sym_data[:close])
-        Rails.cache.redis.hset("orders", symbol[0], {"open_price": sym_data[:close], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:time], "current_time": ticker_time})
+        change_open = (sym_data[:open] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:open])/sym_data[:open])
+        Rails.cache.redis.hset("orders", symbol[0], {"open_price": sym_data[:close], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:time], "current_time": ticker_time, "change_open": change_open, "first_price": sym_data[:open]})
         openning_symbols << symbol
       end
     end
@@ -257,7 +263,8 @@ module HuobisHelper
           # p [symbol[0], ticker_time, tick["tick"]["close"]]
           sym_data = eval symbol[1]
           change = (sym_data[:open_price] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:open_price])/sym_data[:open_price])
-          redis.hset("orders", symbol[0], {"open_price": sym_data[:open_price], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:open_time], "current_time": ticker_time})
+          change_open = (sym_data[:first_price] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:first_price])/sym_data[:first_price])
+          redis.hset("orders", symbol[0], {"open_price": sym_data[:open_price], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:open_time], "current_time": ticker_time, "change_open": change_open, "first_price": sym_data[:first_price]})
 
           pnl = change.truncate(4)
           # Rails.logger.warn "#{symbol[0]} pnl: #{pnl}"
@@ -269,7 +276,7 @@ module HuobisHelper
           redis.rpush("pnl:#{symbol[0]}", h.to_s)
           redis.quit
         rescue Exception => e
-          Rails.logger.warn "huobi_orders_check: #{e.message}"
+          Rails.logger.warn "huobi_orders_check error: #{e.message} #{symbol[0]} #{symbol[1]}"
         end
       end
     end
@@ -284,8 +291,9 @@ module HuobisHelper
     return pnls
   end
 
-  def huobi_close_amount(symbol)
+  def huobi_close_amount(symbol, shares)
     amount = 0
+    shares_amount = 0
     begin
       hash = eval Rails.cache.redis.hget("symbols", symbol)
       precision = hash[:"amount-precision"]
@@ -296,19 +304,24 @@ module HuobisHelper
       rbalance =  Rails.cache.redis.hget("balances", "#{symbol.sub("usdt","")}:trade")
       tr = (eval rbalance)[:balance] if rbalance
       balance = tr.to_d.truncate(precision).to_f if tr
+      share_balance = (tr.to_d/shares).truncate(precision).to_f if tr
       balance = balance.to_i if precision == 0
+      share_balance = (balance/shares).to_i if precision == 0
 
       if balance && balance < sell_market_min_order_amt
         amount = 0
+        shares_amount = 0
       elsif balance && balance > sell_market_max_order_amt
         amount = sell_market_max_order_amt
+        shares_amount = (sell_market_max_order_amt/shares)
       else
         amount = balance.nil? ? 0 : balance
+        shares_amount = balance.nil? ? 0 : share_balance
       end
     rescue Exception => e
       Rails.logger.warn "huobi_close_amount error: #{e.message}"
     end
-    return amount
+    return amount, shares_amount
   end
 
   def huobi_orders_close
@@ -318,7 +331,9 @@ module HuobisHelper
     # 1 timer limit
     data = Rails.cache.redis.hgetall("orders")
     orders = data.find_all {|x| (eval x[1])[:open_time] <= settings.close_timer_up.to_i.seconds.ago}
-    if settings.daily_clear_all_time && !settings.daily_clear_all_time.empty? && Time.now.strftime('%H:%M') == settings.daily_clear_all_time
+    if settings.daily_clear_all_time && !settings.daily_clear_all_time.empty? && Time.now.strftime('%H:%M:%S') == settings.daily_clear_all_time
+      orders = data
+    elsif Time.now.strftime("%H:%M:%S") == "23:59:55"
       orders = data
     end
 
@@ -329,20 +344,6 @@ module HuobisHelper
         Rails.cache.redis.hset("orders:closing", symbol, data)
         Rails.cache.redis.hdel("orders", symbol)
         closing_symbols << symbol if !closing_symbols.include?(symbol)
-        # next if Rails.cache.redis.hget("orders", symbol).nil?
-        # pnls = ApplicationController.helpers.huobi_pnls(symbol)
-        # begin
-        #   amount = ApplicationController.helpers.huobi_close_amount(symbol)
-        #   OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
-        #
-        #   # ApplicationController.helpers.huobi_orders_log(symbol)
-        #   # Rails.cache.redis.hdel("orders", symbol)
-        # rescue Exception => e
-        #   Rails.logger.warn "huobi_orders_close 1: #{e.message}"
-        # ensure
-        #   # OrderLoggersJob.perform_now symbol
-        #   Rails.logger.warn "#{symbol} closed due to timer limit"
-        # end
 
         count = count + 1
       end
@@ -359,18 +360,22 @@ module HuobisHelper
         Rails.cache.redis.hset("orders:closing", symbol, data)
         Rails.cache.redis.hdel("orders", symbol)
         closing_symbols << symbol if !closing_symbols.include?(symbol)
-        # pnls = ApplicationController.helpers.huobi_pnls(symbol)
-        # begin
-        #   amount = ApplicationController.helpers.huobi_close_amount(symbol)
-        #   OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
-        #   # ApplicationController.helpers.huobi_orders_log(symbol)
-        #   # Rails.cache.redis.hdel("orders", symbol)
-        # rescue Exception => e
-        #   Rails.logger.warn "huobi_orders_close 2: #{e.message}"
-        # ensure
-        #   # OrderLoggersJob.perform_later symbol
-        #   Rails.logger.warn "#{symbol} closed due to down limit"
-        # end
+
+        count = count + 1
+      end
+    end
+
+    # 2.5 change_open down limit
+    data = Rails.cache.redis.hgetall("orders")
+    orders = data.find_all {|x| ((eval x[1])[:change_open] <= settings.down_limit.to_f) && (Time.now - (eval x[1])[:open_time].to_time >= settings.open_await_to_close_time.to_i)}
+
+    if orders && orders.any?
+      orders.each do |order|
+        symbol = order[0]
+        data = eval Rails.cache.redis.hget("orders", symbol)
+        Rails.cache.redis.hset("orders:closing", symbol, data)
+        Rails.cache.redis.hdel("orders", symbol)
+        closing_symbols << symbol if !closing_symbols.include?(symbol)
 
         count = count + 1
       end
@@ -387,19 +392,6 @@ module HuobisHelper
         Rails.cache.redis.hset("orders:closing", symbol, data)
         Rails.cache.redis.hdel("orders", symbol)
         closing_symbols << symbol if !closing_symbols.include?(symbol)
-        # pnls = ApplicationController.helpers.huobi_pnls(symbol)
-        # begin
-        #   amount = ApplicationController.helpers.huobi_close_amount(symbol)
-        #   OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
-        #
-        #   # ApplicationController.helpers.huobi_orders_log(symbol)
-        #   # Rails.cache.redis.hdel("orders", symbol)
-        # rescue Exception => e
-        #   Rails.logger.warn "huobi_orders_close 3: #{e.message}"
-        # ensure
-        #   # OrderLoggersJob.perform_later symbol
-        #   Rails.logger.warn "#{symbol} closed due to up limit"
-        # end
 
         count = count + 1
       end
@@ -469,13 +461,19 @@ module HuobisHelper
     huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
     balances = huobi_pro.balances
     status = false
+    frozen_count = 0
     if balances && balances["status"] == "ok"
       account_id = balances["data"]["id"]
       data = balances["data"]["list"].find_all{|x| x["balance"].to_f != 0}
 
+      Rails.cache.redis.hgetall("balances").each do |d|
+        Rails.cache.redis.hdel("balances", d[0]) if d[0].include? "frozen"
+      end
+
       data.each do |d|
         begin
           Rails.cache.redis.hset("balances", "#{d["currency"]}:#{d["type"]}", {"currency": d["currency"],"type": d["type"], "balance": d["balance"], "seq-num": d["seq-num"]} )
+          frozen_count = frozen_count + 1 if (d["type"] == "frozen" && d["currency"] != "usdt")
         rescue Exception => e
           Rails.logger.warn "huobi_balances save error: #{e.message}"
         end
@@ -483,7 +481,7 @@ module HuobisHelper
       status = true
     end
 
-    return account_id, status
+    return frozen_count, status
   end
 
   def huobi_histroy_matchresults(symbol)
@@ -669,6 +667,40 @@ module HuobisHelper
     end
   end
 
+  # def huobi_em
+  #   c = "astusdt"
+  #   req = "market." + c + ".kline.1min"
+  #   @handshake = WebSocket::Handshake::Client.new(url: 'wss://api.huobi.pro/ws', headers: { "sub": req, "id": 1 })
+  #
+  #   EM.run do
+  #
+  #     ws = WebSocket::EventMachine::Client.connect(:uri => 'wss://api.huobi.pro/ws')
+  #
+  #     ws.onopen do
+  #       puts "Connected"
+  #     end
+  #
+  #     ws.onping do |message|
+  #       puts "Ping received: #{message}"
+  #       puts "pong"
+  #     end
+  #
+  #     ws.onmessage do |msg, type|
+  #       puts "Received message: #{msg}"
+  #     end
+  #
+  #     ws.onclose do |code, reason|
+  #       puts "Disconnected with status code: #{code}"
+  #     end
+  #
+  #     EventMachine.next_tick do
+  #       ws.send "Hello Server!"
+  #     end
+  #
+  #   end
+
+  # end
+
   # sql = "CREATE TABLE public.#{table_name} (symbol varchar, time timestamp, open float8, high float8, low float8, close float8, vol float8, amount float8, count int8, bid float8, bidSize float8, ask float8, askSize float8);"
   # res = postgres.exec(sql)
   # sql = "CREATE UNIQUE INDEX #{table_name}_idx ON public.#{table_name} (symbol, time);"
@@ -741,5 +773,24 @@ module HuobisHelper
   #     end
   #   end
   # end
+
+  def sidekiq_queue_clear
+    require 'sidekiq/api'
+    # Clear retry set
+    Sidekiq::RetrySet.new.clear
+    # Clear scheduled jobs
+    Sidekiq::ScheduledSet.new.clear
+    # Clear 'Dead' jobs statistics
+    Sidekiq::DeadSet.new.clear
+    # Clear 'Processed' and 'Failed' jobs statistics
+    Sidekiq::Stats.new.reset
+    # Clear specific queue
+    stats = Sidekiq::Stats.new
+    stats.queues
+    # => {"main_queue"=>25, "my_custom_queue"=>1}
+    queue = Sidekiq::Queue.new('low')
+    queue.count
+    queue.clear
+  end
 
 end
