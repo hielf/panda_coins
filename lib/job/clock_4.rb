@@ -25,7 +25,7 @@ module Clockwork
       else
         loop do
           settings = TraderSetting.current_settings
-          token = (Time.now.to_f * 1000).to_i
+          # token = (Time.now.to_f * 1000).to_i
           begin
             count, closing_symbols = ApplicationController.helpers.huobi_orders_close
             if count > 0
