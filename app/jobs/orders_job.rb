@@ -44,7 +44,8 @@ class OrdersJob < ApplicationJob
       if (@type.include? "sell") && @count == 0 && !(current_time <= settings.buy_accept_start_time && current_time >= settings.buy_accept_end_time)
         Rails.logger.warn "OrdersJob accept_time sell 0 error: #{@symbol}"
         amount, shares_amount = ApplicationController.helpers.huobi_close_amount(@symbol, 1)
-        OrdersJob.set(wait: 2.second).perform_later @symbol, 'sell-market', 0, amount, false
+        frozen_amount = ApplicationController.helpers.huobi_frozen_amount(@symbol)
+        OrdersJob.set(wait: 2.second).perform_later @symbol, 'sell-market', 0, amount, false if (amount > 0 || frozen_amount > 0)
       end
 
 
@@ -58,7 +59,7 @@ class OrdersJob < ApplicationJob
         @order = huobi_pro.new_order(@symbol,@type,@price,@count)
 
         if @order["status"] == "error"
-          Rails.logger.warn "OrdersJob #{@symbol} error: #{@order["err-msg"]}"
+          Rails.logger.warn "OrdersJob #{@symbol} #{@type} #{@count} error: #{@order["err-msg"]}"
           message = @symbol + " " + @order["err-msg"]
           SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["version"], message
         else

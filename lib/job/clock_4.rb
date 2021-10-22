@@ -35,7 +35,7 @@ module Clockwork
                 Rails.cache.write("enqueued:#{symbol}", ['sell-market', amount, false].join('/'), expires_in: 5.second)
                 # OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
                 OrdersJob.perform_now symbol, 'sell-market', 0, shares_amount, false
-                OrdersJob.set(wait: 1.second).perform_later symbol, 'sell-market', 0, (amount - shares_amount), false if amount > shares_amount
+                OrdersJob.set(wait: 1.second).perform_later symbol, 'sell-market', 0, shares_amount, false if amount > shares_amount
               end
             end
           rescue Exception => e

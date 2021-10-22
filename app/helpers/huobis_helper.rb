@@ -324,6 +324,33 @@ module HuobisHelper
     return amount, shares_amount
   end
 
+  def huobi_frozen_amount(symbol)
+    amount = 0
+    begin
+      hash = eval Rails.cache.redis.hget("symbols", symbol)
+      precision = hash[:"amount-precision"]
+      sell_market_min_order_amt = hash[:"sell-market-min-order-amt"]
+      sell_market_max_order_amt = hash[:"sell-market-max-order-amt"]
+      listing_date = hash[:"listing-date"]
+      # tr = TraderBalance.find_by(currency: symbol.sub("usdt",""), balance_type: 'trade')
+      rbalance =  Rails.cache.redis.hget("balances", "#{symbol.sub("usdt","")}:frozen")
+      tr = (eval rbalance)[:balance] if rbalance
+      balance = tr.to_d.truncate(precision).to_f if tr
+      balance = balance.to_i if precision == 0
+
+      if balance && balance < sell_market_min_order_amt
+        amount = 0
+      elsif balance && balance > sell_market_max_order_amt
+        amount = sell_market_max_order_amt
+      else
+        amount = balance.nil? ? 0 : balance
+      end
+    rescue Exception => e
+      Rails.logger.warn "huobi_close_amount error: #{e.message}"
+    end
+    return amount
+  end
+
   def huobi_orders_close
     count = 0
     closing_symbols = []
