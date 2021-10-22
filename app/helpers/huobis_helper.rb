@@ -18,7 +18,7 @@ module HuobisHelper
         symbol = tb.currency + "usdt"
         # @count_match = ApplicationController.helpers.huobi_histroy_matchresults(symbol)
         # @account_id, @status = ApplicationController.helpers.huobi_balances
-        amount = ApplicationController.helpers.huobi_close_amount(symbol)
+        amount, shares_amount = ApplicationController.helpers.huobi_close_amount(symbol, 1)
         p [symbol, amount]
         OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
         sleep 0.3
@@ -291,8 +291,9 @@ module HuobisHelper
     return pnls
   end
 
-  def huobi_close_amount(symbol)
+  def huobi_close_amount(symbol, shares)
     amount = 0
+    shares_amount = 0
     begin
       hash = eval Rails.cache.redis.hget("symbols", symbol)
       precision = hash[:"amount-precision"]
@@ -303,19 +304,24 @@ module HuobisHelper
       rbalance =  Rails.cache.redis.hget("balances", "#{symbol.sub("usdt","")}:trade")
       tr = (eval rbalance)[:balance] if rbalance
       balance = tr.to_d.truncate(precision).to_f if tr
+      share_balance = (tr.to_d/shares).truncate(precision).to_f if tr
       balance = balance.to_i if precision == 0
+      share_balance = (balance/shares).to_i if precision == 0
 
       if balance && balance < sell_market_min_order_amt
         amount = 0
+        shares_amount = 0
       elsif balance && balance > sell_market_max_order_amt
         amount = sell_market_max_order_amt
+        shares_amount = (sell_market_max_order_amt/shares)
       else
         amount = balance.nil? ? 0 : balance
+        shares_amount = balance.nil? ? 0 : share_balance
       end
     rescue Exception => e
       Rails.logger.warn "huobi_close_amount error: #{e.message}"
     end
-    return amount
+    return amount, shares_amount
   end
 
   def huobi_orders_close
