@@ -36,8 +36,6 @@ GEM
     activejob (5.2.6)
       activesupport (= 5.2.6)
       globalid (>= 0.3.6)
-    activejob-locking (0.6.2)
-      activejob
     activejob-status (0.1.6)
       activejob (>= 4.2)
       activesupport (>= 4.2)
@@ -324,7 +322,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  activejob-locking
   activejob-status
   bcrypt (~> 3.1.7)
   business_time

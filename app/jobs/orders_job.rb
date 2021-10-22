@@ -1,17 +1,10 @@
 class OrdersJob < ApplicationJob
-  include ActiveJob::Locking::Unique
   queue_as :critical
 
   # after_perform :logger
 
   rescue_from(ActiveRecord::RecordNotFound) do |exception|
      Rails.logger.warn "#{exception.message.to_s}"
-  end
-
-  self.lock_acquire_time = 5
-
-  def lock_key(*args)
-    [self.class.name, serialize_arguments(self.arguments)].join('/')
   end
 
   def perform(*args)

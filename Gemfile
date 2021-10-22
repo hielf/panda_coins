@@ -74,8 +74,6 @@ gem 'listen', '>= 3.0.5', '< 3.2'
 # end
 
 gem 'sidekiq'
-gem 'activejob-locking'
-# gem 'suo'
 gem 'rack-cors', :require => 'rack/cors'
 gem 'kaminari'
 gem 'ransack'
