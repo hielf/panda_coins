@@ -15,7 +15,7 @@ class OrdersJob < ApplicationJob
     @manual = args[4]
 
     message = "交易错误"
-    current_time = Time.now.strftime("%H:%M")
+    current_time = Time.now.strftime("%H:%M:%S")
     # last_balance = Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")).nil? ? nil : (eval Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")))[:balance]
     # today_balance = Rails.cache.redis.hget("balance_his", (Date.today).strftime("%Y-%m-%d")).nil? ? nil : (eval Rails.cache.redis.hget("balance_his", (Date.today).strftime("%Y-%m-%d")))[:balance]
     white_list_symbols = ApplicationController.helpers.white_list
