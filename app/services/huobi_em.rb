@@ -29,10 +29,9 @@ class HuobiEm
                 symbols_list << {:symbol => data[:ch]}
                 current_ts = Time.at(data[:ts]/1000)
                 if current_ts != last_ts
-                  p [Time.at(data[:ts]/1000), data[:ch], data[:tick][:close], data[:tick][:bid], data[:tick][:vol]]
+                  # p [Time.at(data[:ts]/1000), data[:ch], data[:tick][:close], data[:tick][:bid], data[:tick][:vol]]
+                  Rails.cache.write("tickers_data:#{data[:ch]}:#{Time.at(data[:ts]/1000)}", {:tick => data[:tick]}, expires_in: 5.seconds)
                   # tickers << {:time => current_ts, :symbol => data[:ch], :tick => data[:tick]}
-                  # Rails.cache.redis.hset(current_ts, data[:ch], data[:tick])
-                  # Rails.cache.redis.expire(current_ts, 60)
                 end
               end
             rescue Exception => e
@@ -40,16 +39,15 @@ class HuobiEm
               p data
             ensure
               last_ts = current_ts
-              p "current_ts: #{current_ts}"
-              if tickers.any?
-                p "tickers.last: #{tickers.to_a.last[:time]}"
-                p "finish count: #{(tickers.find_all {|x| x[:time] == current_ts}).count}"
-              end
-              if (tickers.find_all {|x| x[:time] == current_ts}).count == symbols_list.count
-                p current_ts
-                tickers.clear
-                p "ticker cleared"
-              end
+              # if tickers.any?
+              #   p "tickers.last: #{tickers.to_a.last[:time]}"
+              #   p "finish count: #{(tickers.find_all {|x| x[:time] == current_ts}).count}"
+              # end
+              # if (tickers.find_all {|x| x[:time] == current_ts}).count == symbols_list.count
+              #   p current_ts
+              #   tickers.clear
+              #   p "ticker cleared"
+              # end
             end
           end
         end
