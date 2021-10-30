@@ -208,7 +208,7 @@ module HuobisHelper
     end
 
     begin
-      closed_symbols = EventLog.today.where(current_time: 1.hour.ago..Time.now)
+      closed_symbols = EventLog.today.where(current_time: 24.hour.ago..Time.now)
       if closed_symbols && closed_symbols.any?
         closed_symbols.each do |sym|
           symbols.delete_if {|x| x[0] == sym.symbol}

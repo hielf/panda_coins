@@ -77,7 +77,9 @@ class OrdersJob < ApplicationJob
       Rails.logger.warn "OrdersJob error: #{e.message}"
       SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["version"], message
     ensure
-      AccountLoggerJob.set(wait: 1.second).perform_later(@symbol)
+      AccountLoggerJob.perform_now(@symbol)
+      OrderLoggersJob.perform_later @symbol
+      # AccountLoggerJob.set(wait: 1.second).perform_later(@symbol)
     end
   end
 
