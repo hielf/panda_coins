@@ -17,12 +17,16 @@ module Clockwork
   handler do |job, time|
 
     if job == 'huobi.orders_logger'
-      closed_symbols = Rails.cache.redis.hgetall("orders:closing")
-      closed_symbols.each do |cs|
-        symbol = cs[0]
-        # data = eval cs[1]
-        # ApplicationController.helpers.huobi_orders_log(symbol, data)
-        OrderLoggersJob.perform_later symbol
+      11.times do
+        closed_symbols = Rails.cache.redis.hgetall("orders:closing")
+        closed_symbols.each do |cs|
+          symbol = cs[0]
+          # data = eval cs[1]
+          # ApplicationController.helpers.huobi_orders_log(symbol, data)
+          OrderLoggersJob.perform_later symbol
+        end
+        p Time.now
+        sleep 5
       end
     end
 
