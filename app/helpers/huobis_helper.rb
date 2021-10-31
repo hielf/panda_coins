@@ -410,7 +410,7 @@ module HuobisHelper
 
     # 3 up_limit
     data = Rails.cache.redis.hgetall("orders")
-    orders = data.find_all {|x| (eval x[1])[:change] > settings.up_limit.to_f}
+    orders = data.find_all {|x| ((eval x[1])[:change] > settings.up_limit.to_f) && (Time.now - (eval x[1])[:open_time].to_time >= settings.open_await_to_close_time.to_i)}
 
     if orders && orders.any?
       orders.each do |order|
