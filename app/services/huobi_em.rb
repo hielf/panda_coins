@@ -13,54 +13,7 @@ class HuobiEm
     tickers = SortedSet.new # SortedSet.new
     symbols_list = Set.new
     Parallel.map(list, in_threads: list.count) do |symbol|
-      c = "market." + symbol + ".ticker"
-      req = JSON.dump({"sub": c, "id": symbol})
-      last_ts = Time.at(Time.now.to_i/1000)
-      EM.run do
-        ws = Faye::WebSocket::Client.new('wss://api.huobi.pro/ws')
-        ws.on :message do |event|
-          blob_arr = event.data
-          data = JSON.parse(Zlib::gunzip(blob_arr.pack('c*')), symbolize_names: true)
-          if (ts = data[:ping])
-            ws.ready_state == Faye::WebSocket::OPEN && ws.send(JSON.dump({ "pong": ts }))
-          else
-            begin
-              if data[:ts] && data[:tick]
-                symbols_list << {:symbol => data[:ch]}
-                current_ts = Time.at(data[:ts]/1000)
-                if current_ts != last_ts
-                  # p [Time.at(data[:ts]/1000), data[:ch], data[:tick][:close], data[:tick][:bid], data[:tick][:vol]]
-                  Rails.cache.write("tickers_data:#{data[:ch]}:#{Time.at(data[:ts]/1000)}", {:tick => data[:tick]}, expires_in: 5.seconds)
-                  # tickers << {:time => current_ts, :symbol => data[:ch], :tick => data[:tick]}
-                end
-              end
-            rescue Exception => e
-              p e
-              p data
-            ensure
-              last_ts = current_ts
-              # if tickers.any?
-              #   p "tickers.last: #{tickers.to_a.last[:time]}"
-              #   p "finish count: #{(tickers.find_all {|x| x[:time] == current_ts}).count}"
-              # end
-              # if (tickers.find_all {|x| x[:time] == current_ts}).count == symbols_list.count
-              #   p current_ts
-              #   tickers.clear
-              #   p "ticker cleared"
-              # end
-            end
-          end
-        end
-
-        ws.on :open do |event|
-          ws.send(req)
-        end
-
-        ws.on :close do |event|
-          p [:close, event.code, event.reason]
-          ws = nil
-        end
-      end
+      em(symbol)
     end
 
   end
@@ -69,6 +22,59 @@ class HuobiEm
 
   def opened?
     self.ready_state == Faye::WebSocket::OPEN
+  end
+
+  def em(symbol)
+    c = "market." + symbol + ".ticker"
+    req = JSON.dump({"sub": c, "id": symbol})
+    last_ts = Time.at(Time.now.to_i/1000)
+    EM.run do
+      ws = Faye::WebSocket::Client.new('wss://api.huobi.pro/ws')
+      ws.on :message do |event|
+        blob_arr = event.data
+        data = JSON.parse(Zlib::gunzip(blob_arr.pack('c*')), symbolize_names: true)
+        if (ts = data[:ping])
+          ws.ready_state == Faye::WebSocket::OPEN && ws.send(JSON.dump({ "pong": ts }))
+        else
+          begin
+            if data[:ts] && data[:tick]
+              # symbols_list << {:symbol => data[:ch]}
+              current_ts = Time.at(data[:ts]/1000)
+              if current_ts != last_ts
+                # p [Time.at(data[:ts]/1000), data[:ch], data[:tick][:close], data[:tick][:bid], data[:tick][:vol]]
+                Rails.cache.write("tickers_data:#{data[:ch]}:#{Time.at(data[:ts]/1000)}", {:tick => data[:tick]}, expires_in: 5.seconds)
+                # tickers << {:time => current_ts, :symbol => data[:ch], :tick => data[:tick]}
+              end
+            end
+          rescue Exception => e
+            p e
+            p data
+          ensure
+            last_ts = current_ts
+            # if tickers.any?
+            #   p "tickers.last: #{tickers.to_a.last[:time]}"
+            #   p "finish count: #{(tickers.find_all {|x| x[:time] == current_ts}).count}"
+            # end
+            # if (tickers.find_all {|x| x[:time] == current_ts}).count == symbols_list.count
+            #   p current_ts
+            #   tickers.clear
+            #   p "ticker cleared"
+            # end
+          end
+        end
+      end
+
+      ws.on :open do |event|
+        p req
+        ws.send(req)
+      end
+
+      ws.on :close do |event|
+        p [:close, event.code, event.reason, symbol]
+        ws = nil
+        em(symbol)
+      end
+    end
   end
 
 end
