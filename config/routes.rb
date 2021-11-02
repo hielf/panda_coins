@@ -34,6 +34,7 @@ Rails.application.routes.draw do
         post :position_check
         get :trades_data
         get :test
+        get :white_list
       end
     end
     match '*path', via: :all, to: 'root#route_not_found'

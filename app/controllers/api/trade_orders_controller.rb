@@ -35,6 +35,16 @@ class Api::TradeOrdersController < Api::ApplicationController
     render_json(result)
   end
 
+  def white_list
+    begin
+      data = ApplicationController.helpers.white_list
+      result = [0, "success", data.as_json]
+    rescue Exception => e
+      result = [1, e.to_s]
+    end
+    render_json(result)
+  end
+
   private
 
   def trade_order_params
