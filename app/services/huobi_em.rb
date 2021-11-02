@@ -43,7 +43,7 @@ class HuobiEm
               current_ts = Time.at(data[:ts]/1000)
               if current_ts != last_ts
                 # p [Time.at(data[:ts]/1000), data[:ch], data[:tick][:close], data[:tick][:bid], data[:tick][:vol]]
-                Rails.cache.write("tickers_data:#{data[:ch]}:#{Time.at(data[:ts]/1000)}", {:tick => data[:tick]}, expires_in: 5.seconds)
+                Rails.cache.write("tickers_data:#{data[:ch]}:#{Time.at(data[:ts]/1000)}", {:tick => data[:tick]}, expires_in: 30.seconds)
                 # tickers << {:time => current_ts, :symbol => data[:ch], :tick => data[:tick]}
               end
             end
