@@ -59,16 +59,13 @@ class HuobiEm
         blob_arr = event.data
         data = JSON.parse(Zlib::gunzip(blob_arr.pack('c*')), symbolize_names: true)
         if (ts = data[:ping])
-          ws.ready_state == Faye::WebSocket::OPEN && ws.send(JSON.dump({ "pong": ts }))
+          ws.opened? && ws.send(JSON.dump({ "pong": ts }))
         else
           begin
             if data[:ts] && data[:tick]
-              # symbols_list << {:symbol => data[:ch]}
               current_ts = Time.at(data[:ts]/1000)
               if current_ts != last_ts
-                # p [Time.at(data[:ts]/1000), data[:ch], data[:tick][:close], data[:tick][:bid], data[:tick][:vol]]
-                Rails.cache.write("tickers_data:#{data[:ch]}:#{Time.at(data[:ts]/1000)}", {:tick => data[:tick]}, expires_in: 60.seconds)
-                # tickers << {:time => current_ts, :symbol => data[:ch], :tick => data[:tick]}
+                Rails.cache.write("tickers_data:#{data[:ch]}:#{Time.at(data[:ts]/1000)}", {:tick => data[:tick]}, expires_in: 10.seconds)
               end
             end
           rescue Exception => e
@@ -76,15 +73,6 @@ class HuobiEm
             p data
           ensure
             last_ts = current_ts
-            # if tickers.any?
-            #   p "tickers.last: #{tickers.to_a.last[:time]}"
-            #   p "finish count: #{(tickers.find_all {|x| x[:time] == current_ts}).count}"
-            # end
-            # if (tickers.find_all {|x| x[:time] == current_ts}).count == symbols_list.count
-            #   p current_ts
-            #   tickers.clear
-            #   p "ticker cleared"
-            # end
           end
         end
       end
