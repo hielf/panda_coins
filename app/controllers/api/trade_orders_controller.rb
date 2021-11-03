@@ -37,7 +37,7 @@ class Api::TradeOrdersController < Api::ApplicationController
 
   def white_list
     begin
-      data = ApplicationController.helpers.white_list
+      data = ApplicationController.helpers.white_list.sort
       result = [0, "success", data.as_json]
     rescue Exception => e
       result = [1, e.to_s]

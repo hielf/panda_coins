@@ -139,6 +139,36 @@ module HuobisHelper
     return true
   end
 
+  def huobi_tickers_assemble
+    white_list_symbols = ApplicationController.helpers.white_list
+    data = Set.new
+    loop do
+      t = (Time.now - 1).strftime('%Y-%m-%d %H:%M:%S +0800')
+      keys = Rails.cache.redis.keys.sort
+      white_list_symbols.each do |symbol|
+        h = {:symbol => symbol}
+        ticker = "tickers_data:market.#{symbol}.ticker:#{t}"
+        begin
+          tick = Rails.cache.read(ticker)
+          if tick.nil?
+            symbol_tickers = keys.find_all {|x| x.include? "tickers_data:market.#{symbol}.ticker"}
+            next if symbol_tickers.empty?
+            tick = Rails.cache.read(symbol_tickers[-1])
+          end
+          h.merge!(tick[:tick])
+          data << h
+        rescue Exception => e
+          p e
+          p symbol
+          Rails.logger.warn "huobi_tickers_check error: #{symbol} #{e.message}"
+        end
+      end
+      Rails.cache.write("tickers_test:#{t}", data, expires_in: 300.seconds)
+      data.clear
+      sleep 0.4
+    end
+  end
+
   # ApplicationController.helpers.huobi_tickers_check(Time.now - 120, Time.now)
   def huobi_tickers_check(start_time, end_time)
     start_time = Time.now.beginning_of_day - 2 if start_time.nil?
