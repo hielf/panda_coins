@@ -59,7 +59,7 @@ class HuobiEm
         blob_arr = event.data
         data = JSON.parse(Zlib::gunzip(blob_arr.pack('c*')), symbolize_names: true)
         if (ts = data[:ping])
-          ws.opened? && ws.send(JSON.dump({ "pong": ts }))
+          ws.ready_state == Faye::WebSocket::OPEN && ws.send(JSON.dump({ "pong": ts }))
         else
           begin
             if data[:ts] && data[:tick]
