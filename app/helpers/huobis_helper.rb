@@ -142,6 +142,7 @@ module HuobisHelper
   def huobi_tickers_cache_ws
     white_list_symbols = ApplicationController.helpers.white_list
     data = Set.new
+    Rails.cache.redis.del("tickers_latest")
     loop do
       t = (Time.now - 1).strftime('%Y-%m-%d %H:%M:%S +0800')
       keys = Rails.cache.redis.keys.sort
@@ -151,16 +152,23 @@ module HuobisHelper
         begin
           tick = Rails.cache.read(ticker)
           if tick.nil?
-            symbol_tickers = keys.find_all {|x| x.include? "tickers_data:market.#{symbol}.ticker"}
-            next if symbol_tickers.empty?
-            tick = Rails.cache.read(symbol_tickers[-1])
+            # symbol_tickers = keys.find_all {|x| x.include? "tickers_data:market.#{symbol}.ticker"}
+            # next if symbol_tickers.empty?
+            # tick = Rails.cache.read(symbol_tickers[-1])
+            s = Rails.cache.redis.hget("tickers_latest", symbol)
+            next if s.nil?
+            tick = {:tick => (eval s)}
           end
-          h.merge!(tick[:tick])
-          data << h
+          if tick && !tick.empty?
+            h.merge!(tick[:tick])
+            data << h
+          end
         rescue Exception => e
           p e
           p [symbol, tick]
           Rails.logger.warn "huobi_tickers_check error: #{symbol} #{e.message}"
+        ensure
+          Rails.cache.redis.hset("tickers_latest", symbol, tick[:tick]) if (tick && !tick.empty?)
         end
       end
       Rails.cache.write("tickers_test:#{t}", data, expires_in: 300.seconds)
