@@ -139,7 +139,7 @@ module HuobisHelper
     return true
   end
 
-  def huobi_tickers_assemble
+  def huobi_tickers_cache_ws
     white_list_symbols = ApplicationController.helpers.white_list
     data = Set.new
     loop do
@@ -159,7 +159,7 @@ module HuobisHelper
           data << h
         rescue Exception => e
           p e
-          p symbol
+          p [symbol, tick]
           Rails.logger.warn "huobi_tickers_check error: #{symbol} #{e.message}"
         end
       end
