@@ -27,17 +27,10 @@ module Clockwork
         Rails.logger.warn "last tickers expired collecting tickers_cache"
         begin
           ApplicationController.helpers.huobi_tickers_cache
+          # HuobiEm.new.start
         rescue Exception => e
           Rails.logger.warn "huobi.tickers_cache error: #{e.message}"
         end
-      end
-    end
-
-    if job == 'huobi.usdts_symbols'
-      begin
-        ApplicationController.helpers.usdts_symbols
-      rescue Exception => e
-        Rails.logger.warn "huobi.usdts_symbols error: #{e.message}"
       end
     end
 
