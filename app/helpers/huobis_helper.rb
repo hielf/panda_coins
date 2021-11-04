@@ -139,6 +139,7 @@ module HuobisHelper
     return true
   end
 
+  # ApplicationController.helpers.huobi_tickers_cache_ws
   def huobi_tickers_cache_ws
     white_list_symbols = ApplicationController.helpers.white_list
     data = Set.new
@@ -160,6 +161,8 @@ module HuobisHelper
             s = Rails.cache.redis.hget("tickers_latest", symbol)
             next if s.nil?
             tick = {:tick => (eval s)}
+          else
+            tick = eval tick
           end
           if tick && !tick.empty?
             h.merge!(tick[:tick])
