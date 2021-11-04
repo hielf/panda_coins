@@ -145,12 +145,14 @@ module HuobisHelper
     Rails.cache.redis.del("tickers_latest")
     loop do
       t = (Time.now - 1).strftime('%Y-%m-%d %H:%M:%S +0800')
-      keys = Rails.cache.redis.keys.sort
+      redis = Redis.new(Rails.application.config_for(:redis)["market"])
+      # keys = redis.keys.sort
+      tick = redis.mget(keys.last)
       white_list_symbols.each do |symbol|
         h = {:symbol => symbol}
         ticker = "tickers_data:market.#{symbol}.ticker:#{t}"
         begin
-          tick = Rails.cache.read(ticker)
+          tick = redis.get(ticker)
           if tick.nil?
             # symbol_tickers = keys.find_all {|x| x.include? "tickers_data:market.#{symbol}.ticker"}
             # next if symbol_tickers.empty?
@@ -294,7 +296,7 @@ module HuobisHelper
       Parallel.each(opened_symbols, in_thread: threads) do |symbol|
       # opened_symbols.each do |symbol|
         begin
-          redis = Redis.new(Rails.application.config_for(:redis))
+          redis = Redis.new(Rails.application.config_for(:redis)["trade"])
           huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
           tick = huobi_pro.merged(symbol[0])
           ticker_time = Time.at(tick["ts"]/1000).to_s
