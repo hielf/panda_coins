@@ -175,6 +175,7 @@ module HuobisHelper
       end
       Rails.cache.write("tickers_test:#{t}", data, expires_in: 300.seconds)
       data.clear
+      redis.quit
       sleep 0.4
     end
   end
