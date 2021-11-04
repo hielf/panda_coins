@@ -35,7 +35,7 @@ class HuobiEm
       data["data"][270..299]
     end
 
-    tickers = SortedSet.new # SortedSet.new
+    # tickers = SortedSet.new
     symbols_list = Set.new
     Parallel.map(list, in_threads: list.count) do |symbol|
       em(symbol)
@@ -65,7 +65,7 @@ class HuobiEm
             if data[:ts] && data[:tick]
               current_ts = Time.at(data[:ts]/1000)
               if current_ts != last_ts
-                Rails.cache.write("tickers_data:#{data[:ch]}:#{Time.at(data[:ts]/1000)}", {:tick => data[:tick]}, expires_in: 10.seconds)
+                Rails.cache.redis.set("tickers_data:#{data[:ch]}:#{Time.at(data[:ts]/1000)}", {:tick => data[:tick]}, expires_in: 10.seconds)
               end
             end
           rescue Exception => e

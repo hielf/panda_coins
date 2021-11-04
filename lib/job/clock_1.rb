@@ -16,24 +16,22 @@ module Clockwork
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
     if job == 'huobi.tickers_cache'
-      current_time = Time.now
-      keys = Rails.cache.redis.keys.sort
-      times = []
-      keys.each do |key|
-        times << key if (!(key.count("a-zA-Z") > 0) && (DateTime.parse key rescue nil))
+      begin
+        # ApplicationController.helpers.huobi_tickers_cache
+        HuobiEm.new.start
+      rescue Exception => e
+        Rails.logger.warn "huobi.tickers_cache error: #{e.message}"
       end
-
-      if times.empty? || current_time - times[-1].to_time > 30
-        Rails.logger.warn "last tickers expired collecting tickers_cache"
-        begin
-          ApplicationController.helpers.huobi_tickers_cache
-          # HuobiEm.new.start
-        rescue Exception => e
-          Rails.logger.warn "huobi.tickers_cache error: #{e.message}"
-        end
-      end
+      # current_time = Time.now
+      # runtime = Rails.cache.read("running:clock_1_#{ENV["collect_order"]}")
+      # settings = TraderSetting.current_settings
+      # if runtime && (current_time - runtime).abs < 30
+      #   nil
+      # else
+      #   Rails.logger.warn "last tickers expired collecting tickers_cache on collect_order #{ENV["collect_order"]}"
+      #
+      # end
     end
-
   end
 
   # # trades
