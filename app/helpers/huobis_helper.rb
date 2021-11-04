@@ -147,7 +147,7 @@ module HuobisHelper
       t = (Time.now - 1).strftime('%Y-%m-%d %H:%M:%S +0800')
       redis = Redis.new(Rails.application.config_for(:redis)["market"])
       # keys = redis.keys.sort
-      tick = redis.mget(keys.last)
+      # tick = redis.mget(keys.last)
       white_list_symbols.each do |symbol|
         h = {:symbol => symbol}
         ticker = "tickers_data:market.#{symbol}.ticker:#{t}"
