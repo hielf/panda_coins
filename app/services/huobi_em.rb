@@ -18,17 +18,17 @@ class HuobiEm
     when "2"
       data["data"][30..59]
     when "3"
-      data["data"][60..89]
+      data["data"][60..79]
     when "4"
-      data["data"][90..119]
+      data["data"][80..99]
     when "5"
-      data["data"][120..149]
+      data["data"][100..119]
     when "6"
-      data["data"][150..179]
+      data["data"][120..139]
     when "7"
-      data["data"][180..209]
+      data["data"][140..159]
     when "8"
-      data["data"][210..239]
+      data["data"][160..169]
     when "9"
       data["data"][240..269]
     when "10"
@@ -36,7 +36,7 @@ class HuobiEm
     end
 
     # tickers = SortedSet.new
-    symbols_list = Set.new
+    # symbols_list = Set.new
     Parallel.map(list, in_threads: list.count) do |symbol|
       em(symbol)
     end
@@ -74,7 +74,7 @@ class HuobiEm
               end
             end
           rescue Exception => e
-            Rails.logger.warn "huobi_em error: #{e.message}"
+            Rails.logger.warn "huobi_em error: #{} #{e.message}"
           ensure
             last_ts = current_ts
           end
