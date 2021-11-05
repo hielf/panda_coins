@@ -137,7 +137,7 @@ module HuobisHelper
 
   # ApplicationController.helpers.huobi_tickers_check(Time.now - 120, Time.now)
   def huobi_tickers_check(start_time, end_time)
-    start_time = Time.now.beginning_of_day - 2 if start_time.nil?
+    start_time = Time.now.beginning_of_day if start_time.nil?
     end_time = Time.now if end_time.nil?
     current_time = Time.now.strftime("%H:%M")
     keys = Rails.cache.redis.keys.sort
