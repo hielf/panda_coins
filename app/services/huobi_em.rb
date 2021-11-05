@@ -52,7 +52,8 @@ class HuobiEm
   def em(symbol)
     c = "market." + symbol + ".ticker"
     req = JSON.dump({"sub": c, "id": symbol})
-    last_ts = Time.at(Time.now.to_i/1000)
+    last_ts = Time.at(Time.now.to_i)
+    runtime = Time.at(Time.now.to_i)
     EM.run do
       ws = Faye::WebSocket::Client.new('wss://api.huobi.pro/ws')
       ws.on :message do |event|
@@ -66,11 +67,14 @@ class HuobiEm
               current_ts = Time.at(data[:ts]/1000)
               if current_ts != last_ts
                 Rails.cache.redis.set("tickers_data:#{data[:ch]}:#{Time.at(data[:ts]/1000)}", {:tick => data[:tick]}, ex: 10.seconds)
+                if runtime != Time.at(Time.now.to_i)
+                  Rails.cache.write("running:clock_1_#{ENV["collect_order"]}", Time.now, expires_in: 1.minute)
+                  runtime = Time.at(Time.now.to_i)
+                end
               end
             end
           rescue Exception => e
-            p e
-            p data
+            Rails.logger.warn "huobi_em error: #{e.message}"
           ensure
             last_ts = current_ts
           end
@@ -83,7 +87,8 @@ class HuobiEm
       end
 
       ws.on :close do |event|
-        p [:close, event.code, event.reason, symbol]
+        # p [:close, event.code, event.reason, symbol]
+        Rails.logger.warn "huobi_em #{symbol} closed: #{event.code} #{event.reason}"
         ws = nil
         em(symbol)
       end
