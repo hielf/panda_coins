@@ -171,7 +171,7 @@ module HuobisHelper
         rescue Exception => e
           p e
           p [symbol, tick]
-          Rails.logger.warn "huobi_tickers_check error: #{symbol} #{e.message}"
+          Rails.logger.warn "huobi_tickers_cache_ws error: #{symbol} #{e.message}"
         ensure
           Rails.cache.redis.hset("tickers_latest", symbol, tick[:tick]) if (tick && !tick.empty?)
         end
@@ -204,12 +204,12 @@ module HuobisHelper
         data_l = Rails.cache.read(times[-1])
         if data_s && !data_s.empty? && data_l && !data_l.empty?
           data_s.each do |ticker|
-            symbol = ticker["symbol"]
+            symbol = ticker[:symbol]
             next if !white_list_symbols.include? symbol
 
-            last = data_l.find {|x| x["symbol"] == symbol}
-            change = (ticker["close"] == 0 ? 0 : (last["close"]-ticker["close"])/ticker["close"])
-            Rails.cache.redis.hset("tickers", ticker["symbol"], {"time": times[-1], "open": ticker["close"], "close": last["close"],  "amount": last["amount"],  "vol": last["vol"], "change": change})
+            last = data_l.find {|x| x[:symbol] == symbol}
+            change = (ticker[:close] == 0 ? 0 : (last[:close]-ticker[:close])/ticker[:close])
+            Rails.cache.redis.hset("tickers", ticker[:symbol], {"time": times[-1], "open": ticker[:close], "close": last[:close],  "amount": last[:amount],  "vol": last[:vol], "change": change})
           end
 
           changes = Rails.cache.redis.hgetall("tickers")
