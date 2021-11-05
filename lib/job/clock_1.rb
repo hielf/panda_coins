@@ -15,7 +15,7 @@ module Clockwork
 
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
-    
+
     if job == 'huobi.tickers_cache'
       current_time = Time.now
       keys = Rails.cache.redis.keys.sort
@@ -27,7 +27,7 @@ module Clockwork
       if times.empty? || current_time - times[-1].to_time > 30
         Rails.logger.warn "last tickers expired collecting tickers_cache"
         begin
-          ApplicationController.helpers.huobi_tickers_cache
+          ApplicationController.helpers.huobi_tickers_cache_ws
         rescue Exception => e
           Rails.logger.warn "huobi.tickers_cache error: #{e.message}"
         end
