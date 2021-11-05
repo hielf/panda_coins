@@ -176,7 +176,7 @@ module HuobisHelper
           Rails.cache.redis.hset("tickers_latest", symbol, tick[:tick]) if (tick && !tick.empty?)
         end
       end
-      Rails.cache.write("tickers_test:#{t}", data, expires_in: 300.seconds)
+      Rails.cache.write("#{t}", data, expires_in: 300.seconds)
       data.clear
       redis.quit
       sleep 0.4
