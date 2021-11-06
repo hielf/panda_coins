@@ -179,7 +179,7 @@ module HuobisHelper
       Rails.cache.write("#{t}", data, expires_in: 300.seconds)
       data.clear
       redis.quit
-      sleep 0.4
+      sleep 0.2
     end
   end
 
