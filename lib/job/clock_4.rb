@@ -31,8 +31,8 @@ module Clockwork
             if count > 0
               closing_symbols.each do |symbol|
                 amount, shares_amount = ApplicationController.helpers.huobi_close_amount(symbol, 2)
-                next if Rails.cache.read("enqueued:#{symbol}")
-                Rails.cache.write("enqueued:#{symbol}", ['sell-market', amount, false].join('/'), expires_in: 5.second)
+                next if Rails.cache.read("enqueued:closing:#{symbol}")
+                Rails.cache.write("enqueued:closing:#{symbol}", ['sell-market', amount, false].join('/'), expires_in: 5.second)
                 # OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
                 OrdersJob.perform_now symbol, 'sell-market', 0, shares_amount, false
                 OrdersJob.perform_now symbol, 'sell-market', 0, shares_amount, false if amount > shares_amount

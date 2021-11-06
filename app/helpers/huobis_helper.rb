@@ -192,7 +192,7 @@ module HuobisHelper
     times = []
     symbols = []
     white_list_symbols = ApplicationController.helpers.white_list
-    current_trades = Rails.cache.redis.hgetall("trades")
+    # current_trades = Rails.cache.redis.hgetall("trades")
     settings = TraderSetting.current_settings
     keys.each do |key|
       times << key if (!(key.count("a-zA-Z") > 0) && (DateTime.parse key rescue nil) && key.to_time >= start_time && key.to_time <= end_time)
@@ -268,10 +268,11 @@ module HuobisHelper
       Rails.logger.warn "huobi_open_symbols error: #{e.message}"
     end
 
-
     # Parallel.each(symbols, in_thread: symbols.count) do |symbol|
     openning_symbols = []
     symbols.each do |symbol|
+      next if Rails.cache.read("enqueued:openning:#{symbol[0]}")
+      Rails.cache.write("enqueued:openning:#{symbol[0]}", "openning", expires_in: 5.second)
       opened_symbols = Rails.cache.redis.hgetall("orders")
       if opened_symbols.count >= settings.max_opened_orders.to_i
         # symbols.delete_if {|x| x[0] == symbol[0]}
