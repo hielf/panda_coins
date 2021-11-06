@@ -55,7 +55,7 @@ class HuobiEm
     last_ts = Time.at(Time.now.to_i)
     runtime = Time.at(Time.now.to_i)
     EM.run do
-      ws = Faye::WebSocket::Client.new('wss://api.huobi.pro/ws')
+      ws = Faye::WebSocket::Client.new('wss://api-aws.huobi.pro/ws')
       ws.on :message do |event|
         blob_arr = event.data
         data = JSON.parse(Zlib::gunzip(blob_arr.pack('c*')), symbolize_names: true)
