@@ -18,17 +18,17 @@ class HuobiEm
     when "2"
       data["data"][30..59]
     when "3"
-      data["data"][60..79]
+      data["data"][60..89]
     when "4"
-      data["data"][80..99]
+      data["data"][90..119]
     when "5"
-      data["data"][100..119]
+      data["data"][120..149]
     when "6"
-      data["data"][120..139]
+      data["data"][150..179]
     when "7"
-      data["data"][140..159]
+      data["data"][180..209]
     when "8"
-      data["data"][160..169]
+      data["data"][210..239]
     when "9"
       data["data"][240..269]
     when "10"
@@ -55,15 +55,16 @@ class HuobiEm
     last_ts = Time.at(Time.now.to_i)
     runtime = Time.at(Time.now.to_i)
     EM.run do
-      ws = Faye::WebSocket::Client.new('wss://api-aws.huobi.pro/ws')
+      ws = Faye::WebSocket::Client.new('wss://api.huobi.pro/ws')
       ws.on :message do |event|
         blob_arr = event.data
         data = JSON.parse(Zlib::gunzip(blob_arr.pack('c*')), symbolize_names: true)
-        if (ts = data[:ping])
+        if data && data.key?(:ping)
+          ts = data[:ping]
           ws.ready_state == Faye::WebSocket::OPEN && ws.send(JSON.dump({ "pong": ts }))
-        else
+        elsif data && data.key?(:tick)
           begin
-            if data[:ts] && data[:tick]
+            if data[:ts] && data[:tick] && data[:ch] == c
               current_ts = Time.at(data[:ts]/1000)
               if current_ts != last_ts
                 Rails.cache.redis.set("tickers_data:#{data[:ch]}:#{Time.at(data[:ts]/1000)}", {:tick => data[:tick]}, ex: 10.seconds)
@@ -90,7 +91,7 @@ class HuobiEm
         # p [:close, event.code, event.reason, symbol]
         Rails.logger.warn "huobi_em #{symbol} closed: #{event.code} #{event.reason}"
         ws = nil
-        em(symbol)
+        # em(symbol)
       end
     end
   end
