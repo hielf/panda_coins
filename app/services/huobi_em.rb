@@ -68,16 +68,16 @@ class HuobiEm
               current_ts = Time.at(data[:ts]/1000)
               if current_ts != last_ts
                 Rails.cache.redis.set("tickers_data:#{data[:ch]}:#{Time.at(data[:ts]/1000)}", {:tick => data[:tick]}, ex: 10.seconds)
-                if runtime != Time.at(Time.now.to_i)
-                  Rails.cache.write("running:clock_1_#{ENV["collect_order"]}", Time.now, expires_in: 1.minute)
-                  runtime = Time.at(Time.now.to_i)
-                end
               end
             end
           rescue Exception => e
             Rails.logger.warn "huobi_em error: #{} #{e.message}"
           ensure
             last_ts = current_ts
+            if runtime != Time.at(Time.now.to_i)
+              Rails.cache.write("running:clock_1_#{ENV["collect_order"]}", Time.now, expires_in: 1.minute)
+              runtime = Time.at(Time.now.to_i)
+            end
           end
         end
       end
