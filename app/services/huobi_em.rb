@@ -61,6 +61,7 @@ class HuobiEm
         data = JSON.parse(Zlib::gunzip(blob_arr.pack('c*')), symbolize_names: true)
         if data && data.key?(:ping)
           ts = data[:ping]
+          # p [symbol, ts]
           ws.ready_state == Faye::WebSocket::OPEN && ws.send(JSON.dump({ "pong": ts }))
         elsif data && data.key?(:tick)
           begin
@@ -91,7 +92,7 @@ class HuobiEm
         # p [:close, event.code, event.reason, symbol]
         Rails.logger.warn "huobi_em #{symbol} closed: #{event.code} #{event.reason}"
         ws = nil
-        # em(symbol)
+        em(symbol)
       end
     end
   end
