@@ -64,6 +64,7 @@ class HuobiEm
           # p [symbol, ts]
           ws.ready_state == Faye::WebSocket::OPEN && ws.send(JSON.dump({ "pong": ts }))
         elsif data && data.key?(:tick)
+          # p data
           begin
             if data[:ts] && data[:tick] && data[:ch] == c
               current_ts = Time.at(data[:ts]/1000)
