@@ -228,7 +228,7 @@ module HuobisHelper
           symbols.sort_by! { |s| (eval s[1])[:change] }
         end
       rescue Exception => e
-        Rails.logger.warn "huobi_tickers_check error: #{e.message}"
+        Rails.logger.warn "huobi_tickers_check error: #{e.message}" unless (e.message.include? "[]")
       end
     end
 
