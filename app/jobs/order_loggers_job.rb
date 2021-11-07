@@ -8,6 +8,11 @@ class OrderLoggersJob < ApplicationJob
     # @pnls = args[1]
 
     begin
+      rbalance =  Rails.cache.redis.hget("balances", "usdt:trade")
+      current_balance = (eval rbalance)[:balance].to_f if rbalance
+      end_time = Time.now
+      Rails.cache.redis.hset("balance_his", end_time.strftime("%Y-%m-%d"), {:balance => current_balance})
+      
       pnls = ApplicationController.helpers.huobi_pnls(@symbol)
       ApplicationController.helpers.huobi_pnls_log(@symbol, pnls)
 
@@ -22,11 +27,6 @@ class OrderLoggersJob < ApplicationJob
   private
   def around_check
     # Rails.cache.redis.del("pnl:#{@symbol}")
-    rbalance =  Rails.cache.redis.hget("balances", "usdt:trade")
-    current_balance = (eval rbalance)[:balance].to_f if rbalance
-    end_time = Time.now
-    Rails.cache.redis.hset("balance_his", end_time.strftime("%Y-%m-%d"), {:balance => current_balance})
-
     Rails.cache.redis.expire("pnl:#{@symbol}", 600)
   end
 
