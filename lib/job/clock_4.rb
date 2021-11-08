@@ -34,7 +34,7 @@ module Clockwork
           # token = (Time.now.to_f * 1000).to_i
           begin
             count, closing_symbols = ApplicationController.helpers.huobi_orders_close
-            Rails.logger.warn "orders_close clock_4 closing_symbols: #{closing_symbols}"
+            Rails.logger.warn "orders_close clock_4 closing_symbols: #{closing_symbols}" unless closing_symbols.empty?
             if count > 0
               closing_symbols.each do |symbol|
                 # next if Rails.cache.read("enqueued:closing:#{symbol}")
