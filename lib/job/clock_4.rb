@@ -24,15 +24,21 @@ module Clockwork
         nil
       else
         loop do
+          if Rails.cache.read("enqueued:closing:job")
+            sleep 0.1
+            next
+          end
+          ts = (Time.now.to_f * 1000).to_i
+          Rails.cache.write("enqueued:closing:job", ts, expires_in: 5.second)
           settings = TraderSetting.current_settings
           # token = (Time.now.to_f * 1000).to_i
           begin
             count, closing_symbols = ApplicationController.helpers.huobi_orders_close
             if count > 0
               closing_symbols.each do |symbol|
+                # next if Rails.cache.read("enqueued:closing:#{symbol}")
+                # Rails.cache.write("enqueued:closing:#{symbol}", ts, expires_in: 300.second)
                 amount, shares_amount = ApplicationController.helpers.huobi_close_amount(symbol, 2)
-                next if Rails.cache.read("enqueued:closing:#{symbol}")
-                Rails.cache.write("enqueued:closing:#{symbol}", ['sell-market', amount, false].join('/'), expires_in: 300.second)
                 # OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
                 OrdersJob.perform_now symbol, 'sell-market', 0, shares_amount, false
                 OrdersJob.perform_now symbol, 'sell-market', 0, shares_amount, false if amount > shares_amount
@@ -41,6 +47,7 @@ module Clockwork
           rescue Exception => e
             Rails.logger.warn "orders_close clock_4 error: #{e.message}"
           ensure
+            Rails.cache.delete("enqueued:closing:job")
             Rails.cache.write('running:clock_4', Time.now, expires_in: 1.minute)
           end
           sleep 0.2
