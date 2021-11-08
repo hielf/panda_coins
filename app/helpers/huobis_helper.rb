@@ -414,8 +414,8 @@ module HuobisHelper
         symbol = order[0]
         data = eval Rails.cache.redis.hget("orders", symbol)
         Rails.cache.redis.hset("orders:closing", symbol, data)
-        Rails.cache.redis.hdel("orders", symbol)
-        closing_symbols << symbol if !closing_symbols.include?(symbol)
+        o = Rails.cache.redis.hdel("orders", symbol)
+        closing_symbols << symbol if (!closing_symbols.include?(symbol) && o != 0)
 
         count = count + 1
       end
@@ -430,8 +430,8 @@ module HuobisHelper
         symbol = order[0]
         data = eval Rails.cache.redis.hget("orders", symbol)
         Rails.cache.redis.hset("orders:closing", symbol, data)
-        Rails.cache.redis.hdel("orders", symbol)
-        closing_symbols << symbol if !closing_symbols.include?(symbol)
+        o = Rails.cache.redis.hdel("orders", symbol)
+        closing_symbols << symbol if (!closing_symbols.include?(symbol) && o != 0)
 
         count = count + 1
       end
@@ -446,8 +446,8 @@ module HuobisHelper
         symbol = order[0]
         data = eval Rails.cache.redis.hget("orders", symbol)
         Rails.cache.redis.hset("orders:closing", symbol, data)
-        Rails.cache.redis.hdel("orders", symbol)
-        closing_symbols << symbol if !closing_symbols.include?(symbol)
+        o = Rails.cache.redis.hdel("orders", symbol)
+        closing_symbols << symbol if (!closing_symbols.include?(symbol) && o != 0)
 
         count = count + 1
       end
@@ -462,8 +462,8 @@ module HuobisHelper
         symbol = order[0]
         data = eval Rails.cache.redis.hget("orders", symbol)
         Rails.cache.redis.hset("orders:closing", symbol, data)
-        Rails.cache.redis.hdel("orders", symbol)
-        closing_symbols << symbol if !closing_symbols.include?(symbol)
+        o = Rails.cache.redis.hdel("orders", symbol)
+        closing_symbols << symbol if (!closing_symbols.include?(symbol) && o != 0)
 
         count = count + 1
       end
