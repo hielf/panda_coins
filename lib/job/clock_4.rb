@@ -25,7 +25,7 @@ module Clockwork
       else
         loop do
           if Rails.cache.read("enqueued:closing:job")
-            sleep 0.1
+            sleep 0.3
             next
           end
           ts = (Time.now.to_f * 1000).to_i
@@ -34,6 +34,7 @@ module Clockwork
           # token = (Time.now.to_f * 1000).to_i
           begin
             count, closing_symbols = ApplicationController.helpers.huobi_orders_close
+            Rails.logger.warn "orders_close clock_4 closing_symbols: #{closing_symbols}"
             if count > 0
               closing_symbols.each do |symbol|
                 # next if Rails.cache.read("enqueued:closing:#{symbol}")
@@ -50,7 +51,6 @@ module Clockwork
             Rails.cache.delete("enqueued:closing:job")
             Rails.cache.write('running:clock_4', Time.now, expires_in: 1.minute)
           end
-          sleep 0.2
         end
       end
     end
