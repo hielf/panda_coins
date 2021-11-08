@@ -33,6 +33,8 @@ module Clockwork
           settings = TraderSetting.current_settings
           # token = (Time.now.to_f * 1000).to_i
           begin
+            count = 0
+            closing_symbols = []
             count, closing_symbols = ApplicationController.helpers.huobi_orders_close
             Rails.logger.warn "orders_close clock_4 closing_symbols: #{closing_symbols}" unless closing_symbols.empty?
             if count > 0
@@ -50,6 +52,7 @@ module Clockwork
           ensure
             Rails.cache.delete("enqueued:closing:job")
             Rails.cache.write('running:clock_4', Time.now, expires_in: 1.minute)
+            sleep 0.2
           end
         end
       end
