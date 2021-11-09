@@ -43,8 +43,8 @@ module Clockwork
                 # Rails.cache.write("enqueued:closing:#{symbol}", ts, expires_in: 300.second)
                 amount, shares_amount = ApplicationController.helpers.huobi_close_amount(symbol, 2)
                 # OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
-                OrdersJob.perform_now symbol, 'sell-market', 0, shares_amount, false
-                OrdersJob.perform_now symbol, 'sell-market', 0, shares_amount, false if amount > shares_amount
+                # OrdersJob.perform_now symbol, 'sell-market', 0, shares_amount, false
+                # OrdersJob.perform_now symbol, 'sell-market', 0, shares_amount, false if amount > shares_amount
               end
             end
           rescue Exception => e
