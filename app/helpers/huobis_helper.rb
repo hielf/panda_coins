@@ -416,9 +416,9 @@ module HuobisHelper
         symbol = order[0]
         data = eval Rails.cache.redis.hget("orders", symbol)
         Rails.cache.redis.hset("orders:closing", symbol, data)
-        o = Rails.cache.redis.hdel("orders", symbol)
-        Rails.logger.warn "huobi_orders_close 1 #{symbol}: deleted #{o}"
-        closing_symbols << symbol if (!closing_symbols.include?(symbol) && o != 0)
+        Rails.cache.redis.hdel("orders", symbol)
+        # Rails.logger.warn "huobi_orders_close 1 #{symbol}: deleted #{o}"
+        closing_symbols << symbol if !closing_symbols.include?(symbol)
 
         count = count + 1
       end
@@ -433,9 +433,9 @@ module HuobisHelper
         symbol = order[0]
         data = eval Rails.cache.redis.hget("orders", symbol)
         Rails.cache.redis.hset("orders:closing", symbol, data)
-        o = Rails.cache.redis.hdel("orders", symbol)
-        Rails.logger.warn "huobi_orders_close 2 #{symbol}: deleted #{o}"
-        closing_symbols << symbol if (!closing_symbols.include?(symbol) && o != 0)
+        Rails.cache.redis.hdel("orders", symbol)
+        # Rails.logger.warn "huobi_orders_close 2 #{symbol}: deleted #{o}"
+        closing_symbols << symbol if !closing_symbols.include?(symbol)
 
         count = count + 1
       end
@@ -450,9 +450,9 @@ module HuobisHelper
         symbol = order[0]
         data = eval Rails.cache.redis.hget("orders", symbol)
         Rails.cache.redis.hset("orders:closing", symbol, data)
-        o = Rails.cache.redis.hdel("orders", symbol)
-        Rails.logger.warn "huobi_orders_close 2.5 #{symbol}: deleted #{o}"
-        closing_symbols << symbol if (!closing_symbols.include?(symbol) && o != 0)
+        Rails.cache.redis.hdel("orders", symbol)
+        # Rails.logger.warn "huobi_orders_close 2.5 #{symbol}: deleted #{o}"
+        closing_symbols << symbol if !closing_symbols.include?(symbol)
 
         count = count + 1
       end
@@ -467,9 +467,9 @@ module HuobisHelper
         symbol = order[0]
         data = eval Rails.cache.redis.hget("orders", symbol)
         Rails.cache.redis.hset("orders:closing", symbol, data)
-        o = Rails.cache.redis.hdel("orders", symbol)
-        Rails.logger.warn "huobi_orders_close 3 #{symbol}: deleted #{o}"
-        closing_symbols << symbol if (!closing_symbols.include?(symbol) && o != 0)
+        Rails.cache.redis.hdel("orders", symbol)
+        # Rails.logger.warn "huobi_orders_close 3 #{symbol}: deleted #{o}"
+        closing_symbols << symbol if !closing_symbols.include?(symbol)
 
         count = count + 1
       end
