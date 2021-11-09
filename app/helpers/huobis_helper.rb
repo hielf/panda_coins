@@ -309,7 +309,9 @@ module HuobisHelper
           sym_data = eval symbol[1]
           change = (sym_data[:open_price] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:open_price])/sym_data[:open_price])
           change_open = (sym_data[:first_price] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:first_price])/sym_data[:first_price])
-          redis.hset("orders", symbol[0], {"open_price": sym_data[:open_price], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:open_time], "current_time": ticker_time, "change_open": change_open, "first_price": sym_data[:first_price]})
+          if Rails.cache.redis.hget("orders:closing", symbol[0]).nil?
+            redis.hset("orders", symbol[0], {"open_price": sym_data[:open_price], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:open_time], "current_time": ticker_time, "change_open": change_open, "first_price": sym_data[:first_price]})
+          end
 
           pnl = change.truncate(4)
           # Rails.logger.warn "#{symbol[0]} pnl: #{pnl}"
@@ -412,7 +414,6 @@ module HuobisHelper
     if orders && orders.any?
       orders.each do |order|
         symbol = order[0]
-        next if Rails.cache.redis.hget("orders:closing", symbol)
         data = eval Rails.cache.redis.hget("orders", symbol)
         Rails.cache.redis.hset("orders:closing", symbol, data)
         o = Rails.cache.redis.hdel("orders", symbol)
@@ -430,7 +431,6 @@ module HuobisHelper
     if orders && orders.any?
       orders.each do |order|
         symbol = order[0]
-        next if Rails.cache.redis.hget("orders:closing", symbol)
         data = eval Rails.cache.redis.hget("orders", symbol)
         Rails.cache.redis.hset("orders:closing", symbol, data)
         o = Rails.cache.redis.hdel("orders", symbol)
@@ -448,7 +448,6 @@ module HuobisHelper
     if orders && orders.any?
       orders.each do |order|
         symbol = order[0]
-        next if Rails.cache.redis.hget("orders:closing", symbol)
         data = eval Rails.cache.redis.hget("orders", symbol)
         Rails.cache.redis.hset("orders:closing", symbol, data)
         o = Rails.cache.redis.hdel("orders", symbol)
@@ -466,7 +465,6 @@ module HuobisHelper
     if orders && orders.any?
       orders.each do |order|
         symbol = order[0]
-        next if Rails.cache.redis.hget("orders:closing", symbol)
         data = eval Rails.cache.redis.hget("orders", symbol)
         Rails.cache.redis.hset("orders:closing", symbol, data)
         o = Rails.cache.redis.hdel("orders", symbol)
