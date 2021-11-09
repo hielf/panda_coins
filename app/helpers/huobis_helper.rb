@@ -401,8 +401,7 @@ module HuobisHelper
     closing_symbols = []
     # settings = TraderSetting.current_settings
     # 1 timer limit
-    redis = Redis.new(Rails.application.config_for(:redis)["trade"])
-    data = redis.hgetall("orders")
+    data = Rails.cache.redis.hgetall("orders")
     orders = data.find_all {|x| (eval x[1])[:open_time] <= settings.close_timer_up.to_i.seconds.ago}
     if settings.daily_clear_all_time && !settings.daily_clear_all_time.empty? && Time.now.strftime('%H:%M:%S') == settings.daily_clear_all_time
       orders = data
@@ -413,73 +412,70 @@ module HuobisHelper
     if orders && orders.any?
       orders.each do |order|
         symbol = order[0]
-        data = eval redis.hget("orders", symbol)
-        redis.hset("orders:closing", symbol, data)
-        o = redis.hdel("orders", symbol)
+        next if Rails.cache.redis.hget("orders:closing", symbol)
+        data = eval Rails.cache.redis.hget("orders", symbol)
+        Rails.cache.redis.hset("orders:closing", symbol, data)
+        o = Rails.cache.redis.hdel("orders", symbol)
         Rails.logger.warn "huobi_orders_close 1 #{symbol}: deleted #{o}"
         closing_symbols << symbol if (!closing_symbols.include?(symbol) && o != 0)
 
         count = count + 1
       end
     end
-    redis.quit
 
     # 2 down limit
-    redis = Redis.new(Rails.application.config_for(:redis)["trade"])
-    data = redis.hgetall("orders")
+    data = Rails.cache.redis.hgetall("orders")
     orders = data.find_all {|x| ((eval x[1])[:change] <= settings.down_limit.to_f) && (Time.now - (eval x[1])[:open_time].to_time >= settings.open_await_to_close_time.to_i)}
 
     if orders && orders.any?
       orders.each do |order|
         symbol = order[0]
-        data = eval redis.hget("orders", symbol)
-        redis.hset("orders:closing", symbol, data)
-        o = redis.hdel("orders", symbol)
+        next if Rails.cache.redis.hget("orders:closing", symbol)
+        data = eval Rails.cache.redis.hget("orders", symbol)
+        Rails.cache.redis.hset("orders:closing", symbol, data)
+        o = Rails.cache.redis.hdel("orders", symbol)
         Rails.logger.warn "huobi_orders_close 2 #{symbol}: deleted #{o}"
         closing_symbols << symbol if (!closing_symbols.include?(symbol) && o != 0)
 
         count = count + 1
       end
     end
-    redis.quit
 
     # 2.5 change_open down limit
-    redis = Redis.new(Rails.application.config_for(:redis)["trade"])
-    data = redis.hgetall("orders")
+    data = Rails.cache.redis.hgetall("orders")
     orders = data.find_all {|x| ((eval x[1])[:change_open] <= settings.down_limit.to_f) && (Time.now - (eval x[1])[:open_time].to_time >= settings.open_await_to_close_time.to_i)}
 
     if orders && orders.any?
       orders.each do |order|
         symbol = order[0]
-        data = eval redis.hget("orders", symbol)
-        redis.hset("orders:closing", symbol, data)
-        o = redis.hdel("orders", symbol)
+        next if Rails.cache.redis.hget("orders:closing", symbol)
+        data = eval Rails.cache.redis.hget("orders", symbol)
+        Rails.cache.redis.hset("orders:closing", symbol, data)
+        o = Rails.cache.redis.hdel("orders", symbol)
         Rails.logger.warn "huobi_orders_close 2.5 #{symbol}: deleted #{o}"
         closing_symbols << symbol if (!closing_symbols.include?(symbol) && o != 0)
 
         count = count + 1
       end
     end
-    redis.quit
 
     # 3 up_limit
-    redis = Redis.new(Rails.application.config_for(:redis)["trade"])
-    data = redis.hgetall("orders")
+    data = Rails.cache.redis.hgetall("orders")
     orders = data.find_all {|x| ((eval x[1])[:change] > settings.up_limit.to_f) && (Time.now - (eval x[1])[:open_time].to_time >= settings.open_await_to_close_time.to_i)}
 
     if orders && orders.any?
       orders.each do |order|
         symbol = order[0]
-        data = eval redis.hget("orders", symbol)
-        redis.hset("orders:closing", symbol, data)
-        o = redis.hdel("orders", symbol)
+        next if Rails.cache.redis.hget("orders:closing", symbol)
+        data = eval Rails.cache.redis.hget("orders", symbol)
+        Rails.cache.redis.hset("orders:closing", symbol, data)
+        o = Rails.cache.redis.hdel("orders", symbol)
         Rails.logger.warn "huobi_orders_close 3 #{symbol}: deleted #{o}"
         closing_symbols << symbol if (!closing_symbols.include?(symbol) && o != 0)
 
         count = count + 1
       end
     end
-    redis.quit
 
     # 4 pnl_limit
     # data = Rails.cache.redis.hgetall("orders")
@@ -510,7 +506,6 @@ module HuobisHelper
     #     count = count + 1
     #   end
     # end
-
     return count, closing_symbols
   end
 
