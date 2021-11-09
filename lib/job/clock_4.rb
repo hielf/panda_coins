@@ -24,8 +24,6 @@ module Clockwork
         nil
       else
         loop do
-          ts = (Time.now.to_f * 1000).to_i
-          Rails.cache.write("enqueued:closing:job", ts, expires_in: 5.second)
           settings = TraderSetting.current_settings
           # token = (Time.now.to_f * 1000).to_i
           begin
