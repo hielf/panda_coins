@@ -309,7 +309,7 @@ module HuobisHelper
           sym_data = eval symbol[1]
           change = (sym_data[:open_price] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:open_price])/sym_data[:open_price])
           change_open = (sym_data[:first_price] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:first_price])/sym_data[:first_price])
-          if Rails.cache.redis.hget("orders:closing", symbol[0]).nil?
+          if redis.hget("orders:closing", symbol[0]).nil?
             redis.hset("orders", symbol[0], {"open_price": sym_data[:open_price], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:open_time], "current_time": ticker_time, "change_open": change_open, "first_price": sym_data[:first_price]})
           end
 
