@@ -25,11 +25,11 @@ module Clockwork
       # end
       current_time = Time.now
       runtime = Rails.cache.read('running:clock_2')
-      settings = TraderSetting.current_settings
       if runtime && (current_time - runtime).abs < 30
         nil
       else
         loop do
+          settings = TraderSetting.current_settings
           begin
             start_time = Time.now - settings.tickers_check_interval.to_i
             end_time = Time.now
@@ -43,8 +43,8 @@ module Clockwork
               start_time = nil
             end
 
-            symbols = ApplicationController.helpers.huobi_tickers_check(start_time, end_time)
-            open_count, open_symbols = ApplicationController.helpers.huobi_open_symbols(symbols)
+            symbols = ApplicationController.helpers.huobi_tickers_check(settings, start_time, end_time)
+            open_count, open_symbols = ApplicationController.helpers.huobi_open_symbols(settings, symbols)
 
             if open_count > 0
               Rails.logger.warn "openning #{open_count} of new symbols at #{end_time.to_s}"

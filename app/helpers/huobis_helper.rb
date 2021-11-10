@@ -184,7 +184,7 @@ module HuobisHelper
   end
 
   # ApplicationController.helpers.huobi_tickers_check(Time.now - 120, Time.now)
-  def huobi_tickers_check(start_time, end_time)
+  def huobi_tickers_check(settings, start_time, end_time)
     start_time = Time.now.beginning_of_day if start_time.nil?
     end_time = Time.now if end_time.nil?
     current_time = Time.now.strftime("%H:%M")
@@ -193,7 +193,7 @@ module HuobisHelper
     symbols = []
     white_list_symbols = ApplicationController.helpers.white_list
     # current_trades = Rails.cache.redis.hgetall("trades")
-    settings = TraderSetting.current_settings
+    # settings = TraderSetting.current_settings
     keys.each do |key|
       times << key if (!(key.count("a-zA-Z") > 0) && (DateTime.parse key rescue nil) && key.to_time >= start_time && key.to_time <= end_time)
     end
@@ -235,10 +235,10 @@ module HuobisHelper
     return symbols
   end
 
-  def huobi_open_symbols(symbols)
+  def huobi_open_symbols(settings, symbols)
     # symbols = ApplicationController.helpers.huobi_tickers_check(Time.now - 120, Time.now)
     start_time = Time.now - 10
-    settings = TraderSetting.current_settings
+    # settings = TraderSetting.current_settings
     symbols.delete_if {|x| (eval x[1])[:time].to_time <= start_time}
     begin
       opened_symbols = Rails.cache.redis.hgetall("orders")
