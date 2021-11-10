@@ -281,7 +281,10 @@ module HuobisHelper
       else
         huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
         tick = huobi_pro.merged(symbol[0])
-        # tick = ApplicationController.helpers.huobi_symbol_ticker(symbol[0])
+
+        symbol_tendency = huobi_symbol_tendency_check(symbol[0], tick["tick"]["close"])
+        next if !symbol_tendency.all? { |x| x == 1 }
+
         ticker_time = Time.at(tick["ts"]/1000).to_s
         sym_data = eval symbol[1]
         change = (sym_data[:close] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:close])/sym_data[:close])
@@ -292,6 +295,48 @@ module HuobisHelper
     end
 
     return openning_symbols.count, openning_symbols
+  end
+
+  def huobi_symbol_tendency_check(symbol, close_0)
+    flag = []
+    data_1 = Set.new
+    data_2 = Set.new
+
+    begin
+      (4..6).each do |i|
+        time_1 = (Time.now - i).strftime('%Y-%m-%d %H:%M:%S +0800')
+        data_1 = Rails.cache.read(time_1)
+        break if data_1.any?
+      end
+    rescue Exception => e
+      Rails.logger.warn "huobi_symbol_tendency_check data_1 error: #{e.message}"
+    end
+
+    begin
+      (8..10).each do |i|
+        time_2 = (Time.now - i).strftime('%Y-%m-%d %H:%M:%S +0800')
+        data_2 = Rails.cache.read(time_2)
+        break if data_2.any?
+      end
+    rescue Exception => e
+      Rails.logger.warn "huobi_symbol_tendency_check data_2 error: #{e.message}"
+    end
+
+    begin
+      # p close_0
+      ticker_1 = data_1.find{|x| x[:symbol] == symbol}
+      # p "ticker_1: #{ticker_1[:close]}"
+      ticker_2 = data_2.find{|x| x[:symbol] == symbol}
+      # p "ticker_2: #{ticker_2[:close]}"
+
+      flag1 = (close_0 > ticker_1[:close]) ? 1 : 0
+      flag2 = (ticker_1[:close] > ticker_2[:close]) ? 1 : 0
+      flag = [flag1, flag2]
+    rescue Exception => e
+      Rails.logger.warn "huobi_symbol_tendency_check flags error: #{e.message}"
+    end
+
+    return flag
   end
 
   def huobi_orders_check
