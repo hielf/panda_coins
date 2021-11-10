@@ -309,7 +309,7 @@ module HuobisHelper
           sym_data = eval symbol[1]
           change = (sym_data[:open_price] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:open_price])/sym_data[:open_price])
           change_open = (sym_data[:first_price] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:first_price])/sym_data[:first_price])
-          if redis.hget("orders:closing", symbol[0]).nil?
+          if !redis.hget("orders", symbol[0]).nil?
             redis.hset("orders", symbol[0], {"open_price": sym_data[:open_price], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:open_time], "current_time": ticker_time, "change_open": change_open, "first_price": sym_data[:first_price]})
           end
 
@@ -513,7 +513,7 @@ module HuobisHelper
       # Rails.cache.redis.hdel("orders", symbol)
       el = EventLog.new(data)
       el.symbol = symbol
-      el.save
+      el.save unless EventLog.today.where(current_time: 24.hour.ago..Time.now, symbol: symbol).any?
     rescue Exception => e
       Rails.logger.warn "huobi_orders_log error: #{e.message}"
     ensure
