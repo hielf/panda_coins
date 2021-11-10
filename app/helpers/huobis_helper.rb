@@ -283,7 +283,7 @@ module HuobisHelper
         tick = huobi_pro.merged(symbol[0])
 
         symbol_tendency = huobi_symbol_tendency_check(symbol[0], tick["tick"]["close"])
-        next if !symbol_tendency.all? { |x| x == 1 }
+        next if (symbol_tendency.empty? || !symbol_tendency.all? { |x| x == 1 })
 
         ticker_time = Time.at(tick["ts"]/1000).to_s
         sym_data = eval symbol[1]
