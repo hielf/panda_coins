@@ -303,7 +303,7 @@ module HuobisHelper
     data_2 = Set.new
 
     begin
-      (4..6).each do |i|
+      (2..3).each do |i|
         time_1 = (Time.now - i).strftime('%Y-%m-%d %H:%M:%S +0800')
         data_1 = Rails.cache.read(time_1)
         break if data_1.any?
@@ -313,7 +313,7 @@ module HuobisHelper
     end
 
     begin
-      (8..10).each do |i|
+      (4..5).each do |i|
         time_2 = (Time.now - i).strftime('%Y-%m-%d %H:%M:%S +0800')
         data_2 = Rails.cache.read(time_2)
         break if data_2.any?
