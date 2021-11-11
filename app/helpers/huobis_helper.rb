@@ -329,7 +329,7 @@ module HuobisHelper
       # p "ticker_1: #{ticker_1[:close]}"
       ticker_2 = data_2.find{|x| x[:symbol] == symbol}
       # p "ticker_2: #{ticker_2[:close]}"
-      Rails.logger.warn "huobi_symbol_tendency_check 0-2: #{close_0} #{ticker_1[:close]} #{ticker_2[:close]}"
+      Rails.logger.warn "huobi_symbol_tendency_check #{symbol}: #{close_0} #{ticker_1[:close]} #{ticker_2[:close]}"
 
       flag1 = (close_0 > ticker_1[:close]) ? 1 : 0
       flag2 = (ticker_1[:close] > ticker_2[:close]) ? 1 : 0
