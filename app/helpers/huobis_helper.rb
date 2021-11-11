@@ -159,8 +159,7 @@ module HuobisHelper
             # next if symbol_tickers.empty?
             # tick = Rails.cache.read(symbol_tickers[-1])
             s = Rails.cache.redis.hget("tickers_latest", symbol)
-            next if s.nil?
-            tick = {:tick => (eval s)}
+            tick = {:tick => (eval s)} if !s.nil?
           else
             tick = eval tick
           end
@@ -183,7 +182,7 @@ module HuobisHelper
     end
   end
 
-  # ApplicationController.helpers.huobi_tickers_check(Time.now - 120, Time.now)
+  # ApplicationController.helpers.huobi_tickers_check(settings, Time.now - 120, Time.now)
   def huobi_tickers_check(settings, start_time, end_time)
     start_time = Time.now.beginning_of_day if start_time.nil?
     end_time = Time.now if end_time.nil?
