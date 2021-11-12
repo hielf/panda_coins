@@ -168,8 +168,8 @@ module HuobisHelper
             data << h
           end
         rescue Exception => e
-          p e
-          p [symbol, tick]
+          # p e
+          # p [symbol, tick]
           Rails.logger.warn "huobi_tickers_cache_ws error: #{symbol} #{e.message}"
         ensure
           Rails.cache.redis.hset("tickers_latest", symbol, tick[:tick]) if (tick && !tick.empty?)

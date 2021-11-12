@@ -22,6 +22,10 @@
       <%= form.text_field :max_opened_orders, required: true, disabled: true %>
     </div>
     <div class="display: inline-block;">
+      <label>资金使用比率：</label>
+      <%= form.text_field :balance_proportion, required: true %>
+    </div>
+    <div class="display: inline-block;">
       <label>开仓后等待多少时间接受平仓指令(秒)：</label>
       <%= form.text_field :open_await_to_close_time, required: true, disabled: true %>
     </div>
