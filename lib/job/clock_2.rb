@@ -62,7 +62,7 @@ module Clockwork
                   current_trades = Rails.cache.redis.hgetall("trades")
                   last_balance = Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")).nil? ? nil : (eval Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")))[:balance]
                   divide_shares = settings.divide_shares.to_i
-                  use_balance = last_balance * 0.95
+                  use_balance = last_balance * settings.balance_proportion.to_f
                   amount = (use_balance / divide_shares).truncate(0)
 
                   if current_trades.count < divide_shares
