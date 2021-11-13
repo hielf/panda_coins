@@ -13,6 +13,28 @@
 </div>
 
 <div style="padding-top: 25px;">
+  <span style="text-align: center;">历史余额:</span>
+  <table border="1px solid black" cellpadding="0" border-collapse="collapse" width="100%" >
+    <thead>
+      <tr>
+        <th colspan="5"><%= link_to "日期", :sort => "date"%> </th>
+        <th colspan="5"><%= link_to "当日余额", :sort => "balance"%> </th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% @history_balances.each do |data| %>
+        <tr>
+          <td colspan="5"><%= data[:date] %></td>
+          <td colspan="5"><%= data[:balance] %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<div style="padding-top: 25px;">
+  <span style="text-align: center;">当前余额:</span>
   <table border="1" cellpadding="0" cellspacing="" width="100%" >
     <thead>
       <tr>

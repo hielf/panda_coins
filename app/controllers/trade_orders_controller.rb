@@ -44,6 +44,13 @@ class TradeOrdersController < ApplicationController
 
     @trader_balances_all = TraderBalance.all
     @trader_balances = TraderBalance.where("balance > ?", 0.0001)
+
+    @history_balances = Set.new
+    (1..5).reverse_each do |n|
+      date = (Date.today - n).strftime("%Y-%m-%d")
+      balance = Rails.cache.redis.hget("balance_his", date).nil? ? nil : (eval Rails.cache.redis.hget("balance_his", date))[:balance]
+      @history_balances << {"date": date, "balance": balance}
+    end
   end
 
   def histroy_matchresults
@@ -70,14 +77,11 @@ class TradeOrdersController < ApplicationController
     # @last_100_lines = `tail -n 100 #{filename}`
     n = 200
     count = %x{wc -l #{filename}}.split.first.to_i
-    if count < lines
+    if count < n
       n = count
     end
-    n = -1 * lines
+    n = -1 * n
     @lines = IO.readlines(filename)[n..-1]
-    # IO.readlines(filename)[-100..-1].each do |l|
-    #   @lines << l
-    # end
   end
 
 end
