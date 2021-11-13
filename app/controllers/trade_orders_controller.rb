@@ -68,8 +68,13 @@ class TradeOrdersController < ApplicationController
       "#{Rails.root}/log/development.log"
     end
     # @last_100_lines = `tail -n 100 #{filename}`
-
-    @lines = IO.readlines(filename)[-100..-1]
+    n = 200
+    count = %x{wc -l #{filename}}.split.first.to_i
+    if count < lines
+      n = count
+    end
+    n = -1 * lines
+    @lines = IO.readlines(filename)[n..-1]
     # IO.readlines(filename)[-100..-1].each do |l|
     #   @lines << l
     # end
