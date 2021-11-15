@@ -16,7 +16,7 @@ Rails.application.configure do
   # config.cache_store = :redis_cache_store
 
   Rails.application.configure do
-    config.cache_store = :redis_cache_store, { url: "#{Rails.application.config_for(:redis)["url"]}#{Rails.application.config_for(:redis)["db"]}" }
+    config.cache_store = :redis_cache_store, { url: "#{Rails.application.config_for(:redis)["market"]["url"]}#{Rails.application.config_for(:redis)["market"]["db"]}" }
   end
   # if Rails.root.join('tmp/caching-dev.txt').exist?
   #   config.action_controller.perform_caching = true

@@ -135,6 +135,43 @@ module HuobisHelper
     return true
   end
 
+  def huobi_tickers_db
+    redis = Redis.new(Rails.application.config_for(:redis)["trade"])
+    start_time = Time.now.beginning_of_day
+    # start_time = Time.now - 60
+    end_time = Time.now
+    current_time = Time.now.strftime("%H:%M")
+    keys = redis.keys.sort
+    times = []
+    symbols = []
+    data = Set.new
+    keys.each do |key|
+      times << key if (!(key.count("a-zA-Z") > 0) && (DateTime.parse key rescue nil) && key.to_time >= start_time && key.to_time <= end_time)
+    end
+    times.each do |time|
+      tickers = Rails.cache.read(time)
+      tickers.each do |ticker|
+        ticker[:time] = time
+        data << ticker
+      end
+    end
+    redis.quit
+
+    table_name = "huobi_tickers"
+    begin
+      postgres = PG.connect :host => ENV['quant_db_host'], :port => ENV['quant_db_port'], :dbname => ENV['quant_db_name'], :user => ENV['quant_db_user'], :password => ENV['quant_db_pwd']
+      data.each do |row|
+        sql = "insert into #{table_name} select '#{row[:symbol]}', '#{row[:time]}', #{row[:open]}, #{row[:high]}, #{row[:low]}, #{row[:close]}, #{row[:vol]}, #{row[:amount]}, #{row[:count]}, #{row[:bid]}, #{row[:bidSize]}, #{row[:ask]}, #{row[:askSize]} WHERE NOT EXISTS (select 1 from #{table_name} where time = '#{row[:time]}' and symbol = '#{row[:symbol]}');"
+        postgres.exec(sql)
+        # p count
+      end
+    rescue PG::Error => e
+      Rails.logger.warn e.message
+    ensure
+      postgres.close if postgres
+    end
+  end
+
   # ApplicationController.helpers.huobi_tickers_check(Time.now - 120, Time.now)
   def huobi_tickers_check(start_time, end_time)
     start_time = Time.now.beginning_of_day if start_time.nil?
@@ -251,7 +288,7 @@ module HuobisHelper
       Parallel.each(opened_symbols, in_thread: threads) do |symbol|
       # opened_symbols.each do |symbol|
         begin
-          redis = Redis.new(Rails.application.config_for(:redis))
+          redis = Redis.new(Rails.application.config_for(:redis)["trade"])
           huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
           tick = huobi_pro.merged(symbol[0])
           ticker_time = Time.at(tick["ts"]/1000).to_s
