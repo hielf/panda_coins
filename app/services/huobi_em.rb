@@ -63,6 +63,7 @@ class HuobiEm
           ts = data[:ping]
           # p [symbol, ts]
           ws.ready_state == Faye::WebSocket::OPEN && ws.send(JSON.dump({ "pong": ts }))
+          Rails.cache.write("running:clock_1_#{ENV["collect_order"]}", Time.now, expires_in: 3.minute)
         elsif data && data.key?(:tick)
           # p data
           begin
@@ -77,7 +78,6 @@ class HuobiEm
           ensure
             last_ts = current_ts
             if runtime != Time.at(Time.now.to_i)
-              Rails.cache.write("running:clock_1_#{ENV["collect_order"]}", Time.now, expires_in: 1.minute)
               runtime = Time.at(Time.now.to_i)
             end
           end
