@@ -51,31 +51,32 @@ module Clockwork
               open_symbols.each do |data|
                 symbol = data[0]
                 hash = eval data[1]
-                current_balance = 0
-                begin
-                  # rbalance =  Rails.cache.redis.hget("balances", "usdt:trade")
-                  # current_balance = (eval rbalance)[:balance].to_f if rbalance
-                  # current_trades = Rails.cache.redis.hgetall("trades")
-                  # # divide_shares = current_trades.count == 0 ? settings.first_share_divide.to_i : settings.divide_shares.to_i
-                  # divide_shares = settings.divide_shares.to_i
-                  # amount = (current_balance / (divide_shares - current_trades.count)).truncate(0)
-                  current_trades = Rails.cache.redis.hgetall("trades")
-                  last_balance = Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")).nil? ? nil : (eval Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")))[:balance]
-                  divide_shares = settings.divide_shares.to_i
-                  use_balance = last_balance * settings.balance_proportion.to_f
-                  amount = (use_balance / divide_shares).truncate(0)
-
-                  if current_trades.count < divide_shares
-                    OrdersJob.perform_now symbol, 'buy-market', 0, amount, false
-                    Rails.logger.warn "symbol #{symbol} open @ #{hash[:close]} amount: #{amount}"
-                  else
-                    Rails.logger.warn "symbol #{symbol} open skipped: shares all used"
-                  end
-                # rescue FloatDomainError => e
-                #   Rails.logger.warn "symbol #{symbol} open skipped: shares all used"
-                rescue Exception => e
-                  Rails.logger.warn "orders_open clock_2 error: #{e.message}"
-                end
+                ApplicationController.helpers.huobi_open_order(symbol, hash, settings)
+                # current_balance = 0
+                # begin
+                #   # rbalance =  Rails.cache.redis.hget("balances", "usdt:trade")
+                #   # current_balance = (eval rbalance)[:balance].to_f if rbalance
+                #   # current_trades = Rails.cache.redis.hgetall("trades")
+                #   # # divide_shares = current_trades.count == 0 ? settings.first_share_divide.to_i : settings.divide_shares.to_i
+                #   # divide_shares = settings.divide_shares.to_i
+                #   # amount = (current_balance / (divide_shares - current_trades.count)).truncate(0)
+                #   current_trades = Rails.cache.redis.hgetall("trades")
+                #   last_balance = Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")).nil? ? nil : (eval Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")))[:balance]
+                #   divide_shares = settings.divide_shares.to_i
+                #   use_balance = last_balance * settings.balance_proportion.to_f
+                #   amount = (use_balance / divide_shares).truncate(0)
+                #
+                #   if current_trades.count < divide_shares
+                #     OrdersJob.perform_now symbol, 'buy-market', 0, amount, false
+                #     Rails.logger.warn "symbol #{symbol} open @ #{hash[:close]} amount: #{amount}"
+                #   else
+                #     Rails.logger.warn "symbol #{symbol} open skipped: shares all used"
+                #   end
+                # # rescue FloatDomainError => e
+                # #   Rails.logger.warn "symbol #{symbol} open skipped: shares all used"
+                # rescue Exception => e
+                #   Rails.logger.warn "orders_open clock_2 error: #{e.message}"
+                # end
               end
             end
 

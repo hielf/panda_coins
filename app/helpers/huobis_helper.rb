@@ -297,6 +297,25 @@ module HuobisHelper
     return openning_symbols.count, openning_symbols
   end
 
+  def huobi_open_order(symbol, sym_data, settings)
+    begin
+      current_trades = Rails.cache.redis.hgetall("trades")
+      last_balance = Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")).nil? ? nil : (eval Rails.cache.redis.hget("balance_his", (Date.today - 1).strftime("%Y-%m-%d")))[:balance]
+      divide_shares = settings.divide_shares.to_i
+      use_balance = last_balance * settings.balance_proportion.to_f
+      amount = (use_balance / divide_shares).truncate(0)
+
+      if current_trades.count < divide_shares
+        OrdersJob.perform_now symbol, 'buy-market', 0, amount, false
+        Rails.logger.warn "symbol #{symbol} open @ #{sym_data[:close]} amount: #{amount}"
+      else
+        Rails.logger.warn "symbol #{symbol} open skipped: shares all used"
+      end
+    rescue Exception => e
+      Rails.logger.warn "orders_open clock_2 error: #{e.message}"
+    end
+  end
+
   def huobi_symbol_tendency_check(symbol, close_0)
     flag = []
     data_1 = Set.new
