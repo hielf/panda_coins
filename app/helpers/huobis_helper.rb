@@ -149,10 +149,13 @@ module HuobisHelper
       times << key if (!(key.count("a-zA-Z") > 0) && (DateTime.parse key rescue nil) && key.to_time >= start_time && key.to_time <= end_time)
     end
     times.each do |time|
-      tickers = Rails.cache.read(time)
-      tickers.each do |ticker|
-        ticker[:time] = time
-        data << ticker
+      s = redis.get(time)
+      if !s.nil?
+        tickers = Marshal.load(s).value
+        tickers.each do |ticker|
+          ticker[:time] = time
+          data << ticker
+        end
       end
     end
     redis.quit

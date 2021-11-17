@@ -17,7 +17,7 @@ module Clockwork
   handler do |job, time|
 
     if job == 'huobi.tickers_db'
-      ApplicationController.helpers.tickers_db if ENV["db_collect"] == "true"
+      ApplicationController.helpers.huobi_tickers_db if ENV["db_collect"] == "true"
     end
 
   end
