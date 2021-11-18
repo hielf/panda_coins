@@ -281,15 +281,19 @@ module HuobisHelper
         # huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
         # tick = huobi_pro.merged(symbol[0])
         redis = Redis.new(Rails.application.config_for(:redis)["market"])
-        tick_str = ""
         ticker_time = ""
+        tick_str = Rails.cache.redis.hget("tickers_latest", symbol)
+        tick = {:tick => (eval tick_str)} if !tick_str.nil?
         begin
           10.times do
             ticker_time = Time.now.strftime('%Y-%m-%d %H:%M:%S +0800')
             key = "tickers_data:market.#{symbol[0]}.ticker:#{ticker_time}"
             tick_str = redis.get(key)
-            break if !tick_str.nil?
-            sleep 0.01
+            if !tick_str.nil?
+              tick = eval tick_str
+              break
+            end
+            sleep 0.05
           end
         rescue Exception => e
           Rails.logger.warn "huobi_open_symbols tick_str error: #{e.message}"
@@ -297,7 +301,6 @@ module HuobisHelper
           redis.quit
         end
 
-        tick = eval tick_str
         symbol_tendency = huobi_symbol_tendency_check(symbol[0], tick[:tick][:close])
         # next if (symbol_tendency.empty? || !symbol_tendency.all? { |x| x == 1 })
         next if (symbol_tendency.empty? || !(symbol_tendency[0] == 1))
