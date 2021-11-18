@@ -239,8 +239,8 @@ module HuobisHelper
     start_time = Time.now - 10
     # settings = TraderSetting.current_settings
     symbols.delete_if {|x| (eval x[1])[:time].to_time <= start_time}
+    opened_symbols = Rails.cache.redis.hgetall("orders")
     begin
-      opened_symbols = Rails.cache.redis.hgetall("orders")
       if !opened_symbols.empty?
         opened_symbols.each do |sym|
           symbols.delete_if {|x| x[0] == sym[0]}
@@ -270,26 +270,43 @@ module HuobisHelper
     # Parallel.each(symbols, in_thread: symbols.count) do |symbol|
     openning_symbols = []
     symbols.each do |symbol|
-      next if Rails.cache.read("enqueued:openning:#{symbol[0]}")
-      Rails.cache.write("enqueued:openning:#{symbol[0]}", "openning", expires_in: 300.second)
-      opened_symbols = Rails.cache.redis.hgetall("orders")
+      # next if Rails.cache.read("enqueued:openning:#{symbol[0]}")
+      # Rails.cache.write("enqueued:openning:#{symbol[0]}", "openning", expires_in: 300.second)
+      # opened_symbols = Rails.cache.redis.hgetall("orders")
       if opened_symbols.count >= settings.max_opened_orders.to_i
         # symbols.delete_if {|x| x[0] == symbol[0]}
         Rails.logger.warn "skip openning: #{symbol[0]} due to reach max_opened_orders"
         # next
       else
-        huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
-        tick = huobi_pro.merged(symbol[0])
+        # huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
+        # tick = huobi_pro.merged(symbol[0])
+        redis = Redis.new(Rails.application.config_for(:redis)["market"])
+        tick_str = ""
+        ticker_time = ""
+        begin
+          10.times do
+            ticker_time = Time.now.strftime('%Y-%m-%d %H:%M:%S +0800')
+            key = "tickers_data:market.#{symbol[0]}.ticker:#{ticker_time}"
+            tick_str = redis.get(key)
+            break if !tick_str.nil?
+            sleep 0.01
+          end
+          tick = eval tick_str
+        rescue Exception => e
+          Rails.logger.warn "orders_open clock_2 error: #{e.message}"
+        ensure
+          redis.quit
+        end
 
-        symbol_tendency = huobi_symbol_tendency_check(symbol[0], tick["tick"]["close"])
+        symbol_tendency = huobi_symbol_tendency_check(symbol[0], tick[:tick][:close])
         # next if (symbol_tendency.empty? || !symbol_tendency.all? { |x| x == 1 })
         next if (symbol_tendency.empty? || !(symbol_tendency[0] == 1))
 
-        ticker_time = Time.at(tick["ts"]/1000).to_s
+        # ticker_time = Time.at(tick[:ts]/1000).to_s
         sym_data = eval symbol[1]
-        change = (sym_data[:close] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:close])/sym_data[:close])
-        change_open = (sym_data[:open] == 0 ? 0 : (tick["tick"]["close"]-sym_data[:open])/sym_data[:open])
-        Rails.cache.redis.hset("orders", symbol[0], {"open_price": sym_data[:close], "current_price": tick["tick"]["close"], "change": change, "open_time": sym_data[:time], "current_time": ticker_time, "change_open": change_open, "first_price": sym_data[:open]})
+        change = (sym_data[:close] == 0 ? 0 : (tick[:tick][:close]-sym_data[:close])/sym_data[:close])
+        change_open = (sym_data[:open] == 0 ? 0 : (tick[:tick][:close]-sym_data[:open])/sym_data[:open])
+        Rails.cache.redis.hset("orders", symbol[0], {"open_price": sym_data[:close], "current_price": tick[:tick][:close], "change": change, "open_time": sym_data[:time], "current_time": ticker_time, "change_open": change_open, "first_price": sym_data[:open]})
         openning_symbols << symbol
       end
     end
