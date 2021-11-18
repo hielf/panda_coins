@@ -291,13 +291,13 @@ module HuobisHelper
             break if !tick_str.nil?
             sleep 0.01
           end
-          tick = eval tick_str
         rescue Exception => e
-          Rails.logger.warn "orders_open clock_2 error: #{e.message}"
+          Rails.logger.warn "huobi_open_symbols tick_str error: #{e.message}"
         ensure
           redis.quit
         end
 
+        tick = eval tick_str
         symbol_tendency = huobi_symbol_tendency_check(symbol[0], tick[:tick][:close])
         # next if (symbol_tendency.empty? || !symbol_tendency.all? { |x| x == 1 })
         next if (symbol_tendency.empty? || !(symbol_tendency[0] == 1))
@@ -329,7 +329,7 @@ module HuobisHelper
         Rails.logger.warn "symbol #{symbol} open skipped: shares all used"
       end
     rescue Exception => e
-      Rails.logger.warn "orders_open clock_2 error: #{e.message}"
+      Rails.logger.warn "huobi_open_order error: #{e.message}"
     end
   end
 
