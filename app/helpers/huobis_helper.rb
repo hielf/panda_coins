@@ -282,7 +282,7 @@ module HuobisHelper
         # tick = huobi_pro.merged(symbol[0])
         redis = Redis.new(Rails.application.config_for(:redis)["market"])
         ticker_time = ""
-        tick_str = Rails.cache.redis.hget("tickers_latest", symbol)
+        tick_str = Rails.cache.redis.hget("tickers_latest", symbol[0])
         tick = {:tick => (eval tick_str)} if !tick_str.nil?
         begin
           10.times do
