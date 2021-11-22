@@ -22,7 +22,7 @@ module Clockwork
 
   end
 
-  every(1.day, 'huobi.tickers_db', :at => '00:07')
+  every(1.day, 'huobi.tickers_db', :at => '00:15')
 
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')
