@@ -175,7 +175,11 @@ module HuobisHelper
           Rails.cache.redis.hset("tickers_latest", symbol, tick[:tick]) if (tick && !tick.empty?)
         end
       end
-      Rails.cache.write("#{t}", data, expires_in: 930.seconds)
+      delay = 930
+      if (t.to_time.hour == 0 && t.to_time.min == 0 && t.to_time.sec <= 1)
+        delay = 24 * 60 * 60
+      end
+      Rails.cache.write("#{t}", data, expires_in: delay.seconds)
       data.clear
       redis.quit
       sleep 0.2
