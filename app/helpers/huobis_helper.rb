@@ -834,6 +834,13 @@ module HuobisHelper
     end
   end
 
+  def huobi_url_generator(symbol)
+    sym = symbol.gsub("usdt", "")
+    url = "https://www.huobi.com/en-us/exchange/#{sym}_usdt/"
+
+    return url
+  end
+
   # def huobi_em
   #   c = "astusdt"
   #   req = "market." + c + ".kline.1min"

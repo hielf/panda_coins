@@ -32,7 +32,7 @@
     <tbody>
       <% @event_logs.each do |event_log| %>
         <tr>
-          <td colspan="3"><%= event_log["symbol"] %></td>
+          <td colspan="3"><%= link_to event_log["symbol"], huobi_url_generator(event_log["symbol"]), target: :_blank %></td>
           <td colspan="3"><%= event_log["open_price"] %></td>
           <td colspan="3"><%= event_log["current_price"] %></td>
           <td colspan="3"><%= event_log["change"] %></td>

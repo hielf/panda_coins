@@ -30,7 +30,7 @@
     <tbody>
       <% @histroy_matchresults.each do |data| %>
         <tr>
-          <td colspan="3"><%= data["symbol"] %></td>
+          <td colspan="3"><%= link_to data["symbol"], huobi_url_generator(data["symbol"]), target: :_blank %></td>
           <td colspan="3"><%= data["fee_currency"] %></td>
           <td colspan="3"><%= data["price"] %></td>
           <td colspan="3"><%= data["created_time"] %></td>

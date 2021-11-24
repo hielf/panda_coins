@@ -30,7 +30,7 @@
         <% if pre_order && !pre_order.empty? %>
           <% data = eval pre_order[1] %>
           <tr>
-            <td colspan="3"><%= pre_order[0] %></td>
+            <td colspan="3"><%= link_to pre_order[0], huobi_url_generator(pre_order[0]), target: :_blank %></td>
             <td colspan="3"><%= data[:open_price] %></td>
             <td colspan="3"><%= data[:current_price] %></td>
             <td colspan="3"><%= data[:change] %></td>
