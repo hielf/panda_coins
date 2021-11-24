@@ -84,4 +84,16 @@ class TradeOrdersController < ApplicationController
     @lines = IO.readlines(filename)[n..-1]
   end
 
+  def close_by_symbol
+    # symbol = params[:symbol]
+    tb = TraderBalance.find_by(id: params[:id])
+    symbol = tb.currency + "usdt"
+    amount, shares_amount = ApplicationController.helpers.huobi_close_amount(symbol, 1)
+    OrdersJob.perform_now symbol, 'sell-market', 0, amount, true
+
+    respond_to do |format|
+      format.html { redirect_to request.referer, alert: '卖出成功' }
+    end
+  end
+
 end

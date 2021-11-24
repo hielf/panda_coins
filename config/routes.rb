@@ -13,6 +13,9 @@ Rails.application.routes.draw do
       get :accounts_history
       get :production_log
     end
+    member do
+      get :close_by_symbol
+    end
   end
 
   resources :trader_settings, only: [:edit, :update]# do

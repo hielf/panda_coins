@@ -823,11 +823,10 @@ module HuobisHelper
         time["data"].each do |d|
           sql = "insert into #{table_name} select '#{d["symbol"]}', '#{time["time"]}', '#{d["open"]}', #{d["high"]}, #{d["low"]}, #{d["close"]}, #{d["vol"]}, #{d["amount"]}, #{d["count"]}, #{d["bid"]}, #{d["bidSize"]}, #{d["ask"]}, #{d["askSize"]} WHERE NOT EXISTS (select '#{d["symbol"]}', '#{time["time"]}' from #{table_name} where symbol = '#{d["symbol"]}' and time = '#{time["time"]}');"
           postgres.exec(sql)
-          p sql
         end
       end
     rescue PG::Error => e
-      p "huobi_ticker_insert: #{e.message}"
+      # p "huobi_ticker_insert: #{e.message}"
       Rails.logger.warn "huobi_ticker_insert: #{e.message}"
     ensure
       postgres.close if postgres
