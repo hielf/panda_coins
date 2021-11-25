@@ -17,7 +17,7 @@ Rails.application.routes.draw do
       get :close_by_symbol
     end
   end
-
+  resources :symbol_lists, only: [:index, :edit, :update]
   resources :trader_settings, only: [:edit, :update]# do
     # collection do
     #   get :account_settings
