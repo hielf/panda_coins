@@ -18,14 +18,14 @@ Rails.application.routes.draw do
     end
   end
   
-  resources :symbol_lists, only: [:index, :edit, :update]
-
-  resources :trader_settings do
+  resources :symbol_lists do
     member do
       get :enable_symbol
       get :disable_symbol
     end
   end
+
+  resources :trader_settings, only: [:edit, :update]# do
     # collection do
     #   get :account_settings
     # end

@@ -31,8 +31,8 @@
           <td colspan="3"><%= symbol.listing_date %></td>
           <td colspan="3"><%= symbol.is_disabled %></td>
           <th colspan="3">
-            <%= link_to "启用", close_by_symbol_trade_order_path(id: symbol.id) %>
-            <%= link_to "禁用", close_by_symbol_trade_order_path(id: symbol.id) %>
+            <%= link_to "启用", enable_symbol_symbol_list_path(id: symbol.id) %>
+            <%= link_to "禁用", disable_symbol_symbol_list_path(id: symbol.id) %>
           </th>
         </tr>
       <% end %>
