@@ -10,6 +10,30 @@ class SymbolListsController < ApplicationController
     @symbol = SymbolList.find_by(id: id)
   end
 
+  def disable_symbol
+    symbol = SymbolList.find_by(id: params[:id])
+    begin
+      symbol.disable
+    rescue Exception => e
+      Rails.logger.warn "disable_symbol error: #{e.message}"
+    end
+    respond_to do |format|
+      format.html { redirect_to request.referer, alert: "#{symbol.symbol}已禁用" }
+    end
+  end
+
+  def enable_symbol
+    symbol = SymbolList.find_by(id: params[:id])
+    begin
+      symbol.enable
+    rescue Exception => e
+      Rails.logger.warn "disable_symbol error: #{e.message}"
+    end
+    respond_to do |format|
+      format.html { redirect_to request.referer, alert: "#{symbol.symbol}已启用" }
+    end
+  end
+
   private
   # def trade_order_params
   #   params["trader_setting"].permit(:days_after_symbol_listing, :max_opened_orders,

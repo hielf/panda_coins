@@ -30,7 +30,10 @@
           <td colspan="3"><%= link_to symbol.symbol, huobi_url_generator(symbol.symbol), target: :_blank %></td>
           <td colspan="3"><%= symbol.listing_date %></td>
           <td colspan="3"><%= symbol.is_disabled %></td>
-          <th colspan="3"></th>
+          <th colspan="3">
+            <%= link_to "启用", close_by_symbol_trade_order_path(id: symbol.id) %>
+            <%= link_to "禁用", close_by_symbol_trade_order_path(id: symbol.id) %>
+          </th>
         </tr>
       <% end %>
     </tbody>
