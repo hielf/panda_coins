@@ -9,8 +9,7 @@
 module HuobiTestsHelper
   # ApplicationController.helpers.huobi_tickers_check(settings, Time.now - 120, Time.now)
   def huobi_tickers_check_test
-    list = ["titan", "epik", "fis", "mta", "stpt", "mta", "iotx", "iota", "cspr", "skm",
-    "nsure", "act", "aac", "ftorn", "stpt", "talk", "lba", "cvc", "icx", "mdx", "lat"]
+    list = ["zks", "req"]
     list.each do |sym|
       symbol = sym + "usdt"
       start_time = Time.now.beginning_of_day.strftime("%Y-%m-%dT%H:%M:%S")
