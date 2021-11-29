@@ -12,14 +12,18 @@ class OrderLoggersJob < ApplicationJob
       current_balance = (eval rbalance)[:balance].to_f if rbalance
       end_time = Time.now
       Rails.cache.redis.hset("balance_his", end_time.strftime("%Y-%m-%d"), {:balance => current_balance})
+    rescue Exception => e
+      Rails.logger.warn "OrderLoggersJob balances error: #{e.message}"
+    end
 
+    begin
       # pnls = ApplicationController.helpers.huobi_pnls(@symbol)
       # ApplicationController.helpers.huobi_pnls_log(@symbol, pnls)
 
       data = eval Rails.cache.redis.hget("orders:closing", @symbol)
       ApplicationController.helpers.huobi_orders_log(@symbol, data)
     rescue Exception => e
-      Rails.logger.warn "OrderLoggersJob error: #{e.message}"
+      Rails.logger.warn "OrderLoggersJob huobi_orders_log error: #{e.message}"
     end
 
   end
