@@ -12,9 +12,9 @@ class OrderLoggersJob < ApplicationJob
       current_balance = (eval rbalance)[:balance].to_f if rbalance
       end_time = Time.now
       Rails.cache.redis.hset("balance_his", end_time.strftime("%Y-%m-%d"), {:balance => current_balance})
-      
-      pnls = ApplicationController.helpers.huobi_pnls(@symbol)
-      ApplicationController.helpers.huobi_pnls_log(@symbol, pnls)
+
+      # pnls = ApplicationController.helpers.huobi_pnls(@symbol)
+      # ApplicationController.helpers.huobi_pnls_log(@symbol, pnls)
 
       data = eval Rails.cache.redis.hget("orders:closing", @symbol)
       ApplicationController.helpers.huobi_orders_log(@symbol, data)
