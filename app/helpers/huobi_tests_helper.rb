@@ -9,7 +9,7 @@
 module HuobiTestsHelper
   # ApplicationController.helpers.huobi_tickers_check(settings, Time.now - 120, Time.now)
   def huobi_tickers_check_test
-    list = ["zks", "req"]
+    list = ["soc"]
     list.each do |sym|
       symbol = sym + "usdt"
       start_time = Time.now.beginning_of_day.strftime("%Y-%m-%dT%H:%M:%S")
@@ -34,8 +34,9 @@ module HuobiTestsHelper
       p "#{symbol} started.."
       json.each do |data_l|
         change = (data_s["close"] == 0 ? 0 : (data_l["close"]-data_s["close"])/data_s["close"])
+        p [symbol, data_l["close"] ,change, data_l["time"]]
         if change >= settings.up_floor_limit.to_f && change <= settings.up_up_limit.to_f
-          p "found #{symbol} #{change} @ #{data_l["time"]}"
+          p "found!!!!!! #{symbol} #{change} @ #{data_l["time"]}"
           if data_l["vol"]  >= settings.amount_bottom_limit.to_f
             p "#{symbol} amount_bottom_limit enough"
             break
