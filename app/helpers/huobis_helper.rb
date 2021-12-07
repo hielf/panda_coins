@@ -576,7 +576,6 @@ module HuobisHelper
         array = pnls.map{|x| (eval x)[:change]}
         # pnl_samples = (array.select.with_index{|_,i| (i+1) % settings.pnl_interval.to_i == 0}).last(3)
 
-
         # if pnl_samples.any? && pnl_samples.count == 3 && pnl_samples.sort.reverse == pnl_samples && pnl_samples[0] != pnl_samples[-1] && pnl_samples[1] != pnl_samples[-1]
         if array.any? && array.last - array.max < settings.max_down_limit.to_f
           Rails.cache.redis.hset("orders:closing", symbol, data)
