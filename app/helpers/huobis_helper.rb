@@ -578,7 +578,7 @@ module HuobisHelper
 
 
         # if pnl_samples.any? && pnl_samples.count == 3 && pnl_samples.sort.reverse == pnl_samples && pnl_samples[0] != pnl_samples[-1] && pnl_samples[1] != pnl_samples[-1]
-        if array.any? && array.max - array.last < 0.03
+        if array.any? && array.max - array.last < settings.max_down_limit
           Rails.cache.redis.hset("orders:closing", symbol, data)
           Rails.cache.redis.hdel("orders", symbol)
           closing_symbols << symbol if !closing_symbols.include?(symbol)
