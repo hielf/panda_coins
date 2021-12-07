@@ -492,12 +492,12 @@ module HuobisHelper
     closing_symbols = []
     # settings = TraderSetting.current_settings
     # 1 timer limit
-    data = Rails.cache.redis.hgetall("orders")
-    orders = data.find_all {|x| (eval x[1])[:open_time] <= settings.close_timer_up.to_i.seconds.ago}
+    orders_data = Rails.cache.redis.hgetall("orders")
+    orders = orders_data.find_all {|x| (eval x[1])[:open_time] <= settings.close_timer_up.to_i.seconds.ago}
     if settings.daily_clear_all_time && !settings.daily_clear_all_time.empty? && Time.now.strftime('%H:%M:%S') == settings.daily_clear_all_time
-      orders = data
+      orders = orders_data
     elsif Time.now.strftime("%H:%M:%S") == "23:59:55"
-      orders = data
+      orders = orders_data
     end
 
     if orders && orders.any?
@@ -514,8 +514,8 @@ module HuobisHelper
     end
 
     # 2 down limit
-    data = Rails.cache.redis.hgetall("orders")
-    orders = data.find_all {|x| ((eval x[1])[:change] <= settings.down_limit.to_f) && (Time.now - (eval x[1])[:open_time].to_time >= settings.open_await_to_close_time.to_i)}
+    orders_data = Rails.cache.redis.hgetall("orders")
+    orders = orders_data.find_all {|x| ((eval x[1])[:change] <= settings.down_limit.to_f) && (Time.now - (eval x[1])[:open_time].to_time >= settings.open_await_to_close_time.to_i)}
 
     if orders && orders.any?
       orders.each do |order|
@@ -531,8 +531,8 @@ module HuobisHelper
     end
 
     # 2.5 change_open down limit
-    data = Rails.cache.redis.hgetall("orders")
-    orders = data.find_all {|x| ((eval x[1])[:change_open] <= settings.down_limit.to_f) && (Time.now - (eval x[1])[:open_time].to_time >= settings.open_await_to_close_time.to_i)}
+    orders_data = Rails.cache.redis.hgetall("orders")
+    orders = orders_data.find_all {|x| ((eval x[1])[:change_open] <= settings.down_limit.to_f) && (Time.now - (eval x[1])[:open_time].to_time >= settings.open_await_to_close_time.to_i)}
 
     if orders && orders.any?
       orders.each do |order|
@@ -548,8 +548,8 @@ module HuobisHelper
     end
 
     # 3 up_limit
-    data = Rails.cache.redis.hgetall("orders")
-    orders = data.find_all {|x| ((eval x[1])[:change] > settings.up_limit.to_f) && (Time.now - (eval x[1])[:open_time].to_time >= settings.open_await_to_close_time.to_i)}
+    orders_data = Rails.cache.redis.hgetall("orders")
+    orders = orders_data.find_all {|x| ((eval x[1])[:change] > settings.up_limit.to_f) && (Time.now - (eval x[1])[:open_time].to_time >= settings.open_await_to_close_time.to_i)}
 
     if orders && orders.any?
       orders.each do |order|
@@ -565,34 +565,28 @@ module HuobisHelper
     end
 
     # 4 pnl_limit
-    # data = Rails.cache.redis.hgetall("orders")
-    # orders = data
-    #
-    # if orders && orders.any?
-    #   orders.each do |order|
-    #     symbol = order[0]
-    #     pnls = ApplicationController.helpers.huobi_pnls(symbol)
-    #     array = pnls.map{|x| (eval x)[:change]}
-    #     pnl_samples = (array.select.with_index{|_,i| (i+1) % settings.pnl_interval.to_i == 0}).last(3)
-    #
-    #     if pnl_samples.any? && pnl_samples.count == 3 && pnl_samples.sort.reverse == pnl_samples && pnl_samples[0] != pnl_samples[-1] && pnl_samples[1] != pnl_samples[-1]
-    #       begin
-    #         amount = ApplicationController.helpers.huobi_close_amount(symbol)
-    #         OrdersJob.perform_now symbol, 'sell-market', 0, amount, false
+    orders_data = Rails.cache.redis.hgetall("orders")
+    orders = orders_data
 
-    #      #  ApplicationController.helpers.huobi_orders_log(symbol)
-    #      #  Rails.cache.redis.hdel("orders", symbol)
-    #       rescue Exception => e
-    #         Rails.logger.warn "huobi_orders_close 4: #{e.message}"
-    #       ensure
-    #         OrderLoggersJob.perform_later symbol
-    #         Rails.logger.warn "#{symbol} closed due to pnl limit"
-    #       end
-    #     end
-    #
-    #     count = count + 1
-    #   end
-    # end
+    if orders && orders.any?
+      orders.each do |order|
+        symbol = order[0]
+        data = eval Rails.cache.redis.hget("orders", symbol)
+        pnls = ApplicationController.helpers.huobi_pnls(symbol)
+        array = pnls.map{|x| (eval x)[:change]}
+        # pnl_samples = (array.select.with_index{|_,i| (i+1) % settings.pnl_interval.to_i == 0}).last(3)
+
+
+        # if pnl_samples.any? && pnl_samples.count == 3 && pnl_samples.sort.reverse == pnl_samples && pnl_samples[0] != pnl_samples[-1] && pnl_samples[1] != pnl_samples[-1]
+        if array.any? && array.max - array.last < 0.03
+          Rails.cache.redis.hset("orders:closing", symbol, data)
+          Rails.cache.redis.hdel("orders", symbol)
+          closing_symbols << symbol if !closing_symbols.include?(symbol)
+        end
+
+        count = count + 1
+      end
+    end
     return count, closing_symbols
   end
 
