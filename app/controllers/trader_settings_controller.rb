@@ -35,6 +35,6 @@ class TraderSettingsController < ApplicationController
       :close_timer_up, :tickers_check_interval, :daily_balance_up_limit, :daily_start_time,
       :daily_clear_all_time, :buy_accept_start_time, :buy_accept_end_time,
       :open_await_to_close_time, :amount_bottom_limit, :open_down_limit, :balance_proportion,
-      :max_down_limit)
+      :max_down_limit, :symbol_reopen_wait)
   end
 end

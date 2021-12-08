@@ -70,6 +70,10 @@
       <%= form.text_field :close_timer_up, required: true %>
     </div>
     <div class="display: inline-block;">
+      <label>当日合约再次买入等待(秒)：</label>
+      <%= form.text_field :symbol_reopen_wait, required: true %>
+    </div>
+    <div class="display: inline-block;">
       <label>ticker监控回溯时间(秒)：</label>
       <%= form.text_field :tickers_check_interval, required: true %>
     </div>
