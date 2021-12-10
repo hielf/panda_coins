@@ -69,9 +69,7 @@ class HuobiEm
           begin
             if data[:ts] && data[:tick] && data[:ch] == c
               current_ts = Time.at(data[:ts]/1000)
-              if current_ts != last_ts
-                Rails.cache.redis.set("tickers_data:#{data[:ch]}:#{Time.at(data[:ts]/1000)}", {:tick => data[:tick]}, ex: 10.seconds)
-              end
+              Rails.cache.redis.set("tickers_data:#{data[:ch]}:#{Time.at(data[:ts]/1000)}", {:tick => data[:tick]}, ex: 10.seconds)
             end
           rescue Exception => e
             Rails.logger.warn "huobi_em error: #{} #{e.message}"
