@@ -292,6 +292,7 @@ end
 # secret_key = ENV["huobi_secret_key"]
 # account_id = ENV["huobi_accounts"] #huobi_pro.accounts["data"][0]["id"]
 # huobi_pro = HuobiPro.new(access_key,secret_key,account_id)
+# huobi_pro.accounts
 
 # p huobi_pro.balances
 # p huobi_pro.symbols
