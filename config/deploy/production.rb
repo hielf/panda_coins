@@ -7,14 +7,14 @@
 # server "example.com", user: "deploy", roles: %w{app web}, other_property: :other_value
 # server "db.example.com", user: "deploy", roles: %w{db}
 
-server '139.162.165.15', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
-server '172.105.251.116', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
-server '172.104.203.150', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
-server '172.104.203.46', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
-server '172.104.203.27', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
-server '172.104.203.31', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
-server '172.105.117.115', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
-server '172.104.203.138', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
+server '172.104.203.201', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
+# server '172.105.251.116', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
+# server '172.104.203.150', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
+# server '172.104.203.46', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
+# server '172.104.203.27', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
+# server '172.104.203.31', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
+# server '172.105.117.115', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
+# server '172.104.203.138', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
 # server '129.226.126.93', port: 222, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
 
 set :branch, "s_version"
