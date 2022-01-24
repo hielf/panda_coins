@@ -16,21 +16,14 @@ module Clockwork
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
 
-    if job == 'huobi.orders_logger'
-      closed_symbols = Rails.cache.redis.hgetall("orders:closing")
-      closed_symbols.each do |cs|
-        symbol = cs[0]
-        # data = eval cs[1]
-        # ApplicationController.helpers.huobi_orders_log(symbol, data)
-        OrderLoggersJob.perform_later symbol
-      end
+    if job == 'huobi.5'
+
     end
 
   end
 
-  every(1.minute, 'huobi.orders_logger')
-  # every(5.minutes, 'huobi.alive_check2', :skip_first_run => true, :thread => true)
-  #
+  every(1.minute, 'huobi.5')
+  
   # every(1.day, 'midnight.job', :at => '00:00')
 end
 

@@ -175,6 +175,30 @@ module HuobisHelper
     end
   end
 
+  def huobi_symbols_changes_group
+    redis = Redis.new(Rails.application.config_for(:redis)["trade"])
+    start_time = Time.now - 600
+    end_time = Time.now
+    keys = redis.keys.sort
+    times = []
+    symbols = []
+    data = Set.new
+    keys.each do |key|
+      times << key if (!(key.count("a-zA-Z") > 0) && (DateTime.parse key rescue nil) && key.to_time >= start_time && key.to_time <= end_time)
+    end
+    times.each do |time|
+      s = redis.get(time)
+      if !s.nil?
+        tickers = Marshal.load(s).value
+        tickers.each do |ticker|
+          ticker[:time] = time
+          data << ticker
+        end
+      end
+    end
+    redis.quit
+  end
+
   # ApplicationController.helpers.huobi_tickers_check(Time.now - 120, Time.now)
   def huobi_tickers_check(start_time, end_time)
     start_time = Time.now.beginning_of_day if start_time.nil?
