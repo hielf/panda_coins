@@ -175,10 +175,10 @@ module HuobisHelper
     end
   end
 
-  def huobi_symbols_changes_group
+  def huobi_symbols_changes
     redis = Redis.new(Rails.application.config_for(:redis)["trade"])
-    start_time = Time.now - 600
-    end_time = Time.now
+    start_time = (Time.now - 600).beginning_of_minute
+    end_time = Time.now.beginning_of_minute
     keys = redis.keys.sort
     times = []
     symbols = []
@@ -186,17 +186,30 @@ module HuobisHelper
     keys.each do |key|
       times << key if (!(key.count("a-zA-Z") > 0) && (DateTime.parse key rescue nil) && key.to_time >= start_time && key.to_time <= end_time)
     end
-    times.each do |time|
-      s = redis.get(time)
-      if !s.nil?
-        tickers = Marshal.load(s).value
-        tickers.each do |ticker|
-          ticker[:time] = time
-          data << ticker
-        end
+    time = times.first
+    tickers_start = Marshal.load(redis.get(time)).value
+    time = times.last
+    tickers_end = Marshal.load(redis.get(time)).value
+    redis.quit
+    tickers_start.each do |ticker|
+      p [ticker[:symbol], ticker[:close]]
+    end
+
+    period = "5min"
+    url = "http://#{ENV['white_list_server']}:#{ENV['white_list_port']}/api/trade_orders/white_list"
+    res = Faraday.get url
+    data = JSON.parse res.body
+    list = data["data"]
+    huobi_pro = HuobiPro.new(ENV["huobi_access_key"],ENV["huobi_secret_key"],ENV["huobi_accounts"])
+    list.each do |symbol|
+      klines = huobi_pro.history_kline(symbol, period)["data"]
+      klines.each do |kline|
+        time = Time.at kline["id"]
+        change = kline["open"] == 0 ? 0 : (kline["close"] - kline["open"]) / kline["open"]
+        Rails.cache.redis.hset("changes_#{period}", symbol, {"time": time, "change": change})
+        p [symbol, time, change]
       end
     end
-    redis.quit
   end
 
   # ApplicationController.helpers.huobi_tickers_check(Time.now - 120, Time.now)
