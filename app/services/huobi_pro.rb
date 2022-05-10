@@ -259,7 +259,7 @@ class HuobiPro
   private
 
   def util(path,params,request_method)
-    h =  {
+    h = {
       "AccessKeyId"=>@access_key,
       "SignatureMethod"=>"HmacSHA256",
       "SignatureVersion"=>@signature_version,
@@ -272,7 +272,12 @@ class HuobiPro
     http = Net::HTTP.new(@uri.host, @uri.port)
     http.use_ssl = true
     begin
-      JSON.parse http.send_request(request_method, url, JSON.dump(params),@header).body
+      if request_method == "GET"
+        JSON.parse (Faraday.get url).body
+      else
+        JSON.parse Faraday.post(url, JSON.dump(params), @header).body
+        # JSON.parse http.send_request(request_method, url, JSON.dump(params), @header).body
+      end
     rescue Exception => e
       {"message" => 'error' ,"request_error" => e.message}
     end
@@ -288,10 +293,20 @@ class HuobiPro
 
 end
 
+
+# HuobiApi.configure do |config|
+#   # confusingly the account_id is got from the API - see below - it is different from the UID show on the website
+#   config.account_id = ENV["huobi_accounts"]
+#   # key and secret from API Management page on Huobi website
+#   config.key = ENV["huobi_access_key"]
+#   config.secret = ENV["huobi_secret_key"]
+# end
+
 # access_key = ENV["huobi_access_key"]
 # secret_key = ENV["huobi_secret_key"]
 # account_id = ENV["huobi_accounts"] #huobi_pro.accounts["data"][0]["id"]
 # huobi_pro = HuobiPro.new(access_key,secret_key,account_id)
+# huobi_pro.accounts
 
 # p huobi_pro.balances
 # p huobi_pro.symbols
@@ -302,8 +317,8 @@ end
 # p huobi_pro.history_trade('ethbtc')
 
 
-# huobi_pro.new_order(symbol,"buy-market",0,1)
+# huobi_pro.new_order(symbol,"buy-market",0,10000)
 # huobi_pro.history_matchresults(symbol)
-# huobi_pro.new_order(symbol,"sell-market",0,5)
+# huobi_pro.new_order(symbol,"sell-market",0,100)
 # huobi_pro.matchresults(359277988888707)
 # huobi_pro.submitcancel(359277988888707)
