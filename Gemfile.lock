@@ -349,7 +349,6 @@ DEPENDENCIES
   pg
   puma (~> 4.0)
   pycall
-  rack (>= 2.2.3.1)
   rack-cors
   rails (~> 5.2.3)
   rainbow

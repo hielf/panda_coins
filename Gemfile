@@ -13,7 +13,6 @@ gem 'rails', '~> 5.2.3'
 gem 'mysql2'
 gem 'pg'
 gem 'redis'
-gem "rack", ">= 2.2.3.1"
 
 # Use Puma as the app server
 gem 'puma', '~> 4.0'
