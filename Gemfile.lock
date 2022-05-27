@@ -183,7 +183,7 @@ GEM
       nio4r (~> 2.0)
     pycall (1.4.1)
     racc (1.5.2)
-    rack (2.2.3)
+    rack (2.2.3.1)
     rack-cors (1.1.1)
       rack (>= 2.0.0)
     rack-test (1.1.0)
@@ -349,6 +349,7 @@ DEPENDENCIES
   pg
   puma (~> 4.0)
   pycall
+  rack (>= 2.2.3.1)
   rack-cors
   rails (~> 5.2.3)
   rainbow
