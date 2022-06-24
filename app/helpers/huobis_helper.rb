@@ -833,6 +833,17 @@ module HuobisHelper
     return url
   end
 
+  def huobi_balance_his
+    begin
+      rbalance =  Rails.cache.redis.hget("balances", "usdt:trade")
+      current_balance = (eval rbalance)[:balance].to_f if rbalance
+      end_time = Time.now
+      Rails.cache.redis.hset("balance_his", end_time.strftime("%Y-%m-%d"), {:balance => current_balance})
+    rescue Exception => e
+      Rails.logger.warn "OrderLoggersJob balances error: #{e.message}"
+    end
+  end
+
   # def huobi_em
   #   c = "astusdt"
   #   req = "market." + c + ".kline.1min"
