@@ -8,8 +8,8 @@
 # server "db.example.com", user: "deploy", roles: %w{db}
 
 # server '129.226.126.93', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
-server '139.162.149.116', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
-server '139.162.149.116', port: 123, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
+server '192.53.174.29', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
+server '192.53.174.29', port: 123, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
 
 set :branch, "sidekiq"
 set :migration_role, :db
